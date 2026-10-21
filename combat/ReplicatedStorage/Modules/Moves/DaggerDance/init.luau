@@ -15,58 +15,13 @@ local Effect = require(script:WaitForChild("Effect"))
 local DaggerDance = {}
 
 local MOVE_NAME = script.Name
-local KEY_EVENTS = {"Dagger Slash", "Slash Move", "End"}
 
 local remotes = ReplicatedStorage:WaitForChild("Remotes")
 local activeRemote = remotes:WaitForChild("Active")
-local phaseRemote = remotes:FindFirstChild("MovePhase")
+local phaseRemote = remotes:WaitForChild("MovePhase")
 
 local cooldownEnd = 0
 local active = false
-
---// Key Events \\--
-
-local function createEventReporter(character: Model, root: BasePart)
-	local ended = false
-
-	return function(eventName: string)
-		if eventName == "End" then
-			if ended then
-				return
-			end
-
-			ended = true
-		end
-
-		Effect({char = character, root = root, phase = eventName})
-
-		if phaseRemote then
-			phaseRemote:FireServer(MOVE_NAME, eventName)
-		end
-	end
-end
-
-local function connectKeyEvents(track: AnimationTrack, reportEvent)
-	local connections = {}
-
-	table.insert(connections, track.KeyframeReached:Connect(function(keyframeName: string)
-		if table.find(KEY_EVENTS, keyframeName) then
-			reportEvent(keyframeName)
-		end
-	end))
-
-	for _, eventName in ipairs(KEY_EVENTS) do
-		table.insert(connections, track:GetMarkerReachedSignal(eventName):Connect(function()
-			reportEvent(eventName)
-		end))
-	end
-
-	return function()
-		for _, connection in ipairs(connections) do
-			connection:Disconnect()
-		end
-	end
-end
 
 --// Move Flow \\--
 
@@ -111,34 +66,42 @@ local function run()
 
 	local lock = MoveClient.LockMovement(MOVE_NAME, character, humanoid)
 	local aimPosition = MoveClient.GetAimPosition()
-	local reportEvent = createEventReporter(character, root)
 
 	faceAim(root, aimPosition)
 
 	cooldownEnd = os.clock() + Info.Cooldown
 	Client.Library.SetCooldown(character, MOVE_NAME, Info.Cooldown)
-	activeRemote:FireServer(MOVE_NAME, aimPosition)
 
 	local track = MoveClient.LoadTrack(humanoid, MOVE_NAME)
 	local duration = Info.LockDuration
-	local disconnectEvents = nil
+
+	local function reportPhase(eventName: string)
+		phaseRemote:FireServer(MOVE_NAME, eventName)
+	end
 
 	if track then
 		if track.Length > 0 then
 			duration = track.Length
 		end
 
-		disconnectEvents = connectKeyEvents(track, reportEvent)
+		Effect({
+			char = character,
+			root = root,
+			track = track,
+			onEvent = reportPhase,
+		})
+
+		activeRemote:FireServer(MOVE_NAME, aimPosition)
 		MoveClient.StartTrack(track, duration)
+	else
+		activeRemote:FireServer(MOVE_NAME, aimPosition)
 	end
 
 	task.wait(duration)
 
-	if disconnectEvents then
-		disconnectEvents()
-	end
+	Effect({char = character, root = root, phase = "End"})
+	reportPhase("End")
 
-	reportEvent("End")
 	MoveClient.UnlockMovement(MOVE_NAME, humanoid, lock)
 	active = false
 end

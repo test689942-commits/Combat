@@ -198,18 +198,16 @@ return table.freeze({
 		Cooldown = 10;
 		LockDuration = 2.6;
 		PhaseWindow = 4;
+		SlashDamage = 12;
+		SlashStun = 0.8;
 		TickDamage = 4;
 		TickInterval = 0.2;
 		TickStun = 0.45;
-		SlashDamage = 12;
-		SlashStun = 0.8;
-		FinisherDamage = 20;
-		FinisherStun = 1.25;
 		Range = 12;
 		Width = 8;
 		Height = 8;
-		KnockbackForce = 30;
-		KnockbackLift = 10;
+		HitboxSize = Vector3.new(8, 8, 12);
+		HitboxOffset = -6;
 	});
 
 
