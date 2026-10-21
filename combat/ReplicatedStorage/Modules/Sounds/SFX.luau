@@ -198,6 +198,11 @@ return table.freeze({
 			Impact = table.freeze({Pool = "Pools.Hits.Blade"});
 		});
 
+		DaggerDance = table.freeze({
+			Slash = table.freeze({Pool = "Pools.Swings.Light"; PlaybackSpeed = 1.35});
+			Impact = table.freeze({Pool = "Pools.Hits.Blade"});
+		});
+
 
 		Leap = table.freeze({
 			Takeoff = "rbxassetid://1598682218";

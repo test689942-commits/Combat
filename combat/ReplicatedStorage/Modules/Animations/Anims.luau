@@ -398,5 +398,6 @@ return table.freeze({
 		Leap = "rbxassetid://103107472675002";
 		Cut = "rbxassetid://129777736102447";
 		DaggerThrow = "rbxassetid://106448451892609";
+		DaggerDance = "rbxassetid://115648844139917";
 	});
 });

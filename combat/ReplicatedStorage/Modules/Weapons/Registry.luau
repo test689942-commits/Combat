@@ -93,7 +93,7 @@ return table.freeze({
 
 	["Dual KT"] = table.freeze({Category = "DualKatana"; DisplayName = "Dual Katana"; Order = 15; Model = "Dual KT"; Range = 8; Grips = DUAL_BLADE_GRIPS});
 
-	["Steel Dagger"] = table.freeze({Category = "Dagger"; DisplayName = "Steel Dagger"; Order = 16; Model = "Steel Dagger"; Range = 5; Moves = table.freeze({"Cut", "DaggerThrow"})});
+	["Steel Dagger"] = table.freeze({Category = "Dagger"; DisplayName = "Steel Dagger"; Order = 16; Model = "Steel Dagger"; Range = 5; Moves = table.freeze({"Cut", "DaggerThrow", "DaggerDance"})});
 	["Steel Spear"] = table.freeze({Category = "Spear"; DisplayName = "Steel Spear"; Order = 17; Model = "Steel Spear"; Range = 9});
 
 	["Steel Scythe"] = table.freeze({Category = "Scythe"; DisplayName = "Steel Scythe"; Order = 18; Model = "Steel Scythe"; Range = 8.25});
