@@ -443,8 +443,8 @@ function Handler.StartIdle(Character)
 	end
 
 	IdleTrack = loadLocomotionTrack(Animator, weapon, IdleName, Enum.AnimationPriority.Idle, "Idle")
-	WalkTrack = loadLocomotionTrack(Animator, weapon, "Walk", Enum.AnimationPriority.Movement, nil)
-	RunTrack = loadLocomotionTrack(Animator, weapon, "Run", Enum.AnimationPriority.Movement, "Sprint")
+	WalkTrack = loadLocomotionTrack(Animator, weapon, "walk", Enum.AnimationPriority.Movement, "Walk")
+	RunTrack = loadLocomotionTrack(Animator, weapon, "run", Enum.AnimationPriority.Movement, "Run")
 
 	IdleCharacter = Character
 	IdleHumanoid = Humanoid

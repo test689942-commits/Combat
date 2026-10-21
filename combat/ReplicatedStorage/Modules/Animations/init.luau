@@ -41,6 +41,24 @@ local CATEGORY_WEAPON_FALLBACKS = {
 	["Weapons.Scythe"] = "Weapons.Steel Scythe";
 }
 
+local function isValidAnimationId(value: any): boolean
+	if type(value) ~= "string" or value == "" then
+		return false
+	end
+
+	local assetDigits = string.match(value, "^rbxassetid://(%d+)$")
+	if assetDigits then
+		return tonumber(assetDigits) ~= 0
+	end
+
+	local rawDigits = string.match(value, "^(%d+)$")
+	if rawDigits then
+		return tonumber(rawDigits) ~= 0
+	end
+
+	return true
+end
+
 local function buildCache(node, path: string?)
 	for key, value in next, node do
 		local keyName = tostring(key)
@@ -49,7 +67,7 @@ local function buildCache(node, path: string?)
 			local childPath = if path then path .. "." .. keyName else keyName
 
 			buildCache(value, childPath)
-		elseif path and type(value) == "string" and value ~= "" then
+		elseif path and isValidAnimationId(value) then
 			if not self.Cache[path] then
 				self.Cache[path] = {}
 			end
