@@ -34,6 +34,7 @@ return table.freeze({
 		Moves = table.freeze({"Rage", "Leap"});
 		SlashEffects = table.freeze({"M1", "M2", "M3", "M4", "Crit_Slash"});
 		CritSlashEffect = "Crit_Slash";
+		SlashEvents = true;
 	});
 
 	Fists = table.freeze({

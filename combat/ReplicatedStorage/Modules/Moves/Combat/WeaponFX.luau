@@ -31,6 +31,7 @@ local SWING_FADE_TIME = 0.1
 local SLASH_MARKER_CRIT = "Crit Slash"
 local CRIT_SLASH_EFFECT = "Crit_Slash"
 local SLASH_MARKER_PATTERN = "^M(%d+)%s*Slash$"
+local SLASH_LEAD = 0.1
 
 local HIT_UP_LENGTH = 0.77
 local HIT_UP_FADE_TIME = 0.1
@@ -207,6 +208,21 @@ local function playSlashEffect(character: Model, effectName: string, category: s
 	end
 end
 
+local function getSlashMarkerNames(weapon): {string}
+	local names = {}
+	local effects = weapon.SlashEffects
+
+	if effects then
+		for index = 1, #effects do
+			table.insert(names, "M" .. index .. " Slash")
+		end
+	end
+
+	table.insert(names, SLASH_MARKER_CRIT)
+
+	return names
+end
+
 local function clearSlashMarkers(character: Model)
 	local entry = slashMarkers[character]
 
@@ -214,7 +230,10 @@ local function clearSlashMarkers(character: Model)
 		return
 	end
 
-	entry.marker:Disconnect()
+	for _, connection in ipairs(entry.connections) do
+		connection:Disconnect()
+	end
+
 	entry.stopped:Disconnect()
 
 	slashMarkers[character] = nil
@@ -228,19 +247,23 @@ local function bindSlashMarkers(character: Model, track: AnimationTrack?, weapon
 	end
 
 	local entry = {
-		marker = nil,
+		connections = {},
 		stopped = nil,
 	}
 
-	entry.marker = track.MarkerReached:Connect(function(markerName)
-		local effectName = resolveSlashEffect(weapon, markerName)
+	for _, markerName in ipairs(getSlashMarkerNames(weapon)) do
+		local connection = track:GetMarkerReachedSignal(markerName):Connect(function()
+			local effectName = resolveSlashEffect(weapon, markerName)
 
-		if effectName == nil then
-			return
-		end
+			if effectName == nil then
+				return
+			end
 
-		playSlashEffect(character, effectName, weapon.Category)
-	end)
+			playSlashEffect(character, effectName, weapon.Category)
+		end)
+
+		table.insert(entry.connections, connection)
+	end
 
 	entry.stopped = track.Stopped:Connect(function()
 		if slashMarkers[character] == entry then
@@ -249,6 +272,18 @@ local function bindSlashMarkers(character: Model, track: AnimationTrack?, weapon
 	end)
 
 	slashMarkers[character] = entry
+end
+
+local function scheduleSlashEffect(character: Model, weapon, count: number, hit)
+	local effectName = weapon.SlashEffects and weapon.SlashEffects[count]
+
+	if not effectName then
+		return
+	end
+
+	task.delay(math.max(0, hit.ImpactTime - SLASH_LEAD), function()
+		playSlashEffect(character, effectName, weapon.Category)
+	end)
 end
 
 --// Swing \\--
@@ -297,7 +332,11 @@ function WeaponFX.Swing(character: Model, count: number)
 		runSwingWindow(character, hit.TrailStart, hit.TrailEnd)
 	end
 
-	bindSlashMarkers(character, track, weapon)
+	if weapon.SlashEvents then
+		bindSlashMarkers(character, track, weapon)
+	else
+		scheduleSlashEffect(character, weapon, count, hit)
+	end
 
 	return hit
 end
