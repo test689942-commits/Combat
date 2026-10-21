@@ -7,13 +7,13 @@ return table.freeze({
 		Roll = "rbxassetid://114963664648176";
 	});
 
-	Combat = table.freeze({
+	Shared = table.freeze({
 		Punch = table.freeze({
-			Combat1 = "rbxassetid://131985175663129";
-			Combat2 = "rbxassetid://121603729341695";
-			Combat3 = "rbxassetid://98116898772008";
-			Combat4 = "rbxassetid://140218265622686";
-			Combat5 = "rbxassetid://90828170591239";
+			Punch1 = "rbxassetid://131985175663129";
+			Punch2 = "rbxassetid://121603729341695";
+			Punch3 = "rbxassetid://98116898772008";
+			Punch4 = "rbxassetid://140218265622686";
+			Punch5 = "rbxassetid://90828170591239";
 			JumpUp = "rbxassetid://126284167208855";
 		});
 
@@ -43,7 +43,7 @@ return table.freeze({
 		});
 
 		Idle = table.freeze({
-			Combat = "rbxassetid://11361002294";
+			Default = "rbxassetid://11361002294";
 		});
 
 		DownSlam = table.freeze({

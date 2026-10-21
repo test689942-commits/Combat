@@ -218,7 +218,7 @@ function Main.Animation(Animation,Hum,PlaybackSpeed,AnimPriority)
 end
 
 function Main.CombatAnimation(GroupName,AnimationName,Hum,PlaybackSpeed,AnimPriority)
-	Main.Animation(AnimationsModule.GetAnimation("Combat." .. GroupName,AnimationName),Hum,PlaybackSpeed,AnimPriority)
+	Main.Animation(AnimationsModule.GetAnimation("Shared." .. GroupName,AnimationName),Hum,PlaybackSpeed,AnimPriority)
 end
 
 function Main.Sound(SoundObject,Properties,DebrisTime)

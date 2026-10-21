@@ -623,7 +623,7 @@ function WeaponFX.PlayHitUp(character: Model): number
 		return HIT_UP_LENGTH
 	end
 
-	local animation = AnimationsModule.GetAnimation("Combat.Weapon", "HitUp")
+	local animation = AnimationsModule.GetAnimation("Shared.Weapon", "HitUp")
 
 	if animation then
 		local animator = humanoid:FindFirstChildOfClass("Animator") or humanoid

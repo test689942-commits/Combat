@@ -326,7 +326,7 @@ function Combat.UpDown(Character,Count,MaxCount,SkipSwing)
 		--// Variables
 		local Humrp = Character:FindFirstChild("HumanoidRootPart")
 		local Hum = Character:FindFirstChild("Humanoid")
-		local DownSlamIndex = AnimationsModule.PickRandomIndex("Combat.DownSlam")
+		local DownSlamIndex = AnimationsModule.PickRandomIndex("Shared.DownSlam")
 		if SkipSwing ~= true then
 			ClientRemote:FireAllClients(Character,"Client_Framework","DownSwing",Character,DownSlamIndex)
 		end

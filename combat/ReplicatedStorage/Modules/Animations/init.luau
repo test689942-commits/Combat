@@ -50,10 +50,38 @@ local function buildCache(node, path: string?)
 	end
 end
 
+local function normalizePath(root: string?, sub: string?): (string?, string?)
+	if type(root) ~= "string" then
+		return root, sub
+	end
+
+	local normalizedRoot = root
+	if normalizedRoot == "Combat" then
+		normalizedRoot = "Shared"
+	elseif string.sub(normalizedRoot, 1, 7) == "Combat." then
+		normalizedRoot = "Shared." .. string.sub(normalizedRoot, 8)
+	end
+
+	local normalizedSub = sub
+	if type(normalizedSub) == "string" then
+		if normalizedRoot == "Shared.Punch" then
+			local index = string.match(normalizedSub, "^Combat(%d+)$")
+			if index then
+				normalizedSub = "Punch" .. index
+			end
+		elseif normalizedRoot == "Shared.Idle" and normalizedSub == "Combat" then
+			normalizedSub = "Default"
+		end
+	end
+
+	return normalizedRoot, normalizedSub
+end
+
 local function resolveNode(root: string)
+	local normalizedRoot = normalizePath(root, nil)
 	local node = AnimData
 
-	for _, key in ipairs(string.split(root, ".")) do
+	for _, key in ipairs(string.split(normalizedRoot :: string, ".")) do
 		if type(node) ~= "table" then
 			return nil
 		end
@@ -135,8 +163,10 @@ Animations.GetAnimation = function(Root: string, Sub: string): (Animation | nil)
 		return nil
 	end
 
-	if self.Cache[Root] and self.Cache[Root][Sub] then
-		return self.Cache[Root][Sub]:Clone()
+	local normalizedRoot, normalizedSub = normalizePath(Root, Sub)
+
+	if self.Cache[normalizedRoot] and self.Cache[normalizedRoot][normalizedSub] then
+		return self.Cache[normalizedRoot][normalizedSub]:Clone()
 	else
 		warn(("Tried To Index Nil Root And Sub : %s | %s"):format(Root, Sub))
 		return nil
@@ -148,8 +178,10 @@ Animations.GetAnimationId = function(Root: string, Sub: string): (string | nil)
 		return nil
 	end
 
-	if self.Cache[Root] and self.Cache[Root][Sub] then
-		return self.Cache[Root][Sub].AnimationId
+	local normalizedRoot, normalizedSub = normalizePath(Root, Sub)
+
+	if self.Cache[normalizedRoot] and self.Cache[normalizedRoot][normalizedSub] then
+		return self.Cache[normalizedRoot][normalizedSub].AnimationId
 	else
 		warn(("Tried To Index Nil Root And Sub : %s | %s"):format(Root, Sub))
 		return nil
@@ -161,8 +193,10 @@ Animations.GetAnimationTree = function(Root: string): ({[string]: Animation} | n
 		return nil
 	end
 
-	if self.Cache[Root] then
-		return self.Cache[Root]
+	local normalizedRoot = normalizePath(Root, nil)
+
+	if self.Cache[normalizedRoot] then
+		return self.Cache[normalizedRoot]
 	else
 		warn(("Tried To Index Nil Root : %s"):format(Root))
 		return nil
@@ -211,11 +245,13 @@ Animations.DetectAnimation = function(Sub: string)
 end
 
 Animations.DetectSpecificAnimation = function(Root: string, Sub: string)
-	if not Root or not self.Cache[Root] then
+	local normalizedRoot, normalizedSub = normalizePath(Root, Sub)
+
+	if not normalizedRoot or not self.Cache[normalizedRoot] then
 		return
 	end
 
-	if self.Cache[Root][Sub] then
+	if self.Cache[normalizedRoot][normalizedSub] then
 		return true
 	end
 

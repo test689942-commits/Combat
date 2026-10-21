@@ -70,18 +70,18 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 		if Type == "Punch" then
 			CharEff(Character,nil)
 			local hit = WeaponFX.HitEffects(Character, Char2, Count)
-			MainHandler.Animation(AnimationsModule.GetAnimation("Combat.Stun","Hit"..Count),Hum)
+			MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Stun","Hit"..Count),Hum)
 			WeaponFX.OnImpact(Char2, Character, hit)
 
 		elseif Type == "Block Break" then
 			
-			MainHandler.Animation(AnimationsModule.GetAnimation("Combat.Block","BlockBreak"),Hum)
+			MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Block","BlockBreak"),Hum)
 			_G.EffectEmitter(EffFold["Block Break"]:WaitForChild("Break"),{Parent = Humrp,Debris = 1.5})
 			PlayCombatSound("Combat.Punch", "Block Break", Humrp, 2.5)
 			
 		elseif Type == "BlockHit" then
 			
-			MainHandler.Animation(AnimationsModule.GetAnimation("Combat.Block","BlockHit"),Hum)
+			MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Block","BlockHit"),Hum)
 			_G.EffectEmitter(EffFold.Block:WaitForChild("Blocking"),{Parent = Humrp,Debris = 1.5})
 			PlayCombatSound("Combat.Punch", "Block hit", Humrp, 1.5)
 			
@@ -89,7 +89,7 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 			
 			if Character ~= nil and Character:FindFirstChild("Humanoid") ~= nil and Character.Humanoid.Health > 1 then
 				MainHandler.StopAnimation("Combat"..Count,Character.Humanoid)
-				MainHandler.Animation(AnimationsModule.GetAnimation("Combat.Block","BlockBreak"),Character.Humanoid)
+				MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Block","BlockBreak"),Character.Humanoid)
 			end
 			_G.EffectEmitter(EffFold["Perfect Block"]:WaitForChild("Attachment"),{Parent = Humrp,Debris = 1.5})
 			PlayCombatSound("Combat.Punch", "Perfect Block", Humrp, 1.5)
@@ -98,12 +98,12 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 
 			if Character.Humanoid.Health > 1 then
 				MainHandler.StopAnimation("Combat"..Count,Hum)
-				MainHandler.Animation(AnimationsModule.GetAnimation("Combat.Parry","Parried"),Hum)
+				MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Parry","Parried"),Hum)
 			end
 
 			if Char2 ~= nil and Char2:FindFirstChild("Humanoid") ~= nil and Char2:FindFirstChild("HumanoidRootPart") ~= nil then
 				MainHandler.StopAnimation("Blocking",Char2.Humanoid)
-				MainHandler.Animation(AnimationsModule.GetAnimation("Combat.Parry","Parry"),Char2.Humanoid)
+				MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Parry","Parry"),Char2.Humanoid)
 				_G.EffectEmitter(EffFold.Parry:WaitForChild("ATM"),{Parent = Char2.HumanoidRootPart,Debris = 1.5})
 			end
 
@@ -117,7 +117,7 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 			--// Sound //--
 			PlayCombatSound("Combat.Punch", "Punch" .. Count, Humrp, 1.5)
 			--// ANIMATION //--
-			MainHandler.Animation(AnimationsModule.GetAnimation("Combat.Stun","Hit3"),Hum)
+			MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Stun","Hit3"),Hum)
 			
 		elseif Type == "UpFX" then
 			
@@ -205,7 +205,7 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 			--// Sound //--
 			PlayCombatSound("Combat", "Slam", Humrp, 3)
 			--// ANIMATION //--
-			MainHandler.Animation(AnimationsModule.GetAnimation("Combat.Stun","SlamStun"),Hum)
+			MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Stun","SlamStun"),Hum)
 			
 			local Slam = game.ReplicatedStorage.Assets.Effects.Combat:FindFirstChild("Slam"):Clone()
 			Slam.Parent = workspace.Effects
@@ -304,7 +304,7 @@ function Main.UpSwing(Character)
 
 		MainHandler.CreateTing("BoolValue",{Parent = Character, Name = "DoingCombat"},.6)
 		PlayCombatSound("Combat.Punch", "Swing", Humrp)
-		MainHandler.Animation(AnimationsModule.GetAnimation("Combat.Punch","Combat3"),Hum,nil,Enum.AnimationPriority.Action4)
+		MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Punch","Punch3"),Hum,nil,Enum.AnimationPriority.Action4)
 	
 	end
 end
@@ -316,7 +316,7 @@ function Main.DownSwing(Character,DownSlamIndex)
 		local Hum = Character:FindFirstChild("Humanoid")
 		MainHandler.CreateTing("BoolValue",{Parent = Character, Name = "DoingCombat"},.6)
 		PlayCombatSound("Combat.Punch", "Swing", Humrp)
-		MainHandler.Animation(AnimationsModule.GetIndexedAnimation("Combat.DownSlam",DownSlamIndex),Hum,nil,Enum.AnimationPriority.Action4)
+		MainHandler.Animation(AnimationsModule.GetIndexedAnimation("Shared.DownSlam",DownSlamIndex),Hum,nil,Enum.AnimationPriority.Action4)
 
 	end
 end
