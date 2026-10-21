@@ -25,8 +25,12 @@ local slashFolder = effectsFolder:WaitForChild("Slashes")
 local EQUIPPED_NAME = "EquippedWeapon"
 local SOUND_LIFETIME = 4
 local SWING_FADE_TIME = 0.1
-local SLASH_LEAD = 0.1
-local SLASH_FACING_YAW = 180
+
+--// Slash Key Events \\--
+
+local SLASH_MARKER_CRIT = "Crit Slash"
+local CRIT_SLASH_EFFECT = "Crit_Slash"
+local SLASH_MARKER_PATTERN = "^M(%d+)%s*Slash$"
 
 local HIT_UP_LENGTH = 0.77
 local HIT_UP_FADE_TIME = 0.1
@@ -35,6 +39,7 @@ local HIT_UP_TRAIL_START = 0.22
 local HIT_UP_TRAIL_END = 0.72
 
 local swingTracks = setmetatable({}, {__mode = "k"})
+local slashMarkers = setmetatable({}, {__mode = "k"})
 local baseSpeeds = setmetatable({}, {__mode = "k"})
 local trailTokens = setmetatable({}, {__mode = "k"})
 
@@ -142,8 +147,39 @@ local function getSlashTemplate(effectName: string, category: string?): BasePart
 		template = slashFolder:FindFirstChild(effectName, true)
 	end
 
+	if not template then
+		template = effectsFolder:FindFirstChild(effectName, true)
+	end
+
 	if template and template:IsA("BasePart") then
 		return template
+	end
+
+	return nil
+end
+
+local function resolveSlashEffect(weapon, markerName: string): string?
+	local index = markerName:match(SLASH_MARKER_PATTERN)
+
+	if index then
+		local effects = weapon.SlashEffects
+		local effectName = effects and effects[tonumber(index)]
+
+		return effectName or ("M" .. index)
+	end
+
+	if markerName == SLASH_MARKER_CRIT then
+		if weapon.CritSlashEffect then
+			return weapon.CritSlashEffect
+		end
+
+		local effects = weapon.SlashEffects
+
+		if effects and #effects > 0 then
+			return effects[#effects]
+		end
+
+		return CRIT_SLASH_EFFECT
 	end
 
 	return nil
@@ -158,14 +194,12 @@ local function playSlashEffect(character: Model, effectName: string, category: s
 	end
 
 	local EmitModule = require(Modules:WaitForChild("EffectsBase")).EmitModule
-	local facingYaw = math.rad(template:GetAttribute("FacingYaw") or SLASH_FACING_YAW)
 	local templateRotation = template.CFrame - template.CFrame.Position
-	local slashFrame = CFrame.Angles(0, facingYaw, 0) * templateRotation
 
 	for _, attachment in template:GetChildren() do
 		if attachment:IsA("Attachment") then
 			local slashAttachment = attachment:Clone()
-			slashAttachment.CFrame = slashFrame * attachment.CFrame
+			slashAttachment.CFrame = templateRotation * attachment.CFrame
 			slashAttachment.Parent = root
 
 			EmitModule.EmitAndRemove(slashAttachment, nil, {dontClone = true, noAutoSmoke = true})
@@ -173,16 +207,48 @@ local function playSlashEffect(character: Model, effectName: string, category: s
 	end
 end
 
-local function scheduleSlashEffect(character: Model, weapon, count: number, hit)
-	local effectName = weapon.SlashEffects and weapon.SlashEffects[count]
+local function clearSlashMarkers(character: Model)
+	local entry = slashMarkers[character]
 
-	if not effectName then
+	if not entry then
 		return
 	end
 
-	task.delay(math.max(0, hit.ImpactTime - SLASH_LEAD), function()
+	entry.marker:Disconnect()
+	entry.stopped:Disconnect()
+
+	slashMarkers[character] = nil
+end
+
+local function bindSlashMarkers(character: Model, track: AnimationTrack?, weapon)
+	clearSlashMarkers(character)
+
+	if not track or not weapon.SlashEffects then
+		return
+	end
+
+	local entry = {
+		marker = nil,
+		stopped = nil,
+	}
+
+	entry.marker = track.MarkerReached:Connect(function(markerName)
+		local effectName = resolveSlashEffect(weapon, markerName)
+
+		if effectName == nil then
+			return
+		end
+
 		playSlashEffect(character, effectName, weapon.Category)
 	end)
+
+	entry.stopped = track.Stopped:Connect(function()
+		if slashMarkers[character] == entry then
+			clearSlashMarkers(character)
+		end
+	end)
+
+	slashMarkers[character] = entry
 end
 
 --// Swing \\--
@@ -231,7 +297,7 @@ function WeaponFX.Swing(character: Model, count: number)
 		runSwingWindow(character, hit.TrailStart, hit.TrailEnd)
 	end
 
-	scheduleSlashEffect(character, weapon, count, hit)
+	bindSlashMarkers(character, track, weapon)
 
 	return hit
 end

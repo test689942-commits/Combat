@@ -32,7 +32,8 @@ return table.freeze({
 		RageStats = table.freeze({Attribute = "Rage"; DamageMultiplier = 1.5; SpeedMultiplier = 1.25});
 		RageIdleAnimation = "DSIdle";
 		Moves = table.freeze({"Rage", "Leap"});
-		SlashEffects = table.freeze({"M1", "M2", "M3", "M4", "Crit_Atk"});
+		SlashEffects = table.freeze({"M1", "M2", "M3", "M4", "Crit_Slash"});
+		CritSlashEffect = "Crit_Slash";
 	});
 
 	Fists = table.freeze({
