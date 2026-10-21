@@ -29,6 +29,18 @@ local function createAnimation(name: string, id: string): Animation
 	return animation
 end
 
+local seenIds = {}
+
+local CATEGORY_WEAPON_FALLBACKS = {
+	["Weapons.Greatsword"] = "Weapons.GreatSword";
+	["Weapons.Longsword"] = "Weapons.LongSword";
+	["Weapons.Katana"] = "Weapons.Steel Katana";
+	["Weapons.DualKatana"] = "Weapons.Dual KT";
+	["Weapons.Dagger"] = "Weapons.Steel Dagger";
+	["Weapons.Spear"] = "Weapons.Steel Spear";
+	["Weapons.Scythe"] = "Weapons.Steel Scythe";
+}
+
 local function buildCache(node, path: string?)
 	for key, value in next, node do
 		local keyName = tostring(key)
@@ -45,7 +57,11 @@ local function buildCache(node, path: string?)
 			local animation = createAnimation(keyName, value)
 
 			self.Cache[path][keyName] = animation
-			self.Temp[#self.Temp + 1] = animation
+
+			if not seenIds[value] then
+				seenIds[value] = true
+				self.Temp[#self.Temp + 1] = animation
+			end
 		end
 	end
 end
@@ -60,6 +76,8 @@ local function normalizePath(root: string?, sub: string?): (string?, string?)
 		normalizedRoot = "Shared"
 	elseif string.sub(normalizedRoot, 1, 7) == "Combat." then
 		normalizedRoot = "Shared." .. string.sub(normalizedRoot, 8)
+	elseif not self.Cache[normalizedRoot] and CATEGORY_WEAPON_FALLBACKS[normalizedRoot] then
+		normalizedRoot = CATEGORY_WEAPON_FALLBACKS[normalizedRoot]
 	end
 
 	local normalizedSub = sub

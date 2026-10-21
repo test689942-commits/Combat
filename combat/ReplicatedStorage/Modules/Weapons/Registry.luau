@@ -28,7 +28,6 @@ return table.freeze({
 		GripC0 = CFrame.new(-0.230697632, -1.13454056, 0.00231933594);
 		GripC1 = CFrame.new();
 		Hitbox = table.freeze({Offset = 5; Size = Vector3.new(10, 6, 10)});
-		NoLunge = true;
 		RageStats = table.freeze({Attribute = "Rage"; DamageMultiplier = 1.5; SpeedMultiplier = 1.25});
 		RageIdleAnimation = "DSIdle";
 		Moves = table.freeze({"Rage", "Leap"});

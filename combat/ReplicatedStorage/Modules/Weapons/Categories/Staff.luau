@@ -33,7 +33,6 @@ local combo = table.freeze({
 		Impact = 0.47; Length = 0.6; Speed = 1.1; Damage = 9; Stun = 0.5; Recovery = 0.12;
 		SwingSounds = SWING_SOUNDS; HitSounds = HIT_SOUNDS; HitEffect = "Hit";
 		Knockback = LIGHT_KNOCKBACK;
-		Lunge = table.freeze({Force = 16; Duration = 0.2; Lead = 0.25});
 		Shake = table.freeze({Attacker = 0.2; Victim = 0.26; Duration = 0.18});
 		HitStop = 0.06;
 	});
@@ -41,7 +40,6 @@ local combo = table.freeze({
 		Impact = 0.47; Length = 0.63; Speed = 1.1; Damage = 10; Stun = 0.5; Recovery = 0.12;
 		SwingSounds = SWING_SOUNDS; HitSounds = HIT_SOUNDS; HitEffect = "Hit";
 		Knockback = LIGHT_KNOCKBACK;
-		Lunge = table.freeze({Force = 16; Duration = 0.2; Lead = 0.25});
 		Shake = table.freeze({Attacker = 0.22; Victim = 0.28; Duration = 0.18});
 		HitStop = 0.06;
 	});
@@ -49,7 +47,6 @@ local combo = table.freeze({
 		Impact = 0.5; Length = 0.58; Speed = 1.1; Damage = 11; Stun = 0.55; Recovery = 0.12;
 		SwingSounds = SWING_SOUNDS; HitSounds = HIT_SOUNDS; HitEffect = "Hit";
 		Knockback = LIGHT_KNOCKBACK;
-		Lunge = table.freeze({Force = 18; Duration = 0.2; Lead = 0.28});
 		Shake = table.freeze({Attacker = 0.25; Victim = 0.3; Duration = 0.2});
 		HitStop = 0.07;
 	});
@@ -57,7 +54,6 @@ local combo = table.freeze({
 		Impact = 0.5; Length = 0.6; Speed = 1.1; Damage = 12; Stun = 0.6; Recovery = 0.15;
 		SwingSounds = SWING_SOUNDS; HitSounds = HIT_SOUNDS; HitEffect = "Hit";
 		Knockback = LIGHT_KNOCKBACK;
-		Lunge = table.freeze({Force = 18; Duration = 0.2; Lead = 0.28});
 		Shake = table.freeze({Attacker = 0.28; Victim = 0.34; Duration = 0.2});
 		HitStop = 0.07;
 	});
@@ -65,7 +61,6 @@ local combo = table.freeze({
 		Impact = 0.45; Length = 0.68; Speed = 1; Damage = 22; Stun = 1.2; Recovery = 0.6;
 		SwingSounds = SWING_SOUNDS; HitSounds = HIT_SOUNDS; HitEffect = "Finisher";
 		Knockback = FINISHER_KNOCKBACK;
-		Lunge = table.freeze({Force = 28; Duration = 0.24; Lead = 0.3});
 		Shake = table.freeze({Attacker = 0.9; Victim = 1.1; Duration = 0.38});
 		HitStop = 0.12;
 		FovKick = 6;

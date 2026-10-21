@@ -319,9 +319,11 @@ function Handler.StartIdle(Character)
 		return
 	end
 
-	local IdlePath = "Weapons." .. Weapons.GetCategory(Character)
+	local weapon = Weapons.GetForCharacter(Character)
+	local IdlePath = "Weapons." .. weapon.Name
+	local CategoryIdlePath = "Weapons." .. weapon.Category
 	local IdleName = "Idle"
-	local RageIdleName = Weapons.GetForCharacter(Character).RageIdleAnimation
+	local RageIdleName = weapon.RageIdleAnimation
 
 	if RageIdleName ~= nil and Character:GetAttribute("Rage") == true then
 		IdleName = RageIdleName
@@ -330,6 +332,8 @@ function Handler.StartIdle(Character)
 
 	if AnimationsModule.DetectSpecificAnimation(IdlePath, IdleName) then
 		IdleAnimation = AnimationsModule.GetAnimation(IdlePath, IdleName)
+	elseif AnimationsModule.DetectSpecificAnimation(CategoryIdlePath, IdleName) then
+		IdleAnimation = AnimationsModule.GetAnimation(CategoryIdlePath, IdleName)
 	end
 
 	if IdleAnimation ~= nil then

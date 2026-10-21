@@ -36,7 +36,6 @@ function Combo.CreateBuilder(settings)
 			HitEffect = data.HitEffect;
 			CritEffect = data.CritEffect;
 			Knockback = data.Knockback;
-			Lunge = data.Lunge;
 			WalkSpeed = settings.WalkSpeed;
 			Shake = data.Shake;
 			HitStop = data.HitStop;

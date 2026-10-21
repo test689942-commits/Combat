@@ -35,7 +35,6 @@ local combo = table.freeze({
 		Impact = 0.22; Length = 0.53; Speed = 1; Damage = 6; Stun = 0.4; Recovery = 0.08;
 		SwingSounds = SWING_SOUNDS; HitSounds = HIT_SOUNDS; HitEffect = "Hit";
 		Knockback = LIGHT_KNOCKBACK;
-		Lunge = table.freeze({Force = 14; Duration = 0.16; Lead = 0.176});
 		Shake = table.freeze({Attacker = 0.15; Victim = 0.2; Duration = 0.14});
 		HitStop = 0.04;
 	});
@@ -43,7 +42,6 @@ local combo = table.freeze({
 		Impact = 0.2; Length = 0.53; Speed = 1; Damage = 7; Stun = 0.4; Recovery = 0.08;
 		SwingSounds = SWING_SOUNDS; HitSounds = HIT_SOUNDS; HitEffect = "Hit";
 		Knockback = LIGHT_KNOCKBACK;
-		Lunge = table.freeze({Force = 14; Duration = 0.16; Lead = 0.16});
 		Shake = table.freeze({Attacker = 0.15; Victim = 0.2; Duration = 0.14});
 		HitStop = 0.04;
 	});
@@ -51,7 +49,6 @@ local combo = table.freeze({
 		Impact = 0.18; Length = 0.53; Speed = 1; Damage = 8; Stun = 0.45; Recovery = 0.1;
 		SwingSounds = SWING_SOUNDS; HitSounds = HIT_SOUNDS; HitEffect = "Hit";
 		Knockback = LIGHT_KNOCKBACK;
-		Lunge = table.freeze({Force = 16; Duration = 0.16; Lead = 0.144});
 		Shake = table.freeze({Attacker = 0.18; Victim = 0.24; Duration = 0.15});
 		HitStop = 0.05;
 	});
@@ -59,7 +56,6 @@ local combo = table.freeze({
 		Impact = 0.32; Length = 0.58; Speed = 1; Damage = 16; Stun = 1; Recovery = 0.45;
 		SwingSounds = SWING_SOUNDS; HitSounds = HIT_SOUNDS; HitEffect = "Finisher";
 		Knockback = FINISHER_KNOCKBACK;
-		Lunge = table.freeze({Force = 24; Duration = 0.2; Lead = 0.22});
 		Shake = table.freeze({Attacker = 0.7; Victim = 0.9; Duration = 0.3});
 		HitStop = 0.1;
 		FovKick = 5;

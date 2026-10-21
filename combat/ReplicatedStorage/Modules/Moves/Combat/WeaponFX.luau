@@ -90,8 +90,25 @@ local function hasWeaponSound(category: string, soundName: string): boolean
 	return weaponSounds ~= nil and weaponSounds[soundName] ~= nil
 end
 
-local function loadTrack(humanoid: Humanoid, category: string, animationName: string): AnimationTrack?
-	local animation = AnimationsModule.GetAnimation("Weapons." .. category, animationName)
+local function resolveWeaponAnimationRoot(weapon, animationName: string): string?
+	local weaponRoot = "Weapons." .. weapon.Name
+
+	if AnimationsModule.DetectSpecificAnimation(weaponRoot, animationName) then
+		return weaponRoot
+	end
+
+	local categoryRoot = "Weapons." .. weapon.Category
+
+	if AnimationsModule.DetectSpecificAnimation(categoryRoot, animationName) then
+		return categoryRoot
+	end
+
+	return nil
+end
+
+local function loadTrack(humanoid: Humanoid, weapon, animationName: string): AnimationTrack?
+	local root = resolveWeaponAnimationRoot(weapon, animationName)
+	local animation = root and AnimationsModule.GetAnimation(root, animationName)
 
 	if not animation then
 		return nil
@@ -298,7 +315,7 @@ function WeaponFX.Swing(character: Model, count: number)
 		return hit
 	end
 
-	local track = loadTrack(humanoid, category, "Combat" .. count)
+	local track = loadTrack(humanoid, weapon, "Combat" .. count)
 
 	if track then
 		track.Looped = false
@@ -343,21 +360,6 @@ end
 
 --// Owner Swing Movement \\--
 
-local function applyLunge(character: Model, lunge)
-	local _, root = getCharacterParts(character)
-
-	if not root or character:FindFirstChild("Stun") then
-		return
-	end
-
-	local velocity = Instance.new("BodyVelocity")
-	velocity.MaxForce = Vector3.new(4e4, 0, 4e4)
-	velocity.Velocity = root.CFrame.LookVector * Vector3.new(1, 0, 1) * lunge.Force
-	velocity.Parent = root
-
-	DebrisService:AddItem(velocity, lunge.Duration)
-end
-
 function WeaponFX.ClearSwing(humanoid: Humanoid?)
 	walkSlowToken += 1
 
@@ -394,12 +396,6 @@ function WeaponFX.ClientSwing(character: Model, hit)
 
 	if hit.WalkSpeed then
 		slowWalk(humanoid, hit.WalkSpeed, hit.ActionTime)
-	end
-
-	if hit.Lunge and not Weapons.GetForCharacter(character).NoLunge then
-		task.delay(math.max(0, hit.ImpactTime - hit.Lunge.Lead), function()
-			applyLunge(character, hit.Lunge)
-		end)
 	end
 end
 
@@ -573,7 +569,8 @@ end
 --// Equip / Block \\--
 
 function WeaponFX.PlayEquip(character: Model, playAnimation: boolean?): AnimationTrack?
-	local category = Weapons.GetCategory(character)
+	local weapon = Weapons.GetForCharacter(character)
+	local category = weapon.Category
 	local humanoid, root = getCharacterParts(character)
 	local equipTrack = nil
 
@@ -581,8 +578,8 @@ function WeaponFX.PlayEquip(character: Model, playAnimation: boolean?): Animatio
 		return nil
 	end
 
-	if playAnimation ~= false and AnimationsModule.DetectSpecificAnimation("Weapons." .. category, "Equip") then
-		equipTrack = loadTrack(humanoid, category, "Equip")
+	if playAnimation ~= false then
+		equipTrack = loadTrack(humanoid, weapon, "Equip")
 
 		if equipTrack then
 			equipTrack.Looped = false
@@ -604,7 +601,7 @@ function WeaponFX.PlayBlockAnimation(character: Model)
 		return
 	end
 
-	local track = loadTrack(humanoid, Weapons.GetCategory(character), "Blocking")
+	local track = loadTrack(humanoid, Weapons.GetForCharacter(character), "Blocking")
 
 	if track then
 		track.Looped = true
