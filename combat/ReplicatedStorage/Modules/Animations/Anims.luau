@@ -5,6 +5,9 @@ return table.freeze({
 		Left = "rbxassetid://76238009484167";
 		Right = "rbxassetid://115445652062764";
 		Roll = "rbxassetid://114963664648176";
+		Idle = "";
+		Walk = "";
+		Run = "";
 	});
 
 	Shared = table.freeze({
@@ -67,6 +70,8 @@ return table.freeze({
 			Combat5 = "rbxassetid://98746439901076";
 			Idle = "rbxassetid://99524115688566";
 			DSIdle = "rbxassetid://90519168297065";
+			Walk = "";
+			Run = "";
 			Equip = "rbxassetid://98629484644888";
 			Blocking = "rbxassetid://83625987534708";
 		});
@@ -78,6 +83,8 @@ return table.freeze({
 			Combat4 = "rbxassetid://123311420326858";
 			Combat5 = "rbxassetid://98746439901076";
 			Idle = "rbxassetid://99524115688566";
+			Walk = "";
+			Run = "";
 			Equip = "rbxassetid://98629484644888";
 			Blocking = "rbxassetid://83625987534708";
 		});
@@ -89,6 +96,8 @@ return table.freeze({
 			Combat4 = "rbxassetid://123311420326858";
 			Combat5 = "rbxassetid://98746439901076";
 			Idle = "rbxassetid://99524115688566";
+			Walk = "";
+			Run = "";
 			Equip = "rbxassetid://98629484644888";
 			Blocking = "rbxassetid://83625987534708";
 		});
@@ -103,6 +112,8 @@ return table.freeze({
 			Combat5 = "rbxassetid://129033506735142";
 			Critical = "rbxassetid://79689855601446";
 			Idle = "rbxassetid://94310549255164";
+			Walk = "";
+			Run = "";
 			Equip = "rbxassetid://84342583369737";
 			Blocking = "rbxassetid://83625987534708";
 		});
@@ -115,6 +126,8 @@ return table.freeze({
 			Combat5 = "rbxassetid://129033506735142";
 			Critical = "rbxassetid://79689855601446";
 			Idle = "rbxassetid://94310549255164";
+			Walk = "";
+			Run = "";
 			Equip = "rbxassetid://84342583369737";
 			Blocking = "rbxassetid://83625987534708";
 		});
@@ -127,6 +140,8 @@ return table.freeze({
 			Combat5 = "rbxassetid://129033506735142";
 			Critical = "rbxassetid://79689855601446";
 			Idle = "rbxassetid://94310549255164";
+			Walk = "";
+			Run = "";
 			Equip = "rbxassetid://84342583369737";
 			Blocking = "rbxassetid://83625987534708";
 		});
@@ -139,6 +154,8 @@ return table.freeze({
 			Combat5 = "rbxassetid://129033506735142";
 			Critical = "rbxassetid://79689855601446";
 			Idle = "rbxassetid://94310549255164";
+			Walk = "";
+			Run = "";
 			Equip = "rbxassetid://84342583369737";
 			Blocking = "rbxassetid://83625987534708";
 		});
@@ -151,6 +168,8 @@ return table.freeze({
 			Combat5 = "rbxassetid://129033506735142";
 			Critical = "rbxassetid://79689855601446";
 			Idle = "rbxassetid://94310549255164";
+			Walk = "";
+			Run = "";
 			Equip = "rbxassetid://84342583369737";
 			Blocking = "rbxassetid://83625987534708";
 		});
@@ -163,6 +182,8 @@ return table.freeze({
 			Combat5 = "rbxassetid://129033506735142";
 			Critical = "rbxassetid://79689855601446";
 			Idle = "rbxassetid://94310549255164";
+			Walk = "";
+			Run = "";
 			Equip = "rbxassetid://84342583369737";
 			Blocking = "rbxassetid://83625987534708";
 		});
@@ -177,6 +198,8 @@ return table.freeze({
 			Combat5 = "rbxassetid://97376090252044";
 			Critical = "rbxassetid://102572344601898";
 			Idle = "rbxassetid://119186601575951";
+			Walk = "";
+			Run = "";
 			Equip = "rbxassetid://81750054746559";
 			Blocking = "rbxassetid://89104028125350";
 		});
@@ -190,8 +213,10 @@ return table.freeze({
 			Combat4 = "rbxassetid://82245759195431";
 			Combat5 = "rbxassetid://93194714579925";
 			Critical = "rbxassetid://90750579597199";
-			Sprint = "rbxassetid://134059625100812";
 			Idle = "rbxassetid://129537870849720";
+			Walk = "";
+			Run = "rbxassetid://134059625100812";
+			Sprint = "rbxassetid://134059625100812";
 			Equip = "rbxassetid://98629484644888";
 			Blocking = "rbxassetid://83625987534708";
 		});
@@ -203,6 +228,9 @@ return table.freeze({
 			Combat2 = "rbxassetid://134829246696146";
 			Combat3 = "rbxassetid://113484150880019";
 			Combat4 = "rbxassetid://133697597189292";
+			Idle = "rbxassetid://94310549255164";
+			Walk = "";
+			Run = "";
 			Blocking = "rbxassetid://130271994451347";
 		});
 
@@ -211,6 +239,9 @@ return table.freeze({
 			Combat2 = "rbxassetid://134829246696146";
 			Combat3 = "rbxassetid://113484150880019";
 			Combat4 = "rbxassetid://133697597189292";
+			Idle = "rbxassetid://94310549255164";
+			Walk = "";
+			Run = "";
 			Blocking = "rbxassetid://130271994451347";
 		});
 
@@ -222,6 +253,9 @@ return table.freeze({
 			Combat3 = "rbxassetid://78870204061895";
 			Combat4 = "rbxassetid://77265847375944";
 			Combat5 = "rbxassetid://128318354782081";
+			Idle = "rbxassetid://94310549255164";
+			Walk = "";
+			Run = "";
 			Blocking = "rbxassetid://128060776570277";
 		});
 
@@ -232,6 +266,9 @@ return table.freeze({
 			Combat2 = "rbxassetid://123426163215595";
 			Combat3 = "rbxassetid://107778983236386";
 			Combat4 = "rbxassetid://109851281341214";
+			Idle = "rbxassetid://11361002294";
+			Walk = "";
+			Run = "";
 			Blocking = "rbxassetid://130271994451347";
 		});
 
@@ -242,6 +279,9 @@ return table.freeze({
 			Combat2 = "rbxassetid://114146575363599";
 			Combat3 = "rbxassetid://134826435698505";
 			Combat4 = "rbxassetid://100741713827688";
+			Idle = "rbxassetid://119186601575951";
+			Walk = "";
+			Run = "";
 			Blocking = "rbxassetid://129305693033685";
 		});
 
@@ -252,6 +292,9 @@ return table.freeze({
 			Combat2 = "rbxassetid://78529367124708";
 			Combat3 = "rbxassetid://115900848366455";
 			Combat4 = "rbxassetid://77314274708168";
+			Idle = "rbxassetid://129537870849720";
+			Walk = "";
+			Run = "";
 			Blocking = "rbxassetid://83625987534708";
 		});
 
@@ -260,6 +303,9 @@ return table.freeze({
 			Combat2 = "rbxassetid://78529367124708";
 			Combat3 = "rbxassetid://115900848366455";
 			Combat4 = "rbxassetid://77314274708168";
+			Idle = "rbxassetid://129537870849720";
+			Walk = "";
+			Run = "";
 			Blocking = "rbxassetid://83625987534708";
 		});
 
@@ -272,6 +318,8 @@ return table.freeze({
 			Combat4 = "rbxassetid://140218265622686";
 			Combat5 = "rbxassetid://90828170591239";
 			Idle = "rbxassetid://11361002294";
+			Walk = "";
+			Run = "";
 			Blocking = "rbxassetid://129637547540775";
 		});
 
@@ -282,6 +330,8 @@ return table.freeze({
 			Combat4 = "rbxassetid://140218265622686";
 			Combat5 = "rbxassetid://90828170591239";
 			Idle = "rbxassetid://11361002294";
+			Walk = "";
+			Run = "";
 			Blocking = "rbxassetid://129637547540775";
 		});
 
@@ -292,6 +342,8 @@ return table.freeze({
 			Combat4 = "rbxassetid://140218265622686";
 			Combat5 = "rbxassetid://90828170591239";
 			Idle = "rbxassetid://11361002294";
+			Walk = "";
+			Run = "";
 			Blocking = "rbxassetid://129637547540775";
 		});
 
@@ -302,6 +354,8 @@ return table.freeze({
 			Combat4 = "rbxassetid://140218265622686";
 			Combat5 = "rbxassetid://90828170591239";
 			Idle = "rbxassetid://11361002294";
+			Walk = "";
+			Run = "";
 			Blocking = "rbxassetid://129637547540775";
 		});
 	});

@@ -16,15 +16,17 @@ Handler.Variables = {
 
 local AnimationsModule = require(game.ReplicatedStorage.Modules:WaitForChild("Animations"))
 local Weapons = require(game.ReplicatedStorage.Modules:WaitForChild("Weapons"))
+local ClientSystem = require(game.ReplicatedStorage.Modules:WaitForChild("ClientSystem"))
 local WeaponFX = require(script.Parent:WaitForChild("WeaponFX"))
 
---// Idle Variables \\--
+--// Idle / Locomotion Variables \\--
 
 local RunService = game:GetService("RunService")
 
 local IdleFadeTime = 0.2
 local MoveFadeTime = 0.15
 local MoveSpeedThreshold = 0.5
+local RunSpeedThreshold = 18
 
 local GroundedStates = {
 	[Enum.HumanoidStateType.Running] = true;
@@ -32,11 +34,16 @@ local GroundedStates = {
 	[Enum.HumanoidStateType.Landed] = true;
 }
 
+local IdleCharacter = nil
 local IdleTrack = nil
+local WalkTrack = nil
+local RunTrack = nil
 local IdleConnection = nil
 local IdleHumanoid = nil
 local IdleRoot = nil
 local IdlePlaying = false
+local WalkPlaying = false
+local RunPlaying = false
 local EquipTrack = nil
 local RageConnection = nil
 
@@ -252,21 +259,46 @@ function Handler.RemoveBlock(Char)
 	end
 end
 
---// Idle \\--
+--// Idle / Walk / Run \\--
+
+local function isGrounded(Humanoid)
+	if Humanoid == nil or Humanoid.Health <= 0 then
+		return false
+	end
+
+	return GroundedStates[Humanoid:GetState()] == true
+end
+
+local function getHorizontalSpeed(Root)
+	local Velocity = Root.AssemblyLinearVelocity
+
+	return Vector3.new(Velocity.X, 0, Velocity.Z).Magnitude
+end
 
 local function isStandingStill(Humanoid, Root)
-	if Humanoid.Health <= 0 then
+	if not isGrounded(Humanoid) then
 		return false
 	end
 
-	if GroundedStates[Humanoid:GetState()] ~= true then
-		return false
+	return getHorizontalSpeed(Root) <= MoveSpeedThreshold
+end
+
+local function isRunning(Character, Humanoid)
+	if Character == plr.Character and ClientSystem.Running == true then
+		return true
 	end
 
-	local Velocity = Root.AssemblyLinearVelocity
-	local HorizontalSpeed = Vector3.new(Velocity.X, 0, Velocity.Z).Magnitude
+	if Character ~= nil then
+		if Character:GetAttribute("Running") == true or Character:GetAttribute("Sprinting") == true or Character:GetAttribute("Sprint") == true then
+			return true
+		end
 
-	return HorizontalSpeed <= MoveSpeedThreshold
+		if Character:FindFirstChild("Running") ~= nil or Character:FindFirstChild("Sprinting") ~= nil or Character:FindFirstChild("Sprint") ~= nil then
+			return true
+		end
+	end
+
+	return Humanoid ~= nil and Humanoid.WalkSpeed >= RunSpeedThreshold
 end
 
 local function stopEquipTrack()
@@ -291,17 +323,99 @@ local function setIdlePlaying(Playing)
 	end
 end
 
+local function setWalkPlaying(Playing)
+	if WalkTrack == nil or WalkPlaying == Playing then
+		return
+	end
+
+	WalkPlaying = Playing
+
+	if Playing == true then
+		WalkTrack:Play(MoveFadeTime)
+	else
+		WalkTrack:Stop(MoveFadeTime)
+	end
+end
+
+local function setRunPlaying(Playing)
+	if RunTrack == nil or RunPlaying == Playing then
+		return
+	end
+
+	RunPlaying = Playing
+
+	if Playing == true then
+		RunTrack:Play(MoveFadeTime)
+	else
+		RunTrack:Stop(MoveFadeTime)
+	end
+end
+
+local function resolveLocomotionAnimation(weapon, animationName, fallbackName)
+	local roots = {
+		"Weapons." .. weapon.Name,
+		"Weapons." .. weapon.Category,
+		"Movement",
+	}
+
+	for _, root in ipairs(roots) do
+		if AnimationsModule.DetectSpecificAnimation(root, animationName) then
+			return AnimationsModule.GetAnimation(root, animationName)
+		end
+
+		if fallbackName ~= nil and fallbackName ~= animationName and AnimationsModule.DetectSpecificAnimation(root, fallbackName) then
+			return AnimationsModule.GetAnimation(root, fallbackName)
+		end
+	end
+
+	return nil
+end
+
+local function loadLocomotionTrack(Animator, weapon, animationName, priority, fallbackName)
+	local animation = resolveLocomotionAnimation(weapon, animationName, fallbackName)
+
+	if animation == nil then
+		return nil
+	end
+
+	local track = Animator:LoadAnimation(animation)
+	track.Priority = priority
+	track.Looped = true
+
+	animation:Destroy()
+
+	return track
+end
+
 local function updateIdle()
 	if IdleHumanoid == nil or IdleRoot == nil then
 		return
 	end
 
-	local StandingStill = isStandingStill(IdleHumanoid, IdleRoot)
+	if not isGrounded(IdleHumanoid) then
+		setIdlePlaying(false)
+		setWalkPlaying(false)
+		setRunPlaying(false)
+		return
+	end
 
-	setIdlePlaying(StandingStill)
+	local StandingStill = getHorizontalSpeed(IdleRoot) <= MoveSpeedThreshold
 
-	if StandingStill == false then
+	if StandingStill == true then
+		setWalkPlaying(false)
+		setRunPlaying(false)
+		setIdlePlaying(true)
+	else
 		stopEquipTrack()
+		setIdlePlaying(false)
+
+		if isRunning(IdleCharacter, IdleHumanoid) then
+			setWalkPlaying(false)
+			setRunPlaying(true)
+		else
+			setRunPlaying(false)
+			setWalkPlaying(true)
+		end
 	end
 end
 
@@ -319,36 +433,25 @@ function Handler.StartIdle(Character)
 		return
 	end
 
+	local Animator = Humanoid:FindFirstChildOfClass("Animator") or Humanoid
 	local weapon = Weapons.GetForCharacter(Character)
-	local IdlePath = "Weapons." .. weapon.Name
-	local CategoryIdlePath = "Weapons." .. weapon.Category
 	local IdleName = "Idle"
 	local RageIdleName = weapon.RageIdleAnimation
 
 	if RageIdleName ~= nil and Character:GetAttribute("Rage") == true then
 		IdleName = RageIdleName
 	end
-	local IdleAnimation = nil
 
-	if AnimationsModule.DetectSpecificAnimation(IdlePath, IdleName) then
-		IdleAnimation = AnimationsModule.GetAnimation(IdlePath, IdleName)
-	elseif AnimationsModule.DetectSpecificAnimation(CategoryIdlePath, IdleName) then
-		IdleAnimation = AnimationsModule.GetAnimation(CategoryIdlePath, IdleName)
-	end
+	IdleTrack = loadLocomotionTrack(Animator, weapon, IdleName, Enum.AnimationPriority.Idle, "Idle")
+	WalkTrack = loadLocomotionTrack(Animator, weapon, "Walk", Enum.AnimationPriority.Movement, nil)
+	RunTrack = loadLocomotionTrack(Animator, weapon, "Run", Enum.AnimationPriority.Movement, "Sprint")
 
-	if IdleAnimation ~= nil then
-		local Animator = Humanoid:FindFirstChildOfClass("Animator") or Humanoid
-
-		IdleTrack = Animator:LoadAnimation(IdleAnimation)
-		IdleTrack.Priority = Enum.AnimationPriority.Idle
-		IdleTrack.Looped = true
-
-		IdleAnimation:Destroy()
-	end
-
+	IdleCharacter = Character
 	IdleHumanoid = Humanoid
 	IdleRoot = Root
 	IdlePlaying = false
+	WalkPlaying = false
+	RunPlaying = false
 
 	IdleConnection = RunService.Heartbeat:Connect(updateIdle)
 
@@ -378,9 +481,24 @@ function Handler.StopIdle()
 		IdleTrack = nil
 	end
 
+	if WalkTrack ~= nil then
+		WalkTrack:Stop(MoveFadeTime)
+		WalkTrack:Destroy()
+		WalkTrack = nil
+	end
+
+	if RunTrack ~= nil then
+		RunTrack:Stop(MoveFadeTime)
+		RunTrack:Destroy()
+		RunTrack = nil
+	end
+
+	IdleCharacter = nil
 	IdleHumanoid = nil
 	IdleRoot = nil
 	IdlePlaying = false
+	WalkPlaying = false
+	RunPlaying = false
 end
 
 function Handler.ResetCombo()

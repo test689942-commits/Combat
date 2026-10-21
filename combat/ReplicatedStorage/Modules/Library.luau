@@ -31,7 +31,7 @@ module.StopAllAnims = function(Char: Model)
 	for _, v in next, Char.Humanoid.Animator:GetPlayingAnimationTracks() do
 		if v then 
 			if tonumber(v.Name) or AnimationsModule.DetectAnimation(v.Name) then
-				if v.Name == "Counter" or v.Name == "Idle" or v.Name == "Run" or v.Name == "GuardBreak" then continue end
+				if v.Name == "Counter" or v.Name == "Idle" or v.Name == "DSIdle" or v.Name == "Walk" or v.Name == "Run" or v.Name == "Sprint" or v.Name == "GuardBreak" then continue end
 				v:Stop(.2)
 			end
 		end
