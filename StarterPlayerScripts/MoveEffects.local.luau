@@ -3,12 +3,15 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+--// Modules \\--
+
+local movesModule = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Moves")
+local MoveEffects = require(movesModule:WaitForChild("Effects"))
+
 --// Variables \\--
 
 local player = Players.LocalPlayer
-
 local effectsRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Effects")
-local movesModule = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Moves")
 
 local MAX_EFFECT_DISTANCE = 250
 
@@ -17,6 +20,12 @@ local loadedVisuals = {}
 --// Functions \\--
 
 local function getVisual(effectName: string)
+	local handler = MoveEffects[effectName]
+
+	if type(handler) == "function" then
+		return handler
+	end
+
 	if loadedVisuals[effectName] then
 		return loadedVisuals[effectName]
 	end

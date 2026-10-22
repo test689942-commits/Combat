@@ -6,14 +6,15 @@ local DebrisService = game:GetService("Debris")
 
 --// Modules \\--
 
-local Moves = require(ReplicatedStorage.Modules.Moves)
-local Weapons = require(ReplicatedStorage.Modules.Weapons)
+local movesModule = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Moves")
+local Moves = require(movesModule)
+local MoveHandlers = require(movesModule:WaitForChild("Server"))
+local Weapons = require(ReplicatedStorage.Modules:WaitForChild("Weapons"))
 
 --// Variables \\--
 
 local activeRemote = ReplicatedStorage.Remotes.Active
 local phaseRemote = ReplicatedStorage.Remotes:WaitForChild("MovePhase")
-local movesModule = ReplicatedStorage.Modules.Moves
 
 local COOLDOWN_TOLERANCE = 0.3
 
@@ -23,6 +24,10 @@ local loadedMoves = {}
 --// Functions \\--
 
 local function getMove(moveName: string)
+	if MoveHandlers[moveName] then
+		return MoveHandlers[moveName]
+	end
+
 	if loadedMoves[moveName] then
 		return loadedMoves[moveName]
 	end
@@ -102,7 +107,7 @@ local function onActivate(player: Player, moveName: any, aimPosition: any)
 	local settings = Moves[moveName]
 	local move = getMove(moveName)
 
-	if not settings or not move then
+	if not settings or not move or typeof(move.Activate) ~= "function" then
 		return
 	end
 
