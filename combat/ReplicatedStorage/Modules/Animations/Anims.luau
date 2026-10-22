@@ -73,8 +73,8 @@ return table.freeze({
 			Blocking = "rbxassetid://83625987534708";
 			Idle = "rbxassetid://99524115688566";
 			DSIdle = "rbxassetid://90519168297065";
-			walk = "rbxassetid://0";
-			run = "rbxassetid://0";
+			walk = "rbxassetid://76980887133888";
+			run = "rbxassetid://101575350826559";
 		});
 
 		["Steel Greatsword"] = table.freeze({
@@ -117,8 +117,8 @@ return table.freeze({
 			Equip = "rbxassetid://84342583369737";
 			Blocking = "rbxassetid://83625987534708";
 			Idle = "rbxassetid://94310549255164";
-			walk = "rbxassetid://0";
-			run = "rbxassetid://0";
+			walk = "rbxassetid://122649312804233";
+			run = "rbxassetid://113551530261645";
 		});
 
 		["Steel Longsword"] = table.freeze({
@@ -131,8 +131,8 @@ return table.freeze({
 			Equip = "rbxassetid://84342583369737";
 			Blocking = "rbxassetid://83625987534708";
 			Idle = "rbxassetid://94310549255164";
-			walk = "rbxassetid://0";
-			run = "rbxassetid://0";
+			walk = "rbxassetid://122649312804233";
+			run = "rbxassetid://113551530261645";
 		});
 
 		["Serpent's Fang"] = table.freeze({
@@ -145,8 +145,8 @@ return table.freeze({
 			Equip = "rbxassetid://84342583369737";
 			Blocking = "rbxassetid://83625987534708";
 			Idle = "rbxassetid://94310549255164";
-			walk = "rbxassetid://0";
-			run = "rbxassetid://0";
+			walk = "rbxassetid://122649312804233";
+			run = "rbxassetid://113551530261645";
 		});
 
 		["Crescent Blade"] = table.freeze({
@@ -159,8 +159,8 @@ return table.freeze({
 			Equip = "rbxassetid://84342583369737";
 			Blocking = "rbxassetid://83625987534708";
 			Idle = "rbxassetid://94310549255164";
-			walk = "rbxassetid://0";
-			run = "rbxassetid://0";
+			walk = "rbxassetid://122649312804233";
+			run = "rbxassetid://113551530261645";
 		});
 
 		Duskblade = table.freeze({
@@ -173,8 +173,8 @@ return table.freeze({
 			Equip = "rbxassetid://84342583369737";
 			Blocking = "rbxassetid://83625987534708";
 			Idle = "rbxassetid://94310549255164";
-			walk = "rbxassetid://0";
-			run = "rbxassetid://0";
+			walk = "rbxassetid://122649312804233";
+			run = "rbxassetid://113551530261645";
 		});
 
 		["Steel Mourn"] = table.freeze({
@@ -187,8 +187,8 @@ return table.freeze({
 			Equip = "rbxassetid://84342583369737";
 			Blocking = "rbxassetid://83625987534708";
 			Idle = "rbxassetid://94310549255164";
-			walk = "rbxassetid://0";
-			run = "rbxassetid://0";
+			walk = "rbxassetid://122649312804233";
+			run = "rbxassetid://113551530261645";
 		});
 
 		--// Staffs \\--
@@ -235,8 +235,8 @@ return table.freeze({
 			Equip = "rbxassetid://0";
 			Blocking = "rbxassetid://130271994451347";
 			Idle = "rbxassetid://94310549255164";
-			walk = "rbxassetid://0";
-			run = "rbxassetid://0";
+			walk = "rbxassetid://104436812740050";
+			run = "rbxassetid://113551530261645";
 		});
 
 		["Mortal Blade"] = table.freeze({
@@ -249,8 +249,8 @@ return table.freeze({
 			Equip = "rbxassetid://0";
 			Blocking = "rbxassetid://130271994451347";
 			Idle = "rbxassetid://94310549255164";
-			walk = "rbxassetid://0";
-			run = "rbxassetid://0";
+			walk = "rbxassetid://104436812740050";
+			run = "rbxassetid://113551530261645";
 		});
 
 		--// Dual Katanas \\--
@@ -264,9 +264,9 @@ return table.freeze({
 			Critical = "rbxassetid://0";
 			Equip = "rbxassetid://0";
 			Blocking = "rbxassetid://128060776570277";
-			Idle = "rbxassetid://94310549255164";
-			walk = "rbxassetid://0";
-			run = "rbxassetid://0";
+			Idle = "rbxassetid://80205063570429";
+			walk = "rbxassetid://117688040681782";
+			run = "rbxassetid://93837310928313";
 		});
 
 		--// Daggers \\--
@@ -280,7 +280,7 @@ return table.freeze({
 			Critical = "rbxassetid://0";
 			Equip = "rbxassetid://71218143930564";
 			Blocking = "rbxassetid://130271994451347";
-			Idle = "rbxassetid://77205450128982";
+			Idle = "rbxassetid://91216548464847";
 			walk = "rbxassetid://104436812740050";
 			run = "rbxassetid://113551530261645";
 		});
@@ -294,11 +294,11 @@ return table.freeze({
 			Combat4 = "rbxassetid://100741713827688";
 			Combat5 = "rbxassetid://0";
 			Critical = "rbxassetid://0";
-			Equip = "rbxassetid://0";
+			Equip = "rbxassetid://130407541777231";
 			Blocking = "rbxassetid://129305693033685";
 			Idle = "rbxassetid://119186601575951";
-			walk = "rbxassetid://0";
-			run = "rbxassetid://0";
+			walk = "rbxassetid://87979502270630";
+			run = "rbxassetid://138469876012300";
 		});
 
 		--// Scythes \\--
@@ -310,11 +310,11 @@ return table.freeze({
 			Combat4 = "rbxassetid://77314274708168";
 			Combat5 = "rbxassetid://0";
 			Critical = "rbxassetid://0";
-			Equip = "rbxassetid://0";
+			Equip = "rbxassetid://117585018448339";
 			Blocking = "rbxassetid://83625987534708";
 			Idle = "rbxassetid://129537870849720";
-			walk = "rbxassetid://0";
-			run = "rbxassetid://0";
+			walk = "rbxassetid://76980887133888";
+			run = "rbxassetid://101575350826559";
 		});
 
 		["Nocturnal Edge"] = table.freeze({
@@ -324,11 +324,11 @@ return table.freeze({
 			Combat4 = "rbxassetid://77314274708168";
 			Combat5 = "rbxassetid://0";
 			Critical = "rbxassetid://0";
-			Equip = "rbxassetid://0";
+			Equip = "rbxassetid://117585018448339";
 			Blocking = "rbxassetid://83625987534708";
 			Idle = "rbxassetid://129537870849720";
-			walk = "rbxassetid://0";
-			run = "rbxassetid://0";
+			walk = "rbxassetid://76980887133888";
+			run = "rbxassetid://101575350826559";
 		});
 
 		--// Fists / Gauntlets \\--
