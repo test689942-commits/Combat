@@ -27,8 +27,12 @@ end
 
 --// Effects \\--
 
+local function getDashEffectsFolder(): Instance?
+	return Client.Assets.Effects:FindFirstChild("Dash") or Client.Assets.Effects:FindFirstChild("DashVFX")
+end
+
 local function spawnRing(ringCFrame: CFrame, size: Vector3)
-	local Effects = Client.Assets.Effects.DashVFX
+	local Effects = getDashEffectsFolder()
 	local ringTemplate = Effects and Effects:FindFirstChild("Ring")
 
 	if not ringTemplate then
@@ -55,8 +59,15 @@ local function playBurst(character: Model, direction: string)
 		return
 	end
 
+	local dashEffects = getDashEffectsFolder()
+	local burstTemplate = dashEffects and dashEffects:FindFirstChild(direction)
+
+	if not burstTemplate then
+		return
+	end
+
 	local root: BasePart = character.PrimaryPart
-	local burst: BasePart = Client.Assets.Effects.DashVFX[direction]:Clone()
+	local burst: BasePart = burstTemplate:Clone()
 	burst.Parent = workspace.Effects
 	burst.CFrame = root.CFrame
 	burst.WeldConstraint.Part0 = root
@@ -79,13 +90,21 @@ local function playLimbTrails(character: Model)
 		return
 	end
 
+	local dashEffects = getDashEffectsFolder()
+	local trailFolder = dashEffects and dashEffects:FindFirstChild("Trail")
+	local limbAttTemplate = trailFolder and trailFolder:FindFirstChild("LimbAtt")
+
+	if not limbAttTemplate then
+		return
+	end
+
 	local trails = {}
 
 	for _, limbName in LIMB_NAMES do
 		local limb = character:FindFirstChild(limbName)
 
 		if limb then
-			local attachment = Client.Assets.Effects.DashVFX.Trail.LimbAtt:Clone()
+			local attachment = limbAttTemplate:Clone()
 			attachment.Parent = limb
 
 			Client.Utilities.Debris:AddItem(attachment, 0.5)

@@ -7,11 +7,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Client = require(ReplicatedStorage.Modules:WaitForChild("ClientSystem"))
 local Info = require(script.Parent).DropKick
 local MoveClient = require(script.Parent:WaitForChild("MoveClient"))
-local Effect = require(script:WaitForChild("Effect"))
+local Effects = require(script.Parent:WaitForChild("Effects"))
 
 --// Variables \\--
 
-local DropKick = {}
+local DropKick = {
+	Effect = Effects.DropKick,
+}
 
 local MOVE_NAME = script.Name
 local PHASES = {"Startup", "Swing"}
@@ -35,7 +37,7 @@ local function createPhaseReporter(character: Model, root: BasePart)
 
 		reported[phase] = true
 
-		Effect({char = character, root = root, phase = phase})
+		Effects.DropKick({char = character, root = root, phase = phase})
 		phaseRemote:FireServer(MOVE_NAME, phase)
 	end
 end

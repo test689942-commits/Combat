@@ -9,13 +9,16 @@ local RunService = game:GetService("RunService")
 local Client = require(ReplicatedStorage.Modules:WaitForChild("ClientSystem"))
 local HitDetection = require(ReplicatedStorage.Modules.Shared:WaitForChild("HitDetection"))
 local Info = require(script.Parent).GroundSlam
+local Effects = require(script.Parent:WaitForChild("Effects"))
 
 --// Variables \\--
 
-local GroundSlam = {}
+local GroundSlam = {
+	Effect = Effects.GroundSlam,
+}
 
 local MOVE_NAME = script.Name
-local BLOCKING_STATES = { "Stun", "Blocking", "DoingMove", "DoingCombat" }
+local BLOCKING_STATES = {"Stun", "Blocking", "DoingMove", "DoingCombat"}
 
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
@@ -108,7 +111,7 @@ local function faceMouse(root: BasePart)
 end
 
 local function findAirborneEnemyRoot(root: BasePart): BasePart?
-	local nearbyCharacters = HitDetection.GetCharactersInSphere(root.Position, Info.Radius + Info.VerticalReach, { workspace.Effects, workspace.Debris, player.Character }, "GroundSlamAim")
+	local nearbyCharacters = HitDetection.GetCharactersInSphere(root.Position, Info.Radius + Info.VerticalReach, {workspace.Effects, workspace.Debris, player.Character}, "GroundSlamAim")
 	local closestRoot = nil
 	local closestDistance = math.huge
 

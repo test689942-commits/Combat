@@ -1,24 +1,24 @@
 --// Services \\--
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 --// Modules \\--
 
 local Client = require(ReplicatedStorage.Modules:WaitForChild("ClientSystem"))
 local Weapons = require(ReplicatedStorage.Modules:WaitForChild("Weapons"))
-local Info = require(script.Parent).DaggerDance
+local Info = require(script.Parent).Cut
 local MoveClient = require(script.Parent:WaitForChild("MoveClient"))
-local Effect = require(script:WaitForChild("Effect"))
+local Effects = require(script.Parent:WaitForChild("Effects"))
 
 --// Variables \\--
 
-local DaggerDance = {}
+local Cut = {
+	Effect = Effects.Cut,
+}
 
 local MOVE_NAME = script.Name
-
-local remotes = ReplicatedStorage:WaitForChild("Remotes")
-local activeRemote = remotes:WaitForChild("Active")
-local phaseRemote = remotes:WaitForChild("MovePhase")
+local activeRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Active")
 
 local cooldownEnd = 0
 local active = false
@@ -55,6 +55,34 @@ local function faceAim(root: BasePart, aimPosition: Vector3?)
 	end
 end
 
+local function advance(root: BasePart)
+	task.wait(Info.EffectStart)
+
+	local direction = root.CFrame.LookVector * Vector3.new(1, 0, 1)
+
+	if direction.Magnitude < 0.1 then
+		return
+	end
+
+	direction = direction.Unit
+
+	local elapsed = 0
+
+	while elapsed < Info.EffectDuration and root.Parent do
+		elapsed += RunService.Heartbeat:Wait()
+
+		local velocity = root.AssemblyLinearVelocity
+
+		root.AssemblyLinearVelocity = Vector3.new(direction.X * Info.MoveSpeed, velocity.Y, direction.Z * Info.MoveSpeed)
+	end
+
+	if root.Parent then
+		local velocity = root.AssemblyLinearVelocity
+
+		root.AssemblyLinearVelocity = Vector3.new(0, velocity.Y, 0)
+	end
+end
+
 local function run()
 	local character, humanoid, root = MoveClient.GetCharacterParts()
 
@@ -71,36 +99,27 @@ local function run()
 
 	cooldownEnd = os.clock() + Info.Cooldown
 	Client.Library.SetCooldown(character, MOVE_NAME, Info.Cooldown)
+	activeRemote:FireServer(MOVE_NAME, aimPosition)
 
 	local track = MoveClient.LoadTrack(humanoid, MOVE_NAME)
-	local duration = Info.LockDuration
-
-	local function reportPhase(eventName: string)
-		phaseRemote:FireServer(MOVE_NAME, eventName)
-	end
 
 	if track then
-		if track.Length > 0 then
-			duration = track.Length
-		end
-
-		Effect({
-			char = character,
-			root = root,
-			track = track,
-			onEvent = reportPhase,
-		})
-
-		activeRemote:FireServer(MOVE_NAME, aimPosition)
-		MoveClient.StartTrack(track, duration)
-	else
-		activeRemote:FireServer(MOVE_NAME, aimPosition)
+		track.Looped = false
+		MoveClient.StartTrack(track, Info.LockDuration)
 	end
 
-	task.wait(duration)
+	task.spawn(Effects.Cut, {
+		root = root,
+		char = character,
+		delay = Info.HitDelay,
+		start = Info.EffectStart,
+		duration = Info.EffectDuration,
+		distance = Info.EffectDistance,
+	})
 
-	Effect({char = character, root = root, phase = "End"})
-	reportPhase("End")
+	task.spawn(advance, root)
+
+	task.wait(Info.LockDuration)
 
 	MoveClient.UnlockMovement(MOVE_NAME, humanoid, lock)
 	active = false
@@ -108,16 +127,16 @@ end
 
 --// Public \\--
 
-function DaggerDance.TryStart()
+function Cut.TryStart()
 	if canStart() then
 		task.spawn(run)
 	end
 end
 
-function DaggerDance.Release()
+function Cut.Release()
 end
 
-function DaggerDance.Cancel()
+function Cut.Cancel()
 end
 
-return DaggerDance
+return Cut

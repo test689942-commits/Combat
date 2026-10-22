@@ -6,15 +6,21 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Client = require(ReplicatedStorage.Modules:WaitForChild("ClientSystem"))
 local Weapons = require(ReplicatedStorage.Modules:WaitForChild("Weapons"))
-local Info = require(script.Parent).DaggerThrow
+local Info = require(script.Parent).DaggerDance
 local MoveClient = require(script.Parent:WaitForChild("MoveClient"))
+local Effects = require(script.Parent:WaitForChild("Effects"))
 
 --// Variables \\--
 
-local DaggerThrow = {}
+local DaggerDance = {
+	Effect = Effects.DaggerDance,
+}
 
 local MOVE_NAME = script.Name
-local activeRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Active")
+
+local remotes = ReplicatedStorage:WaitForChild("Remotes")
+local activeRemote = remotes:WaitForChild("Active")
+local phaseRemote = remotes:WaitForChild("MovePhase")
 
 local cooldownEnd = 0
 local active = false
@@ -67,16 +73,36 @@ local function run()
 
 	cooldownEnd = os.clock() + Info.Cooldown
 	Client.Library.SetCooldown(character, MOVE_NAME, Info.Cooldown)
-	activeRemote:FireServer(MOVE_NAME, aimPosition)
 
 	local track = MoveClient.LoadTrack(humanoid, MOVE_NAME)
+	local duration = Info.LockDuration
 
-	if track then
-		track.Looped = false
-		MoveClient.StartTrack(track, Info.LockDuration)
+	local function reportPhase(eventName: string)
+		phaseRemote:FireServer(MOVE_NAME, eventName)
 	end
 
-	task.wait(Info.LockDuration)
+	if track then
+		if track.Length > 0 then
+			duration = track.Length
+		end
+
+		Effects.DaggerDance({
+			char = character,
+			root = root,
+			track = track,
+			onEvent = reportPhase,
+		})
+
+		activeRemote:FireServer(MOVE_NAME, aimPosition)
+		MoveClient.StartTrack(track, duration)
+	else
+		activeRemote:FireServer(MOVE_NAME, aimPosition)
+	end
+
+	task.wait(duration)
+
+	Effects.DaggerDance({char = character, root = root, phase = "End"})
+	reportPhase("End")
 
 	MoveClient.UnlockMovement(MOVE_NAME, humanoid, lock)
 	active = false
@@ -84,16 +110,16 @@ end
 
 --// Public \\--
 
-function DaggerThrow.TryStart()
+function DaggerDance.TryStart()
 	if canStart() then
 		task.spawn(run)
 	end
 end
 
-function DaggerThrow.Release()
+function DaggerDance.Release()
 end
 
-function DaggerThrow.Cancel()
+function DaggerDance.Cancel()
 end
 
-return DaggerThrow
+return DaggerDance

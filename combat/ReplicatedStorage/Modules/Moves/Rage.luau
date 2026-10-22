@@ -5,12 +5,16 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 --// Modules \\--
 
 local Client = require(ReplicatedStorage.Modules:WaitForChild("ClientSystem"))
-local Info = require(script.Parent).FistBarrage
+local Weapons = require(ReplicatedStorage.Modules:WaitForChild("Weapons"))
+local Info = require(script.Parent).Rage
 local MoveClient = require(script.Parent:WaitForChild("MoveClient"))
+local Effects = require(script.Parent:WaitForChild("Effects"))
 
 --// Variables \\--
 
-local FistBarrage = {}
+local Rage = {
+	Effect = Effects.Rage,
+}
 
 local MOVE_NAME = script.Name
 local activeRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Active")
@@ -20,8 +24,18 @@ local active = false
 
 --// Move Flow \\--
 
+local function hasRequiredTool(character: Model): boolean
+	return Weapons.HasMove(character, MOVE_NAME)
+end
+
 local function canStart(): boolean
 	if active or os.clock() < cooldownEnd then
+		return false
+	end
+
+	local character = MoveClient.GetCharacterParts()
+
+	if not character or not hasRequiredTool(character) then
 		return false
 	end
 
@@ -29,7 +43,7 @@ local function canStart(): boolean
 end
 
 local function run()
-	local character, humanoid, root = MoveClient.GetCharacterParts()
+	local character, humanoid = MoveClient.GetCharacterParts()
 
 	if not character then
 		return
@@ -39,11 +53,9 @@ local function run()
 
 	local lock = MoveClient.LockMovement(MOVE_NAME, character, humanoid)
 
-	MoveClient.FaceMouse(root)
-
 	cooldownEnd = os.clock() + Info.Cooldown
 	Client.Library.SetCooldown(character, MOVE_NAME, Info.Cooldown)
-	activeRemote:FireServer(MOVE_NAME, MoveClient.GetAimPosition())
+	activeRemote:FireServer(MOVE_NAME)
 
 	local track = MoveClient.LoadTrack(humanoid, MOVE_NAME)
 
@@ -59,16 +71,16 @@ end
 
 --// Public \\--
 
-function FistBarrage.TryStart()
+function Rage.TryStart()
 	if canStart() then
 		task.spawn(run)
 	end
 end
 
-function FistBarrage.Release()
+function Rage.Release()
 end
 
-function FistBarrage.Cancel()
+function Rage.Cancel()
 end
 
-return FistBarrage
+return Rage

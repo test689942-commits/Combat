@@ -1,19 +1,20 @@
 --// Services \\--
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 
 --// Modules \\--
 
 local Client = require(ReplicatedStorage.Modules:WaitForChild("ClientSystem"))
 local Weapons = require(ReplicatedStorage.Modules:WaitForChild("Weapons"))
-local Info = require(script.Parent).Cut
+local Info = require(script.Parent).DaggerThrow
 local MoveClient = require(script.Parent:WaitForChild("MoveClient"))
-local Effect = require(script:WaitForChild("Effect"))
+local Effects = require(script.Parent:WaitForChild("Effects"))
 
 --// Variables \\--
 
-local Cut = {}
+local DaggerThrow = {
+	Effect = Effects.DaggerThrow,
+}
 
 local MOVE_NAME = script.Name
 local activeRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Active")
@@ -53,34 +54,6 @@ local function faceAim(root: BasePart, aimPosition: Vector3?)
 	end
 end
 
-local function advance(root: BasePart)
-	task.wait(Info.EffectStart)
-
-	local direction = root.CFrame.LookVector * Vector3.new(1, 0, 1)
-
-	if direction.Magnitude < 0.1 then
-		return
-	end
-
-	direction = direction.Unit
-
-	local elapsed = 0
-
-	while elapsed < Info.EffectDuration and root.Parent do
-		elapsed += RunService.Heartbeat:Wait()
-
-		local velocity = root.AssemblyLinearVelocity
-
-		root.AssemblyLinearVelocity = Vector3.new(direction.X * Info.MoveSpeed, velocity.Y, direction.Z * Info.MoveSpeed)
-	end
-
-	if root.Parent then
-		local velocity = root.AssemblyLinearVelocity
-
-		root.AssemblyLinearVelocity = Vector3.new(0, velocity.Y, 0)
-	end
-end
-
 local function run()
 	local character, humanoid, root = MoveClient.GetCharacterParts()
 
@@ -106,17 +79,6 @@ local function run()
 		MoveClient.StartTrack(track, Info.LockDuration)
 	end
 
-	task.spawn(Effect, {
-		root = root,
-		char = character,
-		delay = Info.HitDelay,
-		start = Info.EffectStart,
-		duration = Info.EffectDuration,
-		distance = Info.EffectDistance,
-	})
-
-	task.spawn(advance, root)
-
 	task.wait(Info.LockDuration)
 
 	MoveClient.UnlockMovement(MOVE_NAME, humanoid, lock)
@@ -125,16 +87,16 @@ end
 
 --// Public \\--
 
-function Cut.TryStart()
+function DaggerThrow.TryStart()
 	if canStart() then
 		task.spawn(run)
 	end
 end
 
-function Cut.Release()
+function DaggerThrow.Release()
 end
 
-function Cut.Cancel()
+function DaggerThrow.Cancel()
 end
 
-return Cut
+return DaggerThrow

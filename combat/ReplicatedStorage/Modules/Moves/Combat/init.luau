@@ -166,7 +166,8 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 			
 			PlayCombatSound("Combat", "Jump2", Humrp, 1.5)
 			
-			local Particles = game.ReplicatedStorage.Assets.Effects:FindFirstChild("GoUp"):Clone()
+			local goUpTemplate = EffFold:FindFirstChild("GoUp") or game.ReplicatedStorage.Assets.Effects:FindFirstChild("GoUp")
+			local Particles = goUpTemplate:Clone()
 			Particles.Parent = workspace.Effects
 			Particles.CFrame = Humrp.CFrame
 			Particles.Anchored = true
@@ -180,14 +181,16 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 			end
 			
 			--// Shockwave
-			local Ring = game.ReplicatedStorage.Assets.Effects.DashVFX:FindFirstChild("Ring"):Clone()
+			local dashFolder = game.ReplicatedStorage.Assets.Effects:FindFirstChild("Dash") or game.ReplicatedStorage.Assets.Effects:FindFirstChild("DashVFX")
+			local Ring = dashFolder:FindFirstChild("Ring"):Clone()
 			Ring.CFrame = Humrp.CFrame * CFrame.new(0,-2.3,0)
 			Ring.Parent = workspace.Effects
 			Ring.Size *= 2
 			game.Debris:AddItem(Ring,3)
 			Tween:Create(Ring, TweenInfo.new(.25,Enum.EasingStyle.Sine,Enum.EasingDirection.Out), {Size = Ring.Size * 2,Transparency = 1}):Play()
 			--// Center Thing
-			local Center = game.ReplicatedStorage.Assets.Effects:FindFirstChild("Wave"):Clone()
+			local waveTemplate = EffFold:FindFirstChild("Wave") or game.ReplicatedStorage.Assets.Effects:FindFirstChild("Wave")
+			local Center = waveTemplate:Clone()
 			Center.CFrame = Humrp.CFrame * CFrame.new(0,-2,0)
 			Center.Parent = workspace.Effects
 			Center.Orientation += Vector3.new(0,0,180)
