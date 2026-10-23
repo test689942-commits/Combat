@@ -7,7 +7,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Client = require(ReplicatedStorage.Modules:WaitForChild("ClientSystem"))
 local EffectsBase = require(ReplicatedStorage.Modules:WaitForChild("EffectsBase"))
 local AfterImages = require(ReplicatedStorage.Modules:WaitForChild("AfterImages"))
-local Movement = require(ReplicatedStorage.Modules.ClientSystem:WaitForChild("Movement"))
 local Info = require(script.Parent).Dash
 
 --// Variables \\--
@@ -340,7 +339,7 @@ end
 
 --// Move \\--
 
-function Dash.Activate(direction: string, straightForwardInput: boolean?)
+function Dash.Activate(direction: string)
 	local humanoid = Client.Humanoid :: Humanoid
 	local root = Client.Root :: BasePart
 	local character = Client.Character :: Model
@@ -357,21 +356,6 @@ function Dash.Activate(direction: string, straightForwardInput: boolean?)
 		return
 	end
 
-	local movingForward = straightForwardInput == true and humanoid.MoveDirection.Magnitude > 0.05
-	local isSprinting = Client.Running
-		or humanoid:GetAttribute("Sprint") == true
-		or character:GetAttribute("Sprint") == true
-		or humanoid.WalkSpeed >= Client.SprintSpeed
-	local playFastSprint = direction == "Forward" and isSprinting and movingForward
-	if playFastSprint then
-		playFastSprint = Movement.FastSprintBurst()
-		if not playFastSprint and character:GetAttribute("FastSprint") == true then
-			Movement.CancelFastSprintBurst()
-		end
-	elseif Client.Running and character:GetAttribute("FastSprint") == true then
-		Movement.CancelFastSprintBurst()
-	end
-
 	clearVelocities(character)
 	obstructionParams.FilterDescendantsInstances = {character}
 
@@ -380,8 +364,7 @@ function Dash.Activate(direction: string, straightForwardInput: boolean?)
 
 	endAirCombat(character)
 
-	local animation = if playFastSprint then nil
-		else Client.Library.PlayAnimation(character, "Movement", direction, 0.1)
+	local animation = Client.Library.PlayAnimation(character, "Movement", direction, 0.1)
 	local speed, duration = getSpeedAndDuration(character, direction)
 	local velocity = createVelocity(root, duration)
 

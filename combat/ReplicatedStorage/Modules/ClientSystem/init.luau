@@ -50,7 +50,6 @@ System.Root 	 = nil;
 
 System.BaseSpeed = 12;
 System.SprintSpeed = 24;
-System.FastSprintSpeed = 40;
 System.BaseJump  = 40;
 System.Sliding = false;
 

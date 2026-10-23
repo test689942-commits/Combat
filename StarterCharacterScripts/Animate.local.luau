@@ -39,9 +39,6 @@ local animNames = {
 	sprint = {
 				{ id = "rbxassetid://70903321662399", weight = 10 } 
 		},
-	fastsprint = {
-				{ id = "rbxassetid://92394376692356", weight = 10 }
-			},
 	jump = 	{
 				{ id = "rbxassetid://135702083168555", weight = 10 } 
 			}, 
@@ -96,7 +93,7 @@ local dances = {"dance1", "dance2", "dance3"}
 
 -- Existance in this list signifies that it is an emote, the value indicates if it is a looping emote
 local emoteNames = { wave = false, point = false, dance1 = true, dance2 = true, dance3 = true, laugh = false, cheer = false}
-local coreMovementOverrides = { idle = true, walk = true, sprint = true, fastsprint = true, jump = true, fall = true }
+local coreMovementOverrides = { idle = true, walk = true, sprint = true, jump = true, fall = true }
 
 function configureAnimationSet(name, fileList)
 	if (animTable[name] ~= nil) then
@@ -355,14 +352,10 @@ end
 function onRunning(speed)
 	speed /= getRigScale()
 
-	local fastSprinting = Humanoid:GetAttribute("FastSprint") == true or Figure:GetAttribute("FastSprint") == true
 	local sprinting = Humanoid:GetAttribute("Sprint") == true or Figure:GetAttribute("Sprint") == true
 
 	if speed > 0.01 then
-		if fastSprinting then
-			playAnimation("fastsprint", 0.1, Humanoid)
-			setAnimationSpeed((speed / 20) * 0.85)
-		elseif sprinting or speed >= 18 then
+		if sprinting or speed >= 18 then
 			playAnimation("sprint", 0.1, Humanoid)
 			setAnimationSpeed((speed / 16) * 0.72)
 		else
@@ -389,9 +382,7 @@ local function refreshLocomotionOnAttributeChange()
 end
 
 Humanoid:GetAttributeChangedSignal("Sprint"):Connect(refreshLocomotionOnAttributeChange)
-Humanoid:GetAttributeChangedSignal("FastSprint"):Connect(refreshLocomotionOnAttributeChange)
 Figure:GetAttributeChangedSignal("Sprint"):Connect(refreshLocomotionOnAttributeChange)
-Figure:GetAttributeChangedSignal("FastSprint"):Connect(refreshLocomotionOnAttributeChange)
 
 function onDied()
 	pose = "Dead"

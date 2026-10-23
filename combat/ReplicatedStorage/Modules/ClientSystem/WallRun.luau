@@ -2,6 +2,7 @@
 
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local Debris = game:GetService("Debris")
 
 local Client = require(script.Parent)
 local MovementFX = require(script.Parent:WaitForChild("MovementFX"))
@@ -171,6 +172,7 @@ function WallRun.Start(Character: Model)
 	local BG: BodyGyro? = nil
 	local LastNormal: Vector3? = nil
 	local ActiveRunTrack: AnimationTrack? = nil
+	local ActiveGrabAttachment: Attachment? = nil
 	local JumpOffActive = false
 	local Grace = 0.15
 	local SwitchCd = 0
@@ -186,11 +188,75 @@ function WallRun.Start(Character: Model)
 			ActiveRunTrack = nil
 		end
 
+		if ActiveGrabAttachment then
+			for _, descendant in ActiveGrabAttachment:GetDescendants() do
+				if descendant:IsA("ParticleEmitter") or descendant:IsA("Trail") or descendant:IsA("Beam") then
+					descendant.Enabled = false
+				end
+			end
+			Debris:AddItem(ActiveGrabAttachment, 1)
+			ActiveGrabAttachment = nil
+		end
 	end
 
 	local function ClearMovers()
 		if BV then BV:Destroy(); BV = nil end
 		if BG then BG:Destroy(); BG = nil end
+	end
+
+	local function getWallRunArm(side: string): (BasePart?, string, string)
+		local isLeft = side == "LeftVector"
+		local armNames = if isLeft then {"Left Arm", "LeftHand", "LeftLowerArm"} else {"Right Arm", "RightHand", "RightLowerArm"}
+		local arm: BasePart? = nil
+		for _, armName in ipairs(armNames) do
+			local candidate = Character:FindFirstChild(armName)
+			if candidate and candidate:IsA("BasePart") then
+				arm = candidate
+				break
+			end
+		end
+
+		return arm, if isLeft then "LeftWallGrab" else "RightWallGrab", if isLeft then "LeftKick" else "RightKick"
+	end
+
+	local function attachWallRunVisual(side: string)
+		local arm, grabName = getWallRunArm(side)
+		if not arm then
+			return
+		end
+
+		local template = MovementFX.FindTemplate({grabName})
+		if not template or not template:IsA("Attachment") then
+			return
+		end
+
+		local attachment = template:Clone()
+		attachment.Parent = arm
+		ActiveGrabAttachment = attachment
+
+		for _, descendant in attachment:GetDescendants() do
+			if descendant:IsA("Trail") or descendant:IsA("Beam") then
+				descendant.Enabled = true
+			elseif descendant:IsA("ParticleEmitter") then
+				local emitCount = tonumber(descendant:GetAttribute("EmitCount"))
+				if emitCount and emitCount > 0 then
+					descendant:Emit(emitCount)
+				else
+					descendant.Enabled = true
+				end
+			end
+		end
+	end
+
+	local function playWallKick(side: string?)
+		if not side then
+			return
+		end
+
+		local arm, _, kickName = getWallRunArm(side)
+		if arm then
+			MovementFX.PlayOnce(Character, {kickName}, arm.Name, 2.5)
+		end
 	end
 
 	local function Detach(Cooldown: number?)
@@ -240,8 +306,7 @@ function WallRun.Start(Character: Model)
 			ActiveRunTrack:Play(0.1, 1, WALL_RUN_ANIM_SPEED)
 		end
 
-		local grabEffect = if S == "RightVector" then "RightWallGrab" else "LeftWallGrab"
-		MovementFX.PlayOnce(Character, {grabEffect}, "HumanoidRootPart", 2.5)
+		attachWallRunVisual(S)
 	end
 
 	local function Release()
@@ -272,7 +337,7 @@ function WallRun.Start(Character: Model)
 		Detach(0.25)
 
 		if Root.Parent then
-			MovementFX.PlayOnce(Character, {"WallJump"}, "HumanoidRootPart", 3)
+			playWallKick(currentSide)
 			-- Enter the normal jump state so Animate plays the regular Jump track;
 			-- wall-jump-specific left/right tracks are intentionally not used.
 			Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)

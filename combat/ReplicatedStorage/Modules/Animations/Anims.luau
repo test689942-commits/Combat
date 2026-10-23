@@ -8,7 +8,6 @@ return table.freeze({
 		Idle = "rbxassetid://139783125255456";
 		walk = "rbxassetid://81874417224388";
 		Sprint = "rbxassetid://70903321662399";
-		FastSprint = "rbxassetid://92394376692356";
 		jump = "rbxassetid://135702083168555";
 		Fall = "rbxassetid://120908359783163";
 		LeftRun = "rbxassetid://118914310248428";

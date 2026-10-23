@@ -14,8 +14,6 @@ local SLIDE_SPEED = 52
 local SLIDE_DURATION = 0.55
 local SLIDE_COOLDOWN = 1.2
 local WALL_CLIMB_COOLDOWN = 0.8
-local FAST_SPRINT_DURATION = 1
-local FAST_SPRINT_COOLDOWN = 5
 
 local lastSlideTime = 0
 local lastClimbTime = 0
@@ -26,10 +24,6 @@ local activeSlideTrack: AnimationTrack? = nil
 local activeSlideSound: Sound? = nil
 local slideCancelThread: thread? = nil
 
-local fastSprintThread: thread? = nil
-local fastSprintGeneration = 0
-local fastSprintReadyAt = 0
-local stopSprintFX: (() -> ())? = nil
 
 local function hasBlockingState(character: Model?): boolean
 	if not character then
@@ -164,92 +158,7 @@ Movement.Landed = function()
 	end)
 end
 
---// Sprint & FastSprint \\--
-
-local function cancelFastSprintTimer()
-	fastSprintGeneration += 1
-	if fastSprintThread then
-		task.cancel(fastSprintThread)
-		fastSprintThread = nil
-	end
-end
-
-local function setFastSprintAttributes(Character: Model, Humanoid: Humanoid, active: boolean)
-	Humanoid:SetAttribute("FastSprint", active)
-	Character:SetAttribute("FastSprint", active)
-end
-
-Movement.FastSprintBurst = function(duration: number?): boolean
-	local Character: Model = Client.Character
-	local Humanoid: Humanoid = Client.Humanoid
-	local now = os.clock()
-	local isSprinting = Client.Running
-		or (Humanoid and Humanoid:GetAttribute("Sprint") == true)
-		or (Character and Character:GetAttribute("Sprint") == true)
-		or (Humanoid and Humanoid.WalkSpeed >= Client.SprintSpeed)
-	if not Character or not Humanoid or Humanoid.Health <= 0 or not isSprinting
-		or Humanoid.FloorMaterial == Enum.Material.Air
-		or Humanoid.MoveDirection.Magnitude < 0.05 or hasBlockingState(Character)
-		or now < fastSprintReadyAt then
-		return false
-	end
-
-	cancelFastSprintTimer()
-	local generation = fastSprintGeneration
-	fastSprintReadyAt = now + FAST_SPRINT_COOLDOWN
-	setFastSprintAttributes(Character, Humanoid, true)
-	Humanoid:SetAttribute("Sprint", true)
-	Character:SetAttribute("Sprint", true)
-	Humanoid.WalkSpeed = Client.FastSprintSpeed
-
-	if stopSprintFX then
-		stopSprintFX()
-	end
-	stopSprintFX = MovementFX.StartLoop(Character, {"SpeedSprinting"})
-
-	fastSprintThread = task.delay(duration or FAST_SPRINT_DURATION, function()
-		if generation ~= fastSprintGeneration or not Character.Parent then
-			return
-		end
-		fastSprintThread = nil
-		setFastSprintAttributes(Character, Humanoid, false)
-		if stopSprintFX then
-			stopSprintFX()
-			stopSprintFX = nil
-		end
-		local stillSprinting = Client.Running
-			or Humanoid:GetAttribute("Sprint") == true
-			or Character:GetAttribute("Sprint") == true
-		if stillSprinting and not hasBlockingState(Character) then
-			Humanoid.WalkSpeed = Client.SprintSpeed
-		else
-			Humanoid.WalkSpeed = Client.BaseSpeed
-		end
-	end)
-
-	return true
-end
-
-Movement.CancelFastSprintBurst = function()
-	local Character: Model = Client.Character
-	local Humanoid: Humanoid = Client.Humanoid
-	cancelFastSprintTimer()
-	if stopSprintFX then
-		stopSprintFX()
-		stopSprintFX = nil
-	end
-	if not Character or not Humanoid then
-		return
-	end
-
-	setFastSprintAttributes(Character, Humanoid, false)
-	local stillSprinting = Client.Running
-		or Humanoid:GetAttribute("Sprint") == true
-		or Character:GetAttribute("Sprint") == true
-	Humanoid.WalkSpeed = if stillSprinting and not hasBlockingState(Character)
-		then Client.SprintSpeed
-		else Client.BaseSpeed
-end
+--// Sprint \\--
 
 Movement.SetSprint = function(active: boolean)
 	local Character: Model = Client.Character
@@ -263,22 +172,13 @@ Movement.SetSprint = function(active: boolean)
 		active = false
 	end
 
-	cancelFastSprintTimer()
-
-	if stopSprintFX then
-		stopSprintFX()
-		stopSprintFX = nil
-	end
-
 	Client.Running = active
-	setFastSprintAttributes(Character, Humanoid, false)
 	Humanoid:SetAttribute("Sprint", active)
 	Character:SetAttribute("Sprint", active)
 
 	if not hasBlockingState(Character) then
 		Humanoid.WalkSpeed = if active then Client.SprintSpeed else Client.BaseSpeed
 	end
-
 end
 
 --// Slide (Audio is registered as Sounds/SFX.Slide) \\--
@@ -474,7 +374,7 @@ Movement.TryWallClimbOrVault = function()
 		climbVelocity.Parent = Root
 		Debris:AddItem(climbVelocity, 0.28)
 
-		playMovementAnim(Humanoid, "FastSprint", Enum.AnimationPriority.Action3, 0.08, 1.15)
+		playMovementAnim(Humanoid, "Sprint", Enum.AnimationPriority.Action3, 0.08, 1.15)
 	elseif shouldVault then
 		lastClimbTime = tick()
 		local vaultVelocity = Instance.new("BodyVelocity")

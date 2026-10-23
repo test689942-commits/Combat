@@ -181,7 +181,7 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
 
 ### 2.6 Locomotion (`Idle`, `walk`, `Sprint`) & Fallback to `Movement`
 - Weapon animation tables retain their required `Idle`, `walk`, and `run` slots. When a weapon's locomotion slot is `"rbxassetid://0"`, the client uses the shared movement fallback rather than another weapon's animation.
-- Shared locomotion has one `Sprint` animation (`rbxassetid://70903321662399`)—there is no separate shared `run` animation. Weapon `run` requests fall back to `Movement.Sprint`; `FastSprint` remains a distinct faster animation.
+- Shared locomotion has one `Sprint` animation (`rbxassetid://70903321662399`)—there is no separate shared `run` animation. Weapon `run` requests fall back to `Movement.Sprint`.
 
 ---
 
@@ -222,18 +222,18 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
 - **Directional Movement Body-Tilt (`ClientSystem/DirectionalMovement.luau`)**:
   - Smoothly tilts `RootJoint`, `Right Hip`, `Left Hip`, and `Neck` `Motor6D.C0` based on horizontal velocity vs. character facing direction.
   - Automatically resets to neutral pose when idle (`> 2s`), facing a wall within `2` studs, or in any combat/stun/action state (`Stun`, `DoingCombat`, `DoingMove`, `Blocking`).
-- **Double-Tap `W` Sprint, Forward Dash FastSprint & Sprint Visuals (`ClientSystem/Inputs/Sprint.luau`, `ClientSystem/SprintVisuals.luau`)**:
-  - Double-tapping `W` starts the regular `Sprint` animation (`70903321662399`) at `SprintSpeed = 24`. While sprinting straight forward, pressing `Q` performs the normal forward dash and immediately starts `FastSprint` (`92394376692356`) at `FastSprintSpeed = 40` for 1 second, then returns to regular Sprint. The character flickers briefly invisible/visible and the `SpeedSprinting` effect starts only during this burst. FastSprint has a 5-second cooldown; while it is cooling down, Q still performs a normal forward dash. Left, right, backward, diagonal, and airborne dashes do not activate FastSprint.
-  - Sprint immediately clones `Movement.Trail` onto both arms and activates the camera visuals; ordinary sprinting does not automatically transition to FastSprint.
+- **Double-Tap `W` Sprint & Sprint Visuals (`ClientSystem/Inputs/Sprint.luau`, `ClientSystem/SprintVisuals.luau`)**:
+  - Double-tapping `W` starts the regular `Sprint` animation (`70903321662399`) at `SprintSpeed = 24`. Q continues to use the existing directional dash and its matching dash animation.
+  - Sprint immediately clones `Movement.Trail` onto both arms and activates the camera visuals.
 - **Movement VFX Location (`ReplicatedStorage.Assets.Effects.Movement`)**:
-  - Movement and dash VFX are stored in the `Movement` folder: `Ring`, `Back`, `Forward`, `Left`, `Right`, `SideDust`, `SpeedSprinting`, `Trail`, `FootStep`, `WallJump`, and `WallRunAttachments` (with `LeftWallGrab`/`RightWallGrab`).
+  - Movement and dash VFX are stored in the `Movement` folder: `Ring`, `Back`, `Forward`, `Left`, `Right`, `SideDust`, `Trail`, `FootStep`, `WallJump`, and `WallRunAttachments` (with `LeftWallGrab`, `RightWallGrab`, `LeftKick`, and `RightKick`).
   - Dash looks in `Effects.Movement` for direction bursts, `Ring`, `SideDust`, and the `Trail` attachment template. Sprint reuses the same `Trail` template on both arms; `SideDust` emits on each dash.
 - **Slide, LongJump, WallClimb, Vault & WallRun (`ClientSystem/Movement.luau`, `ClientSystem/WallRun.luau`)**:
   - `LeftControl` performs the slide animation (`Sliding` = `134302481749326`) and plays `Sounds/SFX.Slide` (`rbxassetid://6429226498`). Pressing `Space` during slide triggers the forward-upward **LongJump** animation (`71457670921368`).
   - Jump input near a wall performs either a vertical **WallClimb** boost or a ledge **Vault** (alternating `Vault1` = `111806598954502` and `Vault2` = `87942706676175`). WallRun plays left/right run animations at `1.25x`; wall detachment uses the regular `jump` animation, not a separate wall-jump animation. After a dash stops against a vertical wall, jumping within `0.8s` launches away from that wall and uses the regular `jump` animation. Auto wall-run re-entry remains disabled until landing after either kind of wall jump.
-  - `FootStep` emits only on grounded walking/running strides; `WallJump` plays only on a wall-run or dash-wall jump, and `LeftWallGrab`/`RightWallGrab` attach when a wall-run starts. Ordinary jumping plays the jump animation and footstep jump sound only; no movement particle effect is emitted on a regular jump. The movement controller does not treat combat effects (such as `Greatsword/Jump`) as movement VFX.
+  - `FootStep` emits only on grounded walking/running strides. During a wall-run, `LeftWallGrab` attaches to the Left Arm and `RightWallGrab` to the Right Arm; jumping off uses the matching `LeftKick` or `RightKick`. `WallJump` remains specific to the dash-wall jump. Ordinary jumping has no movement particle effect; the controller does not treat combat effects (such as `Greatsword/Jump`) as movement VFX.
 - **Movement Animations (`Animations/Anims.luau`, `StarterCharacterScripts/Animate.local.luau`)**:
-  - `Idle`: `139783125255456`, `walk`: `81874417224388`, `Sprint`: `70903321662399`, `FastSprint`: `92394376692356`, `jump`: `135702083168555`, `Fall`: `120908359783163`.
+  - `Idle`: `139783125255456`, `walk`: `81874417224388`, `Sprint`: `70903321662399`, `jump`: `135702083168555`, `Fall`: `120908359783163`.
   - `WallRun`: `Left Run` (`118914310248428`), `Right Run` (`92324260993876`).
   - `Vault`: `Vault1` (`111806598954502`), `Vault2` (`87942706676175`).
   - `Slide`: `LongJump` (`71457670921368`), `Sliding` (`134302481749326`).

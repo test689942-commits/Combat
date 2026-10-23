@@ -80,7 +80,6 @@ local FOLDER_LAYOUT = {
 		"Left",
 		"Right",
 		"SideDust",
-		"SpeedSprinting",
 		"Trail",
 		"TransparentArmTrail",
 	},

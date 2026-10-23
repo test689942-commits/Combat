@@ -397,9 +397,7 @@ local function loadLocomotionTrack(Animator, weapon, animationName, priority, fa
 end
 
 local function loadRunTrackForState(Animator, weapon, Character)
-	if Character:GetAttribute("FastSprint") == true then
-		return loadLocomotionTrack(Animator, weapon, "FastSprint", Enum.AnimationPriority.Movement)
-	elseif Character:GetAttribute("Sprint") == true then
+	if Character:GetAttribute("Sprint") == true then
 		return loadLocomotionTrack(Animator, weapon, "Sprint", Enum.AnimationPriority.Movement)
 	end
 
@@ -478,11 +476,9 @@ function Handler.StartIdle(Character)
 		Handler.StartIdle(Character)
 	end)
 
-	for _, attributeName in {"Sprint", "FastSprint"} do
-		table.insert(SprintStateConnections, Character:GetAttributeChangedSignal(attributeName):Connect(function()
-			Handler.StartIdle(Character)
-		end))
-	end
+	table.insert(SprintStateConnections, Character:GetAttributeChangedSignal("Sprint"):Connect(function()
+		Handler.StartIdle(Character)
+	end))
 
 	updateIdle()
 end
