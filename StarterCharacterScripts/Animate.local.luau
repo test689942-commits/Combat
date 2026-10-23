@@ -505,8 +505,6 @@ function move(time)
 	elseif (pose == "Seated") then
 		playAnimation("sit", 0.5, Humanoid)
 		return
-	elseif (pose == "Running") then
-		playAnimation("walk", 0.1, Humanoid)
 	elseif (pose == "Dead" or pose == "GettingUp" or pose == "FallingDown" or pose == "Seated" or pose == "PlatformStanding") then
 --		print("Wha " .. pose)
 		stopAllAnimations()
