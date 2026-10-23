@@ -117,7 +117,7 @@ local function playLimbTrails(character: Model)
 		local limb = character:FindFirstChild(limbName)
 
 		if limb then
-			local attachment = limbAttTemplate:Clone()
+			local attachment = limbTrailTemplate:Clone()
 			attachment.Parent = limb
 
 			Client.Utilities.Debris:AddItem(attachment, 0.5)
