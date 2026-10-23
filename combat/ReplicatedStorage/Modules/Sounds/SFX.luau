@@ -1,6 +1,7 @@
 return table.freeze({
 	["Dash1"] = "rbxassetid://1201103356";
 	["Dash2"] = "rbxassetid://8475493570";
+	["Slide"] = "rbxassetid://6429226498";
 
 	Gui = table.freeze({
 		["New Area"] = "rbxassetid://96480143599028";

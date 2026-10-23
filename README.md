@@ -218,6 +218,26 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
 
 ---
 
+### 2.10 Movement System (`ClientSystem`, `StarterCharacterScripts`)
+- **Directional Movement Body-Tilt (`ClientSystem/DirectionalMovement.luau`)**:
+  - Smoothly tilts `RootJoint`, `Right Hip`, `Left Hip`, and `Neck` `Motor6D.C0` based on horizontal velocity vs. character facing direction.
+  - Automatically resets to neutral pose when idle (`> 2s`), facing a wall within `2` studs, or in any combat/stun/action state (`Stun`, `DoingCombat`, `DoingMove`, `Blocking`).
+- **Double-Tap `W` Sprint & Sprint Visuals (`ClientSystem/Inputs/Sprint.luau`, `ClientSystem/SprintVisuals.luau`)**:
+  - Double-tapping `W` within `0.2s` activates Sprint (`SprintSpeed = 24`) while `W` is held, and sets the `Sprint` attribute on `Humanoid` and `Character`.
+  - Attaches subtle `SprintTrail` trails on `Left Arm` and `Right Arm`, tweens camera `FieldOfView` (`70 -> 76`), and adds velocity-scaled camera sway while sprinting.
+- **Slide (`ClientSystem/Inputs/Slide.luau`, `ClientSystem/Movement.luau`)**:
+  - Pressing `LeftControl` performs a forward ground slide impulse and plays the slide audio (`rbxassetid://6429226498`).
+- **WallClimb & Vault (`ClientSystem/Inputs/Jump.luau`, `ClientSystem/Movement.luau`)**:
+  - Pressing `Space` near a wall checks ground, overhead clearance, torso wall hit, and head ledge clearance to perform either a vertical **WallClimb** boost or a ledge **Vault**.
+- **WallRun Controller (`ClientSystem/WallRun.luau`)**:
+  - Detects runnable left/right walls while airborne with forward input, propels the character along the wall tangent using `BodyVelocity` and `BodyGyro`, and allows jumping off the wall with `Space`.
+- **Shiftlock Offset & Combat Jump Tuning (`ClientSystem/CameraShiftlock.luau`)**:
+  - Applies custom Shiftlock camera offset (`Vector3.new(1.3, 0.35, 0)`), custom Shiftlock mouse icon (`http://www.roblox.com/asset/?id=109916623354797`), camera zoom bounds (`0..20`), and consecutive-jump height/power decay while in combat.
+- **Material-Mapped Footsteps (`ClientSystem/FootSteps.luau`, `StarterCharacterScripts/MovementController.local.luau`)**:
+  - Plays material-mapped footstep and jump sounds across `Concrete`, `Tile`, `Wood`, `Glass`, `Metal_Solid`, `Metal_Grate`, `Dirt`, `Grass`, `Carpet`, `Gravel`, `Snow`, `Sand`, `Rubber`, and `Mud`.
+
+---
+
 ## 3. Weapons Reference Table
 
 | Weapon Name | Category | Swings (`MaxCombo`) | Critical | Moves (`Z` / `X` / `C`) | Notes |

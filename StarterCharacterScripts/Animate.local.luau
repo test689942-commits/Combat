@@ -351,11 +351,16 @@ end
 
 function onRunning(speed)
 	speed /= getRigScale()
-	
+
+	local sprinting = Humanoid:GetAttribute("Sprint") == true or Figure:GetAttribute("Sprint") == true
+
 	if speed > 0.01 then
-		playAnimation("walk", 0.1, Humanoid)
-		if currentAnimInstance and currentAnimInstance.AnimationId == "http://www.roblox.com/asset/?id=180426354" then
-			setAnimationSpeed(speed / 14.5)
+		if sprinting or speed >= 18 then
+			playAnimation("run", 0.1, Humanoid)
+			setAnimationSpeed((speed / 16) * 0.72)
+		else
+			playAnimation("walk", 0.1, Humanoid)
+			setAnimationSpeed(speed / 16)
 		end
 		pose = "Running"
 	else

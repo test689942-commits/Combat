@@ -49,7 +49,9 @@ System.Animator  = nil;
 System.Root 	 = nil;
 
 System.BaseSpeed = 12;
+System.SprintSpeed = 24;
 System.BaseJump  = 40;
+System.SlideSoundId = "rbxassetid://6429226498";
 
 System.CurrentInput = {};
 System.Speeds   = {};
@@ -75,6 +77,9 @@ System.Settings = {
 	KeyBinds = {},
 	DefaultBinds = {
 		Dash    = System.Moves.Dash.Key;
+		Sprint  = Enum.KeyCode.W;
+		Slide   = Enum.KeyCode.LeftControl;
+		Jump    = Enum.KeyCode.Space;
 	};
 };
 
