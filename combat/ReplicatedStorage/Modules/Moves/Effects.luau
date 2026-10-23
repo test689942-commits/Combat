@@ -383,7 +383,7 @@ function Effects.FistBarrage(data)
 	task.wait(data.delay or 0)
 
 	for pulse = 1, pulses do
-		if not root.Parent then
+		if not canCharacterEmit(data.char, root) then
 			break
 		end
 
@@ -534,10 +534,19 @@ function Effects.Leap(data)
 		EmitModule.EnableVFX(trail)
 	end
 
-	task.wait(data.duration or 0)
+	local duration = data.duration or 0
+	local elapsed = 0
+
+	while elapsed < duration and canCharacterEmit(data.char, root) do
+		elapsed += RunService.Heartbeat:Wait()
+	end
 
 	if trail then
 		EmitModule.RemoveVFX(trail)
+	end
+
+	if not canCharacterEmit(data.char, root) then
+		return
 	end
 
 	playMoveSound("Land", "Moves.Leap", root)
@@ -1287,6 +1296,42 @@ function Effects.DaggerDance(data)
 	end
 
 	attachToCharacterDanceTrack(character, root, data.track, data.onEvent)
+end
+
+--// Cancel Move (On Parry / Interrupt) \\--
+
+function Effects.CancelMove(data)
+	if type(data) ~= "table" then
+		return
+	end
+
+	local character = data.char
+
+	if typeof(character) ~= "Instance" or not character:IsA("Model") then
+		return
+	end
+
+	disableSlashMove(character)
+
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	local animator = humanoid and humanoid:FindFirstChildOfClass("Animator")
+
+	if animator then
+		local movesTree = AnimationsModule.GetAnimationTree("Moves")
+		local targetMove = data.move
+
+		for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+			local anim = track.Animation
+			local trackName = track.Name
+			local animName = anim and anim.Name
+
+			if (targetMove and (trackName == targetMove or animName == targetMove))
+				or (movesTree and (movesTree[trackName] ~= nil or (animName and movesTree[animName] ~= nil)))
+				or isDaggerDanceTrack(track, AnimationsModule.GetAnimationId("Moves", DAGGER_DANCE_NAME)) then
+				track:Stop(0.1)
+			end
+		end
+	end
 end
 
 --// Dispatcher \\--

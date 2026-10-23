@@ -96,15 +96,18 @@ local function getIgnoreList(character: Model)
 	return {character, workspace.Effects, workspace.Debris, workspace.NPCS}
 end
 
-local function travel(root: BasePart, origin: Vector3, target: Vector3, rayParams: RaycastParams)
+local function travel(character: Model, humanoid: Humanoid, root: BasePart, origin: Vector3, target: Vector3, rayParams: RaycastParams): boolean
 	local control = getControl(origin, target, Info.ArcHeight)
 	local elapsed = 0
 
 	while elapsed < Info.LeapDuration do
 		elapsed += RunService.Heartbeat:Wait()
 
-		if not root.Parent then
-			return
+		if not root.Parent or MoveClient.IsInterrupted(character, humanoid) then
+			if root.Parent then
+				root.AssemblyLinearVelocity = Vector3.zero
+			end
+			return false
 		end
 
 		local alpha = math.clamp(elapsed / Info.LeapDuration, 0, 1)
@@ -114,7 +117,7 @@ local function travel(root: BasePart, origin: Vector3, target: Vector3, rayParam
 		if blocked then
 			root.CFrame = CFrame.new(blocked.Position + blocked.Normal * 0.1) * root.CFrame.Rotation
 			root.AssemblyLinearVelocity = Vector3.zero
-			return
+			return true
 		end
 
 		root.CFrame = CFrame.new(nextPosition) * root.CFrame.Rotation
@@ -122,6 +125,7 @@ local function travel(root: BasePart, origin: Vector3, target: Vector3, rayParam
 	end
 
 	root.CFrame = CFrame.new(target) * root.CFrame.Rotation
+	return true
 end
 
 local function run()
@@ -158,9 +162,11 @@ local function run()
 		duration = Info.LeapDuration,
 	})
 
-	travel(root, origin, target, createRayParams(ignoreList))
-
-	task.wait(math.max(0, Info.LockDuration - Info.LeapDuration))
+	if travel(character, humanoid, root, origin, target, createRayParams(ignoreList)) then
+		MoveClient.WaitForMove(character, humanoid, math.max(0, Info.LockDuration - Info.LeapDuration), track)
+	elseif track and track.IsPlaying then
+		track:Stop(0.1)
+	end
 
 	MoveClient.UnlockMovement(MOVE_NAME, humanoid, lock)
 	active = false

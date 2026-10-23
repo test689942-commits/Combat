@@ -2,6 +2,7 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 --// Modules \\--
 
@@ -52,6 +53,14 @@ function MoveClient.CanStart(): boolean
 	end
 
 	return #Client.Actions == 0 and #Client.Stuns == 0 and not Client.Dashing
+end
+
+function MoveClient.IsInterrupted(character: Model?, humanoid: Humanoid?): boolean
+	if not character or not character.Parent or not humanoid or humanoid.Health <= 0 then
+		return true
+	end
+
+	return character:FindFirstChild("Stun") ~= nil
 end
 
 --// Movement Lock \\--
@@ -144,6 +153,24 @@ function MoveClient.StartTrack(track: AnimationTrack, duration: number)
 			track:Stop(0.2)
 		end
 	end)
+end
+
+function MoveClient.WaitForMove(character: Model, humanoid: Humanoid, duration: number, track: AnimationTrack?): boolean
+	local elapsed = 0
+
+	while elapsed < duration do
+		if MoveClient.IsInterrupted(character, humanoid) then
+			if track and track.IsPlaying then
+				track:Stop(0.1)
+			end
+
+			return false
+		end
+
+		elapsed += RunService.Heartbeat:Wait()
+	end
+
+	return true
 end
 
 return MoveClient

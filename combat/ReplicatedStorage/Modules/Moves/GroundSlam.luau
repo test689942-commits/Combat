@@ -148,15 +148,15 @@ local function faceAim(character: Model, root: BasePart)
 	root.CFrame = CFrame.lookAt(root.Position, flatTarget)
 end
 
-local function playAnimation(humanoid: Humanoid)
+local function playAnimation(humanoid: Humanoid): AnimationTrack?
 	if not Client.Animations.DetectSpecificAnimation("Moves", MOVE_NAME) then
-		return
+		return nil
 	end
 
 	local animator = humanoid:FindFirstChildOfClass("Animator")
 
 	if not animator then
-		return
+		return nil
 	end
 
 	local animation = Client.Animations.GetAnimation("Moves", MOVE_NAME)
@@ -167,10 +167,14 @@ local function playAnimation(humanoid: Humanoid)
 	track:Play(0.1)
 
 	task.delay(Info.LockDuration, function()
-		track:Stop(0.2)
+		if track.IsPlaying then
+			track:Stop(0.2)
+		end
 	end)
 
 	animation:Destroy()
+
+	return track
 end
 
 --// Move Flow \\--
@@ -214,9 +218,18 @@ local function run()
 	cooldownEnd = os.clock() + Info.Cooldown
 	Client.Library.SetCooldown(character, MOVE_NAME, Info.Cooldown)
 	activeRemote:FireServer(MOVE_NAME, mouse.Hit.Position)
-	playAnimation(humanoid)
+	local track = playAnimation(humanoid)
 
-	task.wait(Info.LockDuration)
+	local elapsed = 0
+	while elapsed < Info.LockDuration do
+		if humanoid.Health <= 0 or character:FindFirstChild("Stun") then
+			if track and track.IsPlaying then
+				track:Stop(0.1)
+			end
+			break
+		end
+		elapsed += RunService.Heartbeat:Wait()
+	end
 
 	unlockMovement(humanoid)
 	active = false

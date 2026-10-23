@@ -99,7 +99,7 @@ local function run()
 		activeRemote:FireServer(MOVE_NAME, aimPosition)
 	end
 
-	task.wait(duration)
+	MoveClient.WaitForMove(character, humanoid, duration, track)
 
 	Effects.DaggerDance({char = character, root = root, phase = "End"})
 	reportPhase("End")

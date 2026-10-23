@@ -66,7 +66,7 @@ end
 
 --// Can Block?
 function Handler.Can_Do_Block(Character)
-	if Character:FindFirstChild("Stun") or Character:FindFirstChild("DoingCombat") and Character:FindFirstChild("DoingMove") ~= nil then
+	if Character:FindFirstChild("Stun") ~= nil or Character:FindFirstChild("DoingCombat") ~= nil or Character:FindFirstChild("DoingMove") ~= nil then
 		return false
 	else
 		return true

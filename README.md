@@ -16,6 +16,7 @@ This repository contains the modular Roblox Luau combat, weapon, animation, and 
    - [2.6 Locomotion (`Idle`, `walk`, `run`) & Fallback to `Movement`](#26-locomotion-idle-walk-run--fallback-to-movement)
    - [2.7 Animation Key-Event Slash VFX & Lunge Removal](#27-animation-key-event-slash-vfx--lunge-removal)
    - [2.8 `Animations/Anims.luau` Naming Cleanup](#28-animationsanimsluau-naming-cleanup)
+   - [2.9 Skill Parry & Cancel System](#29-skill-parry--cancel-system)
 3. [Weapons Reference Table](#3-weapons-reference-table)
 4. [Moves Reference Table](#4-moves-reference-table)
 5. [Commit History Summary](#5-commit-history-summary)
@@ -200,6 +201,18 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
 
 ---
 
+### 2.9 Skill Parry & Cancel System
+- **Regular Blocking vs. Parrying on Skills (`Moves/MoveHit.luau` & `Moves/Server.luau`)**:
+  - Regular blocking (`Blocking` without `PB`) does not block skills — skills break/bypass regular block (`CombatServer.DestroyBlock`).
+  - **Parrying at the right time (`Blocking` with `PB` active within the `ParryWindow`)** parries and **cancels** any skill (`GroundSlam`, `FistBarrage`, `DropKick`, `Rage`, `Leap`, `Cut`, `DaggerThrow`, `DaggerDance`):
+    1. The defender takes **no damage, stun, or knockback**.
+    2. The attacker's `DoingMove` state is cleared and replaced with `Stun` (`CombatInfo.Block.ParryStun`).
+    3. All ongoing server skill loops/ticks/phases (`FistBarrage`, `Cut`, `DaggerDance`, `DropKick`, `Rage`, `Leap`, `GroundSlam`, `DaggerThrow`) immediately abort.
+    4. The Parry VFX and `Parry` / `Parried` animations (`Enum.AnimationPriority.Action4`) play on the defender and attacker, stopping any active skill animation track.
+    5. `Remotes.Effects` broadcasts `"CancelMove"` (`Effects.CancelMove`) and `MoveClient.WaitForMove` interrupts the caster's client-side movement/dash/VFX immediately.
+
+---
+
 ## 3. Weapons Reference Table
 
 | Weapon Name | Category | Swings (`MaxCombo`) | Critical | Moves (`Z` / `X` / `C`) | Notes |
@@ -235,6 +248,7 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
 
 ## 5. Commit History Summary
 
+- **Latest** — Add skill parry & cancel system across `Moves/MoveHit.luau`, `Moves/Server.luau`, `Moves/Effects.luau`, `Moves/MoveClient.luau`, `Moves/Combat/init.luau`, and all 8 client move modules.
 - **`b562d47`** — Update `DragonSlayer` `M1`–`M4` (`Combat1`–`Combat4`) animation IDs in `Animations/Anims.luau`.
 - **`c6583f7`** — Add `DragonSlayer` Greatsword with 4 swings (`MaxCombo = 4`), no `Idle`/`walk`/`run`/`Critical`, and key-event VFX (`M1Swing`, `M1Floor`, `M2Swing`, `M2Floor`, `M3Swing`, `M3Slam`, `M3Floor`, `M4Swing`).
 - **`6f9dc9d`** — Trim weapon registry and animation tables down to 1 primary weapon per category (10 base weapons).

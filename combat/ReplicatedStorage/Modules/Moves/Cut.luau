@@ -55,8 +55,10 @@ local function faceAim(root: BasePart, aimPosition: Vector3?)
 	end
 end
 
-local function advance(root: BasePart)
-	task.wait(Info.EffectStart)
+local function advance(character: Model, humanoid: Humanoid, root: BasePart)
+	if not MoveClient.WaitForMove(character, humanoid, Info.EffectStart) then
+		return
+	end
 
 	local direction = root.CFrame.LookVector * Vector3.new(1, 0, 1)
 
@@ -68,7 +70,7 @@ local function advance(root: BasePart)
 
 	local elapsed = 0
 
-	while elapsed < Info.EffectDuration and root.Parent do
+	while elapsed < Info.EffectDuration and root.Parent and not MoveClient.IsInterrupted(character, humanoid) do
 		elapsed += RunService.Heartbeat:Wait()
 
 		local velocity = root.AssemblyLinearVelocity
@@ -117,9 +119,9 @@ local function run()
 		distance = Info.EffectDistance,
 	})
 
-	task.spawn(advance, root)
+	task.spawn(advance, character, humanoid, root)
 
-	task.wait(Info.LockDuration)
+	MoveClient.WaitForMove(character, humanoid, Info.LockDuration, track)
 
 	MoveClient.UnlockMovement(MOVE_NAME, humanoid, lock)
 	active = false

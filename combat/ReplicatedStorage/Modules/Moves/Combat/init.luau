@@ -97,13 +97,23 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 		elseif Type == "Parry" then
 
 			if Character.Humanoid.Health > 1 then
-				MainHandler.StopAnimation("Combat"..Count,Hum)
-				MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Parry","Parried"),Hum)
+				WeaponFX.ClearSwing(Hum)
+				MainHandler.StopAnimation("Combat"..tostring(Count),Hum)
+				if typeof(Count) == "string" then
+					MainHandler.StopAnimation(Count,Hum)
+				end
+				local movesTree = AnimationsModule.GetAnimationTree("Moves")
+				if movesTree ~= nil then
+					for moveAnimName in pairs(movesTree) do
+						MainHandler.StopAnimation(moveAnimName,Hum)
+					end
+				end
+				MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Parry","Parried"),Hum,nil,Enum.AnimationPriority.Action4)
 			end
 
 			if Char2 ~= nil and Char2:FindFirstChild("Humanoid") ~= nil and Char2:FindFirstChild("HumanoidRootPart") ~= nil then
 				MainHandler.StopAnimation("Blocking",Char2.Humanoid)
-				MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Parry","Parry"),Char2.Humanoid)
+				MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Parry","Parry"),Char2.Humanoid,nil,Enum.AnimationPriority.Action4)
 				_G.EffectEmitter(EffFold.Parry:WaitForChild("ATM"),{Parent = Char2.HumanoidRootPart,Debris = 1.5})
 			end
 

@@ -79,7 +79,7 @@ local function run()
 		MoveClient.StartTrack(track, Info.LockDuration)
 	end
 
-	task.wait(Info.LockDuration)
+	MoveClient.WaitForMove(character, humanoid, Info.LockDuration, track)
 
 	MoveClient.UnlockMovement(MOVE_NAME, humanoid, lock)
 	active = false

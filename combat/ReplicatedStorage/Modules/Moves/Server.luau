@@ -151,6 +151,10 @@ do
 	end
 
 	local function applyHit(character: Model, root: BasePart, target, settings)
+		if target.Model:FindFirstChild("Blocking") then
+			CombatServer.DestroyBlock(target.Model)
+		end
+
 		target.Humanoid:TakeDamage(settings.Damage)
 		handlerClient:FireAllClients(character, "MainHandler", "DamageInd", target.Model, settings.Damage)
 		MainHandler.CreateTing("BoolValue", {Parent = target.Model, Name = "Stun"}, settings.StunTime)
@@ -211,6 +215,11 @@ do
 		end
 
 		if #airborneTargets > 0 then
+			if MoveHit.TryParryGroup(character, airborneTargets, settings.EntryName) then
+				dropFromAirCombat(character, root)
+				return
+			end
+
 			CombatServer.UpDown(character, CombatInfo.MaxCombo, CombatInfo.MaxCombo, true)
 
 			for _, target in ipairs(airborneTargets) do
@@ -228,7 +237,13 @@ do
 			return
 		end
 
-		for _, target in ipairs(getTargets(character, root, settings)) do
+		local targets = getTargets(character, root, settings)
+
+		if MoveHit.TryParryGroup(character, targets, settings.EntryName) then
+			return
+		end
+
+		for _, target in ipairs(targets) do
 			applyHit(character, root, target, settings)
 		end
 
@@ -281,7 +296,9 @@ do
 			end
 
 			if target then
-				MoveHit.ApplyDamage(character, target, settings.Damage, settings.StunTime)
+				if not MoveHit.ApplyDamage(character, target, settings.Damage, settings.StunTime, settings.EntryName) then
+					break
+				end
 			end
 
 			if hitIndex < settings.HitCount then
@@ -308,16 +325,20 @@ do
 		return root.CFrame.LookVector
 	end
 
-	local function hitTarget(character: Model, root: BasePart, settings)
+	local function hitTarget(character: Model, root: BasePart, settings): boolean
 		local boxCFrame = root.CFrame * CFrame.new(0, 0, -settings.HitboxOffset)
 		local target = MoveHit.FindClosestTarget(character, root, boxCFrame, settings.HitboxSize)
 
 		if not target then
-			return
+			return true
 		end
 
-		MoveHit.ApplyDamage(character, target, settings.Damage, settings.StunTime)
+		if not MoveHit.ApplyDamage(character, target, settings.Damage, settings.StunTime, settings.EntryName) then
+			return false
+		end
+
 		MoveHit.Knockback(target, getLookDirection(root), settings.KnockbackForce, settings.KnockbackLift, settings.KnockbackDuration)
+		return true
 	end
 
 	local function handleStartup(caster: Player, character: Model, root: BasePart, state, settings)
@@ -340,7 +361,11 @@ do
 			return
 		end
 
-		hitTarget(character, root, settings)
+		if not hitTarget(character, root, settings) then
+			activeKicks[character] = nil
+			return
+		end
+
 		broadcastToOthers(caster, settings.EntryName, {phase = "Swing", char = character, root = root})
 	end
 
@@ -434,19 +459,34 @@ do
 		activeAuras[character] = pieces
 	end
 
-	local function stunNearby(character: Model, root: BasePart, settings)
+	local function stunNearby(character: Model, root: BasePart, settings): boolean
 		local boxSize = Vector3.new(settings.Radius * 2, settings.VerticalReach * 2, settings.Radius * 2)
 		local ignoreList = {workspace.Effects, workspace.Debris, character}
 		local targets = HitDetection.GetCharactersInBox(root.CFrame, boxSize, ignoreList, "MoveHit")
+		local validTargets = {}
 
 		for _, target in ipairs(targets) do
 			local humanoid = target:FindFirstChildOfClass("Humanoid")
 			local targetRoot = target:FindFirstChild("HumanoidRootPart")
 
 			if humanoid and targetRoot and humanoid.Health > 0 and (targetRoot.Position - root.Position).Magnitude <= settings.Radius then
-				MainHandler.CreateTing("BoolValue", {Parent = target, Name = "Stun"}, settings.StunTime)
+				table.insert(validTargets, target)
 			end
 		end
+
+		if MoveHit.TryParryGroup(character, validTargets, settings.EntryName) then
+			return false
+		end
+
+		for _, target in ipairs(validTargets) do
+			if target:FindFirstChild("Blocking") then
+				CombatServer.DestroyBlock(target)
+			end
+
+			MainHandler.CreateTing("BoolValue", {Parent = target, Name = "Stun"}, settings.StunTime)
+		end
+
+		return true
 	end
 
 	function Rage.Activate(_player: Player, character: Model, settings, _aimPosition: Vector3?)
@@ -466,11 +506,13 @@ do
 
 		local humanoid = character:FindFirstChildOfClass("Humanoid")
 
-		if not humanoid or humanoid.Health <= 0 then
+		if not humanoid or not MoveHit.CanAct(character, humanoid, root) then
 			return
 		end
 
-		stunNearby(character, root, settings)
+		if not stunNearby(character, root, settings) then
+			return
+		end
 
 		local token = (character:GetAttribute(settings.AttributeName .. "Token") or 0) + 1
 
@@ -525,13 +567,22 @@ do
 	end
 
 	local function landingHit(character: Model, root: BasePart, settings)
+		local targets = getTargets(character, root, settings)
+
+		if MoveHit.TryParryGroup(character, targets, settings.EntryName) then
+			return
+		end
+
 		local damage = getDamage(character, settings)
 
-		for _, target in ipairs(getTargets(character, root, settings)) do
+		for _, target in ipairs(targets) do
 			local away = (target.Root.Position - root.Position) * Vector3.new(1, 0, 1)
 			local direction = if away.Magnitude > 0.1 then away.Unit else root.CFrame.LookVector
 
-			MoveHit.ApplyDamage(character, target, damage, settings.StunTime)
+			if not MoveHit.ApplyDamage(character, target, damage, settings.StunTime, settings.EntryName) then
+				return
+			end
+
 			MoveHit.Knockback(target, direction, settings.KnockbackForce, settings.KnockbackLift, 0.25)
 		end
 	end
@@ -585,17 +636,36 @@ do
 		return targets
 	end
 
-	local function tickHit(character: Model, root: BasePart, settings)
-		for _, target in ipairs(getTargets(character, root, settings)) do
-			MoveHit.ApplyDamage(character, target, settings.TickDamage, settings.TickStun)
+	local function tickHit(character: Model, root: BasePart, settings): boolean
+		local targets = getTargets(character, root, settings)
+
+		if MoveHit.TryParryGroup(character, targets, settings.EntryName) then
+			return false
 		end
+
+		for _, target in ipairs(targets) do
+			if not MoveHit.ApplyDamage(character, target, settings.TickDamage, settings.TickStun, settings.EntryName) then
+				return false
+			end
+		end
+
+		return true
 	end
 
 	local function finisherHit(character: Model, root: BasePart, settings)
+		local targets = getTargets(character, root, settings)
+
+		if MoveHit.TryParryGroup(character, targets, settings.EntryName) then
+			return
+		end
+
 		local direction = root.CFrame.LookVector * Vector3.new(1, 0, 1)
 
-		for _, target in ipairs(getTargets(character, root, settings)) do
-			MoveHit.ApplyDamage(character, target, settings.Damage, settings.StunTime)
+		for _, target in ipairs(targets) do
+			if not MoveHit.ApplyDamage(character, target, settings.Damage, settings.StunTime, settings.EntryName) then
+				return
+			end
+
 			MoveHit.Knockback(target, direction.Unit, settings.KnockbackForce, settings.KnockbackLift, 0.25)
 		end
 	end
@@ -608,7 +678,9 @@ do
 				return false
 			end
 
-			tickHit(character, root, settings)
+			if not tickHit(character, root, settings) then
+				return false
+			end
 
 			task.wait(settings.TickInterval)
 			elapsed += settings.TickInterval
@@ -732,7 +804,10 @@ do
 		task.wait(distance / settings.Speed)
 
 		if target.Humanoid.Health > 0 then
-			MoveHit.ApplyDamage(character, target, settings.Damage, settings.StunTime)
+			if not MoveHit.ApplyDamage(character, target, settings.Damage, settings.StunTime, settings.EntryName) then
+				return
+			end
+
 			MoveHit.Knockback(target, direction * Vector3.new(1, 0, 1), settings.KnockbackForce, settings.KnockbackLift, 0.25)
 		end
 	end
@@ -820,10 +895,20 @@ do
 		return targets
 	end
 
-	local function applyDamagePass(character: Model, root: BasePart, damage: number, stunDuration: number, settings)
-		for _, target in ipairs(getTargets(character, root, settings)) do
-			MoveHit.ApplyDamage(character, target, damage, stunDuration)
+	local function applyDamagePass(character: Model, root: BasePart, damage: number, stunDuration: number, settings): boolean
+		local targets = getTargets(character, root, settings)
+
+		if MoveHit.TryParryGroup(character, targets, settings.EntryName) then
+			return false
 		end
+
+		for _, target in ipairs(targets) do
+			if not MoveHit.ApplyDamage(character, target, damage, stunDuration, settings.EntryName) then
+				return false
+			end
+		end
+
+		return true
 	end
 
 	local function getAliveParts(character: Model)
@@ -835,6 +920,21 @@ do
 		end
 
 		return humanoid, root
+	end
+
+	local function cancelDance(player: Player?, character: Model, root: BasePart?, state, settings)
+		state.Ended = true
+		state.SlashMoveActive = false
+
+		if activeDances[character] == state then
+			activeDances[character] = nil
+		end
+
+		broadcastToOthers(player, settings.EntryName, {
+			char = character,
+			root = root,
+			phase = END_NAME,
+		})
 	end
 
 	local function runPhase(player: Player?, character: Model, settings, rawPhaseName: any)
@@ -859,15 +959,9 @@ do
 
 		local humanoid, root = getAliveParts(character)
 
-		if not humanoid then
-			if phaseName == END_NAME then
-				state.Ended = true
-				state.SlashMoveActive = false
-				activeDances[character] = nil
-				broadcastToOthers(player, settings.EntryName, {
-					char = character,
-					phase = END_NAME,
-				})
+		if not humanoid or character:FindFirstChild("Stun") then
+			if phaseName == END_NAME or character:FindFirstChild("Stun") then
+				cancelDance(player, character, root, state, settings)
 			end
 			return
 		end
@@ -879,19 +973,22 @@ do
 
 			state.SlashDone = true
 
-			broadcastToOthers(player, settings.EntryName, {
-				char = character,
-				root = root,
-				phase = DAGGER_SLASH_NAME,
-			})
-
-			applyDamagePass(
+			if not applyDamagePass(
 				character,
 				root,
 				settings.SlashDamage,
 				settings.SlashStun,
 				settings
-			)
+			) then
+				cancelDance(player, character, root, state, settings)
+				return
+			end
+
+			broadcastToOthers(player, settings.EntryName, {
+				char = character,
+				root = root,
+				phase = DAGGER_SLASH_NAME,
+			})
 		elseif phaseName == SLASH_MOVE_NAME then
 			if state.SlashMoveActive or state.Ended then
 				return
@@ -909,17 +1006,21 @@ do
 				while state.SlashMoveActive and not state.Ended and activeDances[character] == state do
 					local currentHumanoid, currentRoot = getAliveParts(character)
 
-					if not currentHumanoid or os.clock() - state.StartTime > settings.PhaseWindow then
+					if not currentHumanoid or character:FindFirstChild("Stun") or os.clock() - state.StartTime > settings.PhaseWindow then
+						cancelDance(player, character, currentRoot, state, settings)
 						break
 					end
 
-					applyDamagePass(
+					if not applyDamagePass(
 						character,
 						currentRoot,
 						settings.TickDamage,
 						settings.TickStun,
 						settings
-					)
+					) then
+						cancelDance(player, character, currentRoot, state, settings)
+						break
+					end
 
 					task.wait(settings.TickInterval)
 				end
@@ -929,18 +1030,7 @@ do
 				return
 			end
 
-			state.Ended = true
-			state.SlashMoveActive = false
-
-			if activeDances[character] == state then
-				activeDances[character] = nil
-			end
-
-			broadcastToOthers(player, settings.EntryName, {
-				char = character,
-				root = root,
-				phase = END_NAME,
-			})
+			cancelDance(player, character, root, state, settings)
 		end
 	end
 

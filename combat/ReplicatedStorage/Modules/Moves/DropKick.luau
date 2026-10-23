@@ -27,11 +27,11 @@ local active = false
 
 --// Phases \\--
 
-local function createPhaseReporter(character: Model, root: BasePart)
+local function createPhaseReporter(character: Model, humanoid: Humanoid, root: BasePart)
 	local reported = {}
 
 	return function(phase: string)
-		if reported[phase] then
+		if reported[phase] or MoveClient.IsInterrupted(character, humanoid) then
 			return
 		end
 
@@ -83,7 +83,7 @@ local function run()
 	active = true
 
 	local lock = MoveClient.LockMovement(MOVE_NAME, character, humanoid)
-	local reportPhase = createPhaseReporter(character, root)
+	local reportPhase = createPhaseReporter(character, humanoid, root)
 
 	MoveClient.FaceMouse(root)
 
@@ -100,7 +100,7 @@ local function run()
 		scheduleFallbackPhases(reportPhase)
 	end
 
-	task.wait(Info.LockDuration)
+	MoveClient.WaitForMove(character, humanoid, Info.LockDuration, track)
 
 	MoveClient.UnlockMovement(MOVE_NAME, humanoid, lock)
 	active = false
