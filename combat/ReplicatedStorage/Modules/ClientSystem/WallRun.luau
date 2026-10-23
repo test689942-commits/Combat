@@ -268,6 +268,9 @@ function WallRun.Start(Character: Model)
 		Detach(0.25)
 
 		if Root.Parent then
+			-- Enter the normal jump state so Animate plays the regular Jump track;
+			-- wall-jump-specific left/right tracks are intentionally not used.
+			Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 			-- Stronger launch along the run direction and away from the wall.
 			Root.AssemblyLinearVelocity = Root.CFrame.LookVector * 52 + horizontalAway * 48 + Vector3.new(0, 48, 0)
 		end

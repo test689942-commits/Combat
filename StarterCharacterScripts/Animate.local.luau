@@ -581,7 +581,14 @@ game:GetService("Players").LocalPlayer.Chatted:connect(function(msg)
 end)
 
 -- emote bindable hook
-script:WaitForChild("PlayEmote").OnInvoke = function(emote)
+local playEmoteBindable = script:FindFirstChild("PlayEmote")
+if not playEmoteBindable then
+	playEmoteBindable = Instance.new("BindableFunction")
+	playEmoteBindable.Name = "PlayEmote"
+	playEmoteBindable.Parent = script
+end
+
+playEmoteBindable.OnInvoke = function(emote)
 	-- Only play emotes when idling
 	if pose ~= "Standing" then
 		return
