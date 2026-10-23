@@ -5,12 +5,10 @@ local Movement = require(script.Parent.Parent.Movement)
 
 --// Slide Input \\--
 
-return function(Input: InputObject, Key: string)
-	if Input.UserInputState ~= Enum.UserInputState.Begin then
-		return
-	end
+local SlideInput = {}
 
-	local Character: Model = Client.Character
+SlideInput.InputBegan = function(_Input: InputObject?, _Client: any)
+	local Character: Model? = Client.Character
 	if not Character then
 		return
 	end
@@ -21,3 +19,11 @@ return function(Input: InputObject, Key: string)
 
 	Movement.Slide()
 end
+
+SlideInput.InputEnded = function(_Input: InputObject?, _Client: any)
+end
+
+SlideInput.InputChanged = function(_Input: InputObject?, _Client: any)
+end
+
+return SlideInput

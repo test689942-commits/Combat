@@ -7,27 +7,26 @@ local UserInputService = game:GetService("UserInputService")
 local Client = require(script.Parent.Parent)
 local Movement = require(script.Parent.Parent.Movement)
 
-local LastTapped = false
+local TAP_WINDOW = 0.2
+local LastTapTime = 0
 local Active = false
+local ReleaseConnection: RBXScriptConnection? = nil
 
---// Sprint Input (Double-tap W) \\--
+--// Sprint Input (double-tap W) \\--
 
-return function(Input: InputObject, Key: string)
-	if Input.UserInputState ~= Enum.UserInputState.Begin then
+local SprintInput = {}
+
+SprintInput.InputBegan = function(Input: InputObject?, _Client: any)
+	local now = os.clock()
+	if LastTapTime == 0 or now - LastTapTime > TAP_WINDOW then
+		LastTapTime = now
 		return
 	end
 
-	if not LastTapped then
-		LastTapped = true
-		task.delay(0.2, function()
-			LastTapped = false
-		end)
-		return
-	end
+	LastTapTime = 0
 
-	local Character: Model = Client.Character
-	local Humanoid: Humanoid = Client.Humanoid
-
+	local Character: Model? = Client.Character
+	local Humanoid: Humanoid? = Client.Humanoid
 	if not Character or not Humanoid or Humanoid.Health <= 0 then
 		return
 	end
@@ -35,22 +34,33 @@ return function(Input: InputObject, Key: string)
 	Active = true
 	Movement.SetSprint(true)
 
-	local Connection: RBXScriptConnection? = nil
-	Connection = UserInputService.InputEnded:Connect(function(EndedInput: InputObject)
-		if EndedInput.KeyCode ~= Input.KeyCode then
+	if ReleaseConnection then
+		ReleaseConnection:Disconnect()
+		ReleaseConnection = nil
+	end
+
+	ReleaseConnection = UserInputService.InputEnded:Connect(function(EndedInput: InputObject)
+		if Input and EndedInput.KeyCode ~= Input.KeyCode then
 			return
 		end
 
-		if Connection then
-			Connection:Disconnect()
-			Connection = nil
+		if ReleaseConnection then
+			ReleaseConnection:Disconnect()
+			ReleaseConnection = nil
 		end
 
-		if not Active then
-			return
+		if Active then
+			Active = false
+			Movement.SetSprint(false)
 		end
-
-		Active = false
-		Movement.SetSprint(false)
 	end)
 end
+
+SprintInput.InputEnded = function(_Input: InputObject?, _Client: any)
+	-- The release connection above covers the key-up after the activating tap.
+end
+
+SprintInput.InputChanged = function(_Input: InputObject?, _Client: any)
+end
+
+return SprintInput
