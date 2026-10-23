@@ -14,7 +14,7 @@ local SLIDE_SPEED = 52
 local SLIDE_DURATION = 0.55
 local SLIDE_COOLDOWN = 1.2
 local WALL_CLIMB_COOLDOWN = 0.8
-local FAST_SPRINT_DELAY = 1.35
+local SPRINT_EFFECT_DELAY = 3
 
 local lastSlideTime = 0
 local lastClimbTime = 0
@@ -25,7 +25,7 @@ local activeSlideTrack: AnimationTrack? = nil
 local activeSlideSound: Sound? = nil
 local slideCancelThread: thread? = nil
 
-local fastSprintThread: thread? = nil
+local sprintEffectThread: thread? = nil
 local stopSprintFX: (() -> ())? = nil
 
 local function hasBlockingState(character: Model?): boolean
@@ -175,9 +175,9 @@ Movement.SetSprint = function(active: boolean)
 		active = false
 	end
 
-	if fastSprintThread then
-		task.cancel(fastSprintThread)
-		fastSprintThread = nil
+	if sprintEffectThread then
+		task.cancel(sprintEffectThread)
+		sprintEffectThread = nil
 	end
 
 	if stopSprintFX then
@@ -186,27 +186,26 @@ Movement.SetSprint = function(active: boolean)
 	end
 
 	Client.Running = active
+	Humanoid:SetAttribute("FastSprint", active)
+	Character:SetAttribute("FastSprint", active)
 	Humanoid:SetAttribute("Sprint", active)
 	Character:SetAttribute("Sprint", active)
-	Humanoid:SetAttribute("FastSprint", false)
-	Character:SetAttribute("FastSprint", false)
 
 	if not hasBlockingState(Character) then
 		Humanoid.WalkSpeed = if active then Client.SprintSpeed else Client.BaseSpeed
 	end
 
 	if active then
-		stopSprintFX = MovementFX.StartLoop(Character, {"SpeedSprinting"})
-
-		fastSprintThread = task.delay(FAST_SPRINT_DELAY, function()
-			fastSprintThread = nil
+		sprintEffectThread = task.delay(SPRINT_EFFECT_DELAY, function()
+			sprintEffectThread = nil
 			if not Client.Running or not Character.Parent or Humanoid.Health <= 0 or hasBlockingState(Character) then
 				return
 			end
 
-			Humanoid:SetAttribute("FastSprint", true)
-			Character:SetAttribute("FastSprint", true)
-			Humanoid.WalkSpeed = Client.FastSprintSpeed
+			-- Start with FastSprint, then transition to Sprint after the opening phase.
+			Humanoid:SetAttribute("FastSprint", false)
+			Character:SetAttribute("FastSprint", false)
+			stopSprintFX = MovementFX.StartLoop(Character, {"SpeedSprinting"})
 		end)
 	end
 end

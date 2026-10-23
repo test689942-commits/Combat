@@ -46,6 +46,7 @@ local WalkPlaying = false
 local RunPlaying = false
 local EquipTrack = nil
 local RageConnection = nil
+local SprintStateConnections = {}
 
 --// Remotes //--
 local ServerRemote = game.ReplicatedStorage.Events:FindFirstChild("HandlerFireServer")
@@ -395,6 +396,16 @@ local function loadLocomotionTrack(Animator, weapon, animationName, priority, fa
 	return track
 end
 
+local function loadRunTrackForState(Animator, weapon, Character)
+	if Character:GetAttribute("FastSprint") == true then
+		return loadLocomotionTrack(Animator, weapon, "FastSprint", Enum.AnimationPriority.Movement)
+	elseif Character:GetAttribute("Sprint") == true then
+		return loadLocomotionTrack(Animator, weapon, "Sprint", Enum.AnimationPriority.Movement)
+	end
+
+	return loadLocomotionTrack(Animator, weapon, "run", Enum.AnimationPriority.Movement, "Run")
+end
+
 local function updateIdle()
 	if IdleHumanoid == nil or IdleRoot == nil then
 		return
@@ -452,7 +463,7 @@ function Handler.StartIdle(Character)
 
 	IdleTrack = loadLocomotionTrack(Animator, weapon, IdleName, Enum.AnimationPriority.Idle, "Idle")
 	WalkTrack = loadLocomotionTrack(Animator, weapon, "walk", Enum.AnimationPriority.Movement, "Walk")
-	RunTrack = loadLocomotionTrack(Animator, weapon, "run", Enum.AnimationPriority.Movement, "Run")
+	RunTrack = loadRunTrackForState(Animator, weapon, Character)
 
 	IdleCharacter = Character
 	IdleHumanoid = Humanoid
@@ -467,6 +478,12 @@ function Handler.StartIdle(Character)
 		Handler.StartIdle(Character)
 	end)
 
+	for _, attributeName in {"Sprint", "FastSprint"} do
+		table.insert(SprintStateConnections, Character:GetAttributeChangedSignal(attributeName):Connect(function()
+			Handler.StartIdle(Character)
+		end))
+	end
+
 	updateIdle()
 end
 
@@ -480,6 +497,11 @@ function Handler.StopIdle()
 		RageConnection:Disconnect()
 		RageConnection = nil
 	end
+
+	for _, connection in SprintStateConnections do
+		connection:Disconnect()
+	end
+	table.clear(SprintStateConnections)
 
 	stopEquipTrack()
 

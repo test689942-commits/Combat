@@ -223,8 +223,8 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
   - Smoothly tilts `RootJoint`, `Right Hip`, `Left Hip`, and `Neck` `Motor6D.C0` based on horizontal velocity vs. character facing direction.
   - Automatically resets to neutral pose when idle (`> 2s`), facing a wall within `2` studs, or in any combat/stun/action state (`Stun`, `DoingCombat`, `DoingMove`, `Blocking`).
 - **Double-Tap `W` Sprint, FastSprint & Sprint Visuals (`ClientSystem/Inputs/Sprint.luau`, `ClientSystem/SprintVisuals.luau`)**:
-  - Double-tapping `W` within `0.2s` activates Sprint (`SprintSpeed = 24`, animation `Sprint` = `70903321662399`) while `W` is held, and transitions into `FastSprint` (`FastSprintSpeed = 28`, animation `FastSprint` = `92394376692356`) after `1.35s` of continuous sprinting.
-  - Attaches `SprintTrail`s on `Left Arm` and `Right Arm`, tweens camera `FieldOfView` (`70 -> 76`), adds velocity-scaled camera sway, and loops the `SpeedSprinting` effect from `ReplicatedStorage.Assets.Effects.Movement` when available.
+  - Double-tapping `W` starts with the `FastSprint` animation (`92394376692356`), then switches to `Sprint` (`70903321662399`) after 3 seconds of continuous sprinting.
+  - Arm trails and camera visuals activate immediately. The `SpeedSprinting` effect from `ReplicatedStorage.Assets.Effects.Movement` starts only after that 3-second delay.
 - **Movement VFX Location (`ReplicatedStorage.Assets.Effects.Movement`)**:
   - Movement and dash VFX are stored in the `Movement` folder: `Ring`, `Arm Trail`, `Back`, `Forward`, `Left`, `Right`, `SideDust`, `SpeedSprinting`, `Trail`, and `TransparentArmTrail`.
   - Dash now looks in `Effects.Movement` first for direction bursts, `Ring`, and arm-trail attachments (with legacy `Dash` / `DashVFX` fallback).
