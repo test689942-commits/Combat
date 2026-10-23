@@ -4,6 +4,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local Client = require(script.Parent)
+local MovementFX = require(script.Parent:WaitForChild("MovementFX"))
 
 local WallRun = {}
 
@@ -130,6 +131,28 @@ local function isActionLocked(character: Model): boolean
 	return #Client.Actions > 0 or #Client.Stuns > 0 or Client.Dashing
 end
 
+local function loadMovementTrack(humanoid: Humanoid, animKey: string, priority: Enum.AnimationPriority, looped: boolean): AnimationTrack?
+	local animator = humanoid:FindFirstChildOfClass("Animator")
+	if not animator then
+		return nil
+	end
+
+	if not Client.Animations.DetectSpecificAnimation("Movement", animKey) then
+		return nil
+	end
+
+	local anim = Client.Animations.GetAnimation("Movement", animKey)
+	if not anim then
+		return nil
+	end
+
+	local track = animator:LoadAnimation(anim)
+	track.Priority = priority
+	track.Looped = looped
+	anim:Destroy()
+	return track
+end
+
 function WallRun.Start(Character: Model)
 	local Humanoid = Character:WaitForChild("Humanoid", 5) :: Humanoid?
 	local Root = Character:WaitForChild("HumanoidRootPart", 5) :: BasePart?
@@ -145,10 +168,27 @@ function WallRun.Start(Character: Model)
 	local BV: BodyVelocity? = nil
 	local BG: BodyGyro? = nil
 	local LastNormal: Vector3? = nil
+	local ActiveRunTrack: AnimationTrack? = nil
+	local StopWallFX: (() -> ())? = nil
 	local Grace = 0.15
 	local SwitchCd = 0
 	local StabilityTmr = 0
 	local RetryCd = 0
+
+	local function StopRunVisuals()
+		if ActiveRunTrack then
+			if ActiveRunTrack.IsPlaying then
+				ActiveRunTrack:Stop(0.12)
+			end
+			ActiveRunTrack:Destroy()
+			ActiveRunTrack = nil
+		end
+
+		if StopWallFX then
+			StopWallFX()
+			StopWallFX = nil
+		end
+	end
 
 	local function ClearMovers()
 		if BV then BV:Destroy(); BV = nil end
@@ -160,6 +200,7 @@ function WallRun.Start(Character: Model)
 		Side = nil
 		Grace = 0.15
 		Character:SetAttribute("WallRunning", nil)
+		StopRunVisuals()
 		ClearMovers()
 
 		if Cooldown then
@@ -169,6 +210,8 @@ function WallRun.Start(Character: Model)
 	end
 
 	local function Activate(S: string)
+		StopRunVisuals()
+
 		for _, Obj in Root:GetChildren() do
 			local IsMover = Obj:IsA("BodyVelocity") or Obj:IsA("BodyGyro")
 			if IsMover then
@@ -192,6 +235,17 @@ function WallRun.Start(Character: Model)
 		Grace = 0.15
 		RetryCd = 0
 		Character:SetAttribute("WallRunning", S)
+
+		local runAnimKey = if S == "LeftVector" then "LeftRun" else "RightRun"
+		ActiveRunTrack = loadMovementTrack(Humanoid, runAnimKey, Enum.AnimationPriority.Action2, true)
+		if ActiveRunTrack then
+			ActiveRunTrack:Play(0.1)
+		end
+
+		local fxCandidates = if S == "LeftVector"
+			then {"Left Run", "LeftRun", "WallRun", "WallRunFX"}
+			else {"Right Run", "RightRun", "WallRun", "WallRunFX"}
+		StopWallFX = MovementFX.StartLoop(Character, fxCandidates)
 	end
 
 	local function Release()
@@ -207,8 +261,20 @@ function WallRun.Start(Character: Model)
 			return
 		end
 
+		local currentSide = Side
 		local jumpAway = LastNormal or Vector3.zero
 		Detach(0.25)
+
+		local jumpAnimKey = if currentSide == "LeftVector" then "LeftJump" else "RightJump"
+		local jumpTrack = loadMovementTrack(Humanoid, jumpAnimKey, Enum.AnimationPriority.Action3, false)
+		if jumpTrack then
+			jumpTrack:Play(0.08)
+		end
+
+		local jumpFxNames = if currentSide == "LeftVector"
+			then {"Left Jump", "LeftJump", "WallJump", "JumpFX"}
+			else {"Right Jump", "RightJump", "WallJump", "JumpFX"}
+		MovementFX.PlayOnce(Character, jumpFxNames)
 
 		if Root.Parent then
 			Root.AssemblyLinearVelocity = Root.CFrame.LookVector * 32 + jumpAway * 22 + Vector3.new(0, 42, 0)
@@ -272,6 +338,7 @@ function WallRun.Start(Character: Model)
 	return function()
 		InputConn:Disconnect()
 		SteppedConn:Disconnect()
+		StopRunVisuals()
 		ClearMovers()
 		Character:SetAttribute("WallRunning", nil)
 	end

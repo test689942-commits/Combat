@@ -5,9 +5,44 @@ return table.freeze({
 		Left = "rbxassetid://76238009484167";
 		Right = "rbxassetid://115445652062764";
 		Roll = "rbxassetid://114963664648176";
-		Idle = "rbxassetid://0";
-		walk = "rbxassetid://0";
-		run = "rbxassetid://0";
+		Idle = "rbxassetid://139783125255456";
+		walk = "rbxassetid://81874417224388";
+		run = "rbxassetid://70903321662399";
+		Sprint = "rbxassetid://70903321662399";
+		FastSprint = "rbxassetid://92394376692356";
+		jump = "rbxassetid://135702083168555";
+		Jump = "rbxassetid://135702083168555";
+		Fall = "rbxassetid://120908359783163";
+		fall = "rbxassetid://120908359783163";
+		LeftJump = "rbxassetid://119937163876536";
+		["Left Jump"] = "rbxassetid://119937163876536";
+		LeftRun = "rbxassetid://118914310248428";
+		["Left Run"] = "rbxassetid://118914310248428";
+		RightJump = "rbxassetid://109550456840533";
+		["Right Jump"] = "rbxassetid://109550456840533";
+		RightRun = "rbxassetid://92324260993876";
+		["Right Run"] = "rbxassetid://92324260993876";
+		Vault1 = "rbxassetid://111806598954502";
+		Vault2 = "rbxassetid://87942706676175";
+		LongJump = "rbxassetid://71457670921368";
+		Sliding = "rbxassetid://134302481749326";
+		Slide = "rbxassetid://134302481749326";
+
+		WallRun = table.freeze({
+			LeftJump = "rbxassetid://119937163876536";
+			["Left Jump"] = "rbxassetid://119937163876536";
+			LeftRun = "rbxassetid://118914310248428";
+			["Left Run"] = "rbxassetid://118914310248428";
+			RightJump = "rbxassetid://109550456840533";
+			["Right Jump"] = "rbxassetid://109550456840533";
+			RightRun = "rbxassetid://92324260993876";
+			["Right Run"] = "rbxassetid://92324260993876";
+		});
+
+		Vault = table.freeze({
+			Vault1 = "rbxassetid://111806598954502";
+			Vault2 = "rbxassetid://87942706676175";
+		});
 	});
 
 	Shared = table.freeze({

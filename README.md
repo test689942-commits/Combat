@@ -222,15 +222,21 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
 - **Directional Movement Body-Tilt (`ClientSystem/DirectionalMovement.luau`)**:
   - Smoothly tilts `RootJoint`, `Right Hip`, `Left Hip`, and `Neck` `Motor6D.C0` based on horizontal velocity vs. character facing direction.
   - Automatically resets to neutral pose when idle (`> 2s`), facing a wall within `2` studs, or in any combat/stun/action state (`Stun`, `DoingCombat`, `DoingMove`, `Blocking`).
-- **Double-Tap `W` Sprint & Sprint Visuals (`ClientSystem/Inputs/Sprint.luau`, `ClientSystem/SprintVisuals.luau`)**:
-  - Double-tapping `W` within `0.2s` activates Sprint (`SprintSpeed = 24`) while `W` is held, and sets the `Sprint` attribute on `Humanoid` and `Character`.
-  - Attaches subtle `SprintTrail` trails on `Left Arm` and `Right Arm`, tweens camera `FieldOfView` (`70 -> 76`), and adds velocity-scaled camera sway while sprinting.
-- **Slide (`ClientSystem/Inputs/Slide.luau`, `ClientSystem/Movement.luau`)**:
-  - Pressing `LeftControl` performs a forward ground slide impulse and plays the slide audio (`rbxassetid://6429226498`).
+- **Double-Tap `W` Sprint, FastSprint & Sprint Visuals (`ClientSystem/Inputs/Sprint.luau`, `ClientSystem/SprintVisuals.luau`)**:
+  - Double-tapping `W` within `0.2s` activates Sprint (`SprintSpeed = 24`, animation `Sprint` = `70903321662399`) while `W` is held, and transitions into `FastSprint` (`FastSprintSpeed = 28`, animation `FastSprint` = `92394376692356`) after `1.35s` of continuous sprinting.
+  - Attaches `SprintTrail` trails on `Left Arm` and `Right Arm`, tweens camera `FieldOfView` (`70 -> 76`), adds velocity-scaled camera sway, and plays any `Sprint` / `FastSprint` VFX from `ReplicatedStorage.Assets.Effects`.
+- **Slide & LongJump (`ClientSystem/Inputs/Slide.luau`, `ClientSystem/Movement.luau`)**:
+  - Pressing `LeftControl` performs a forward ground slide impulse, plays the `Sliding` animation (`134302481749326`), plays the slide audio (`rbxassetid://6429226498`), and plays any `Slide` / `Sliding` VFX from `Assets.Effects`.
+  - Pressing `Space` while sliding cancels the slide into a forward-upward **LongJump** boost, playing the `LongJump` animation (`71457670921368`) and emitting any `LongJump` VFX from `Assets.Effects`.
 - **WallClimb & Vault (`ClientSystem/Inputs/Jump.luau`, `ClientSystem/Movement.luau`)**:
-  - Pressing `Space` near a wall checks ground, overhead clearance, torso wall hit, and head ledge clearance to perform either a vertical **WallClimb** boost or a ledge **Vault**.
+  - Pressing `Space` near a wall checks ground, overhead clearance, torso wall hit, and head ledge clearance to perform either a vertical **WallClimb** boost (`FastSprint` = `92394376692356`) or a ledge **Vault** (alternating `Vault1` = `111806598954502` and `Vault2` = `87942706676175`) with VFX from `Assets.Effects`.
 - **WallRun Controller (`ClientSystem/WallRun.luau`)**:
-  - Detects runnable left/right walls while airborne with forward input, propels the character along the wall tangent using `BodyVelocity` and `BodyGyro`, and allows jumping off the wall with `Space`.
+  - Detects runnable left/right walls while airborne with forward input, propels the character along the wall tangent using `BodyVelocity` and `BodyGyro`, plays `Left Run` (`118914310248428`) / `Right Run` (`92324260993876`) with wallrun VFX from `Assets.Effects`, and plays `Left Jump` (`119937163876536`) / `Right Jump` (`109550456840533`) when jumping off the wall with `Space`.
+- **Movement Animations (`Animations/Anims.luau`, `StarterCharacterScripts/Animate.local.luau`)**:
+  - `Idle`: `139783125255456`, `walk`: `81874417224388`, `Sprint`/`run`: `70903321662399`, `FastSprint`: `92394376692356`, `jump`: `135702083168555`, `Fall`: `120908359783163`.
+  - `WallRun`: `Left Jump` (`119937163876536`), `Left Run` (`118914310248428`), `Right Jump` (`109550456840533`), `Right Run` (`92324260993876`).
+  - `Vault`: `Vault1` (`111806598954502`), `Vault2` (`87942706676175`).
+  - `Slide`: `LongJump` (`71457670921368`), `Sliding` (`134302481749326`).
 - **Shiftlock Offset & Combat Jump Tuning (`ClientSystem/CameraShiftlock.luau`)**:
   - Applies custom Shiftlock camera offset (`Vector3.new(1.3, 0.35, 0)`), custom Shiftlock mouse icon (`http://www.roblox.com/asset/?id=109916623354797`), camera zoom bounds (`0..20`), and consecutive-jump height/power decay while in combat.
 - **Material-Mapped Footsteps (`ClientSystem/FootSteps.luau`, `StarterCharacterScripts/MovementController.local.luau`)**:

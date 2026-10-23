@@ -72,6 +72,25 @@ local FOLDER_LAYOUT = {
 		"Slash Floor",
 		"Idk",
 	},
+	Movement = {
+		"Slide",
+		"Sliding",
+		"SlideFX",
+		"LongJump",
+		"Vault",
+		"Vault1",
+		"Vault2",
+		"WallClimb",
+		"WallRun",
+		"LeftRun",
+		"RightRun",
+		"LeftJump",
+		"RightJump",
+		"Sprint",
+		"FastSprint",
+		"JumpFX",
+		"LandFX",
+	},
 }
 
 local function normalizeKey(text: string): string

@@ -6,16 +6,29 @@ local Debris = game:GetService("Debris")
 
 local Movement = {}
 local Client = require(script.Parent)
+local MovementFX = require(script.Parent:WaitForChild("MovementFX"))
 
 Movement.__index = Movement
 
 local SLIDE_SPEED = 52
-local SLIDE_DURATION = 0.45
+local SLIDE_DURATION = 0.55
 local SLIDE_COOLDOWN = 1.2
 local WALL_CLIMB_COOLDOWN = 0.8
+local FAST_SPRINT_DELAY = 1.35
 
 local lastSlideTime = 0
 local lastClimbTime = 0
+local vaultToggle = false
+
+local activeSlideVelocity: BodyVelocity? = nil
+local activeSlideTrack: AnimationTrack? = nil
+local activeSlideSound: Sound? = nil
+local stopSlideFX: (() -> ())? = nil
+local slideCancelThread: thread? = nil
+
+local fastSprintThread: thread? = nil
+local stopSprintFX: (() -> ())? = nil
+local stopFastSprintFX: (() -> ())? = nil
 
 local function hasBlockingState(character: Model?): boolean
 	if not character then
@@ -49,6 +62,67 @@ local function createMapParams(character: Model): RaycastParams
 	return rayParams
 end
 
+local function playMovementAnim(humanoid: Humanoid, animKey: string, priority: Enum.AnimationPriority, fadeTime: number?, speed: number?): AnimationTrack?
+	local animator = humanoid:FindFirstChildOfClass("Animator")
+	if not animator then
+		return nil
+	end
+
+	if not Client.Animations.DetectSpecificAnimation("Movement", animKey) then
+		return nil
+	end
+
+	local anim = Client.Animations.GetAnimation("Movement", animKey)
+	if not anim then
+		return nil
+	end
+
+	local track = animator:LoadAnimation(anim)
+	track.Priority = priority
+	track:Play(fadeTime or 0.1, 1, speed or 1)
+	anim:Destroy()
+	return track
+end
+
+local function cancelActiveSlide()
+	if slideCancelThread then
+		task.cancel(slideCancelThread)
+		slideCancelThread = nil
+	end
+
+	if activeSlideVelocity then
+		if activeSlideVelocity.Parent then
+			activeSlideVelocity:Destroy()
+		end
+		activeSlideVelocity = nil
+	end
+
+	if activeSlideTrack then
+		if activeSlideTrack.IsPlaying then
+			activeSlideTrack:Stop(0.1)
+		end
+		activeSlideTrack:Destroy()
+		activeSlideTrack = nil
+	end
+
+	if activeSlideSound then
+		if activeSlideSound.Parent then
+			activeSlideSound:Stop()
+		end
+		activeSlideSound = nil
+	end
+
+	if stopSlideFX then
+		stopSlideFX()
+		stopSlideFX = nil
+	end
+
+	Client.Sliding = false
+	if Client.Character then
+		Client.Character:SetAttribute("Sliding", false)
+	end
+end
+
 --// Landed / Roll \\--
 
 Movement.Landed = function()
@@ -71,6 +145,10 @@ Movement.Landed = function()
 	end
 
 	local Height = (Client.FallHeight - Root.Position.Y)
+	if Height and Height > 6 then
+		MovementFX.PlayOnce(Character, {"LandFX", "Land", "FallFX", "Fall"})
+	end
+
 	if not Height or Height <= 15 then
 		return
 	end
@@ -94,7 +172,7 @@ Movement.Landed = function()
 	end)
 end
 
---// Sprint \\--
+--// Sprint & FastSprint \\--
 
 Movement.SetSprint = function(active: boolean)
 	local Character: Model = Client.Character
@@ -108,16 +186,51 @@ Movement.SetSprint = function(active: boolean)
 		active = false
 	end
 
+	if fastSprintThread then
+		task.cancel(fastSprintThread)
+		fastSprintThread = nil
+	end
+
+	if stopSprintFX then
+		stopSprintFX()
+		stopSprintFX = nil
+	end
+
+	if stopFastSprintFX then
+		stopFastSprintFX()
+		stopFastSprintFX = nil
+	end
+
 	Client.Running = active
 	Humanoid:SetAttribute("Sprint", active)
 	Character:SetAttribute("Sprint", active)
+	Humanoid:SetAttribute("FastSprint", false)
+	Character:SetAttribute("FastSprint", false)
 
 	if not hasBlockingState(Character) then
 		Humanoid.WalkSpeed = if active then Client.SprintSpeed else Client.BaseSpeed
 	end
+
+	if active then
+		stopSprintFX = MovementFX.StartLoop(Character, {"Sprint", "SprintFX", "RunFX"})
+		MovementFX.PlayOnce(Character, {"SprintStart", "Sprint"})
+
+		fastSprintThread = task.delay(FAST_SPRINT_DELAY, function()
+			fastSprintThread = nil
+			if not Client.Running or not Character.Parent or Humanoid.Health <= 0 or hasBlockingState(Character) then
+				return
+			end
+
+			Humanoid:SetAttribute("FastSprint", true)
+			Character:SetAttribute("FastSprint", true)
+			Humanoid.WalkSpeed = Client.FastSprintSpeed
+			stopFastSprintFX = MovementFX.StartLoop(Character, {"FastSprint", "FastSprintFX", "Sprint", "SprintFX"})
+			MovementFX.PlayOnce(Character, {"FastSprint", "FastSprintFX"})
+		end)
+	end
 end
 
---// Slide (Audio: rbxassetid://6429226498) \\--
+--// Slide (Sliding: rbxassetid://134302481749326, Audio: rbxassetid://6429226498) \\--
 
 Movement.Slide = function()
 	local Character: Model = Client.Character
@@ -128,7 +241,7 @@ Movement.Slide = function()
 		return
 	end
 
-	if Client.InAir or hasBlockingState(Character) then
+	if Client.InAir or Client.Sliding or hasBlockingState(Character) then
 		return
 	end
 
@@ -149,12 +262,16 @@ Movement.Slide = function()
 
 	direction = direction.Unit
 
+	cancelActiveSlide()
+	Client.Sliding = true
+	Character:SetAttribute("Sliding", true)
+
 	local slideVelocity = Instance.new("BodyVelocity")
 	slideVelocity.Name = "SlideVelocity"
 	slideVelocity.MaxForce = Vector3.new(4e4, 0, 4e4)
 	slideVelocity.Velocity = direction * SLIDE_SPEED
 	slideVelocity.Parent = Root
-	Debris:AddItem(slideVelocity, SLIDE_DURATION)
+	activeSlideVelocity = slideVelocity
 
 	local slideSound = Instance.new("Sound")
 	slideSound.Name = "SlideSound"
@@ -163,20 +280,21 @@ Movement.Slide = function()
 	slideSound.Parent = Root
 	slideSound:Play()
 	Debris:AddItem(slideSound, 2)
+	activeSlideSound = slideSound
 
-	local animName = if Client.Animations.DetectSpecificAnimation("Movement", "Slide") then "Slide" else "Roll"
-	if Client.Animations.DetectSpecificAnimation("Movement", animName) then
-		local slideAnim = Client.Animations.GetAnimation("Movement", animName)
-		if slideAnim and Humanoid:FindFirstChildOfClass("Animator") then
-			local track = Humanoid.Animator:LoadAnimation(slideAnim)
-			track.Priority = Enum.AnimationPriority.Action3
-			track:Play(0.1)
-			slideAnim:Destroy()
-		end
-	end
+	local animName = if Client.Animations.DetectSpecificAnimation("Movement", "Sliding") then "Sliding" else "Roll"
+	activeSlideTrack = playMovementAnim(Humanoid, animName, Enum.AnimationPriority.Action3, 0.08, 1)
+
+	stopSlideFX = MovementFX.StartLoop(Character, {"Sliding", "Slide", "SlideFX"})
+	MovementFX.PlayOnce(Character, {"Sliding", "Slide", "SlideFX"})
+
+	slideCancelThread = task.delay(SLIDE_DURATION, function()
+		slideCancelThread = nil
+		cancelActiveSlide()
+	end)
 end
 
---// WallClimb & Vault \\--
+--// WallClimb, Vault (Vault1 / Vault2) & Slide LongJump \\--
 
 Movement.ShouldWallClimb = function(Character: Model, Humanoid: Humanoid): (boolean, boolean)
 	local RootPart = Humanoid.RootPart
@@ -224,6 +342,28 @@ Movement.TryWallClimbOrVault = function()
 		return
 	end
 
+	-- LongJump when jumping out of an active Slide (rbxassetid://71457670921368)
+	if Client.Sliding then
+		cancelActiveSlide()
+
+		local direction = Humanoid.MoveDirection
+		if direction.Magnitude < 0.1 then
+			direction = Root.CFrame.LookVector * Vector3.new(1, 0, 1)
+		end
+		direction = if direction.Magnitude > 0.05 then direction.Unit else Root.CFrame.LookVector
+
+		local longJumpVelocity = Instance.new("BodyVelocity")
+		longJumpVelocity.Name = "LongJumpVelocity"
+		longJumpVelocity.MaxForce = Vector3.new(4e4, 4e4, 4e4)
+		longJumpVelocity.Velocity = direction * 54 + Vector3.new(0, 38, 0)
+		longJumpVelocity.Parent = Root
+		Debris:AddItem(longJumpVelocity, 0.24)
+
+		playMovementAnim(Humanoid, "LongJump", Enum.AnimationPriority.Action3, 0.08, 1)
+		MovementFX.PlayOnce(Character, {"LongJump", "Long Jump", "SlideJump", "JumpFX"})
+		return
+	end
+
 	if tick() - lastClimbTime < WALL_CLIMB_COOLDOWN then
 		return
 	end
@@ -238,6 +378,9 @@ Movement.TryWallClimbOrVault = function()
 		climbVelocity.Velocity = Root.CFrame.LookVector * 8 + Vector3.new(0, 46, 0)
 		climbVelocity.Parent = Root
 		Debris:AddItem(climbVelocity, 0.28)
+
+		playMovementAnim(Humanoid, "FastSprint", Enum.AnimationPriority.Action3, 0.08, 1.15)
+		MovementFX.PlayOnce(Character, {"WallClimb", "Climb", "Vault", "WallRun"})
 	elseif shouldVault then
 		lastClimbTime = tick()
 		local vaultVelocity = Instance.new("BodyVelocity")
@@ -246,6 +389,11 @@ Movement.TryWallClimbOrVault = function()
 		vaultVelocity.Velocity = Root.CFrame.LookVector * 28 + Vector3.new(0, 32, 0)
 		vaultVelocity.Parent = Root
 		Debris:AddItem(vaultVelocity, 0.22)
+
+		vaultToggle = not vaultToggle
+		local vaultAnimKey = if vaultToggle then "Vault1" else "Vault2"
+		playMovementAnim(Humanoid, vaultAnimKey, Enum.AnimationPriority.Action3, 0.06, 1)
+		MovementFX.PlayOnce(Character, {vaultAnimKey, "Vault", "VaultFX"})
 	end
 end
 
