@@ -78,10 +78,10 @@ return table.freeze({
 		});
 
 		DragonSlayer = table.freeze({
-			Combat1 = "rbxassetid://78369954719539";
-			Combat2 = "rbxassetid://73470458137355";
-			Combat3 = "rbxassetid://103611653018266";
-			Combat4 = "rbxassetid://132310679786099";
+			Combat1 = "rbxassetid://91138922124420";
+			Combat2 = "rbxassetid://110429591388952";
+			Combat3 = "rbxassetid://82396912225048";
+			Combat4 = "rbxassetid://129650220050908";
 			Combat5 = "rbxassetid://0";
 			Critical = "rbxassetid://0";
 			Equip = "rbxassetid://0";
