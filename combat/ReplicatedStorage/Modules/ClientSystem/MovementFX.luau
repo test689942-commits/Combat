@@ -146,6 +146,55 @@ local function emitWithAttributes(container: Instance)
 	end
 end
 
+function MovementFX.PlayAt(candidateNames: {string}, effectCFrame: CFrame, cleanupAfter: number?)
+	local template = MovementFX.FindTemplate(candidateNames)
+	if not template then
+		return
+	end
+
+	local clone = template:Clone()
+	local worldEffects = workspace:FindFirstChild("Effects") or workspace
+	local cleanupRoot: Instance = clone
+
+	if clone:IsA("Attachment") or clone:IsA("Folder") then
+		local holder = Instance.new("Part")
+		holder.Name = "MovementVFXAnchor"
+		holder.Size = Vector3.new(0.1, 0.1, 0.1)
+		holder.Transparency = 1
+		holder.Anchored = true
+		holder.CanCollide = false
+		holder.CanQuery = false
+		holder.CanTouch = false
+		holder.CFrame = effectCFrame
+		holder.Parent = worldEffects
+		clone.Parent = holder
+		cleanupRoot = holder
+	elseif clone:IsA("BasePart") then
+		clone.Anchored = true
+		clone.CanCollide = false
+		clone.CanQuery = false
+		clone.CanTouch = false
+		clone.CFrame = effectCFrame
+		clone.Parent = worldEffects
+	elseif clone:IsA("Model") then
+		for _, descendant in ipairs(clone:GetDescendants()) do
+			if descendant:IsA("BasePart") then
+				descendant.Anchored = true
+				descendant.CanCollide = false
+				descendant.CanQuery = false
+				descendant.CanTouch = false
+			end
+		end
+		clone:PivotTo(effectCFrame)
+		clone.Parent = worldEffects
+	else
+		clone.Parent = worldEffects
+	end
+
+	emitWithAttributes(clone)
+	Debris:AddItem(cleanupRoot, cleanupAfter or 2)
+end
+
 function MovementFX.PlayOnce(character: Model?, candidateNames: {string}, targetPartName: string?, cleanupAfter: number?)
 	if not character then
 		return

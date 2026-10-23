@@ -15,8 +15,16 @@ local Dash = {}
 
 local MOVE_NAME = script.Name
 local LIMB_NAMES = {"Right Arm", "Left Arm", "Left Leg", "Right Leg"}
+local SUPER_DASH_WINDOW = 0.35
+local SUPER_DASH_DURATION = 0.65
+local SUPER_DASH_SPEED = 85
+local SUPER_DASH_COOLDOWN = 1.5
 
 local directionsByName = {}
+local superDashQueued = false
+local superDashActive = false
+local superDashWindowUntil = 0
+local lastSuperDashTime = -math.huge
 
 local obstructionParams = RaycastParams.new()
 obstructionParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -337,6 +345,90 @@ local function runDash(character: Model, root: BasePart, animation: AnimationTra
 	until not velocity.Parent
 end
 
+local function runSuperDash(character: Model, humanoid: Humanoid, root: BasePart)
+	local now = os.clock()
+	if superDashActive or now - lastSuperDashTime < SUPER_DASH_COOLDOWN
+		or #Client.Actions > 0 or #Client.Stuns > 0 or humanoid.Health <= 0 then
+		return
+	end
+
+	local movementDirection = humanoid.MoveDirection * Vector3.new(1, 0, 1)
+	if movementDirection.Magnitude < 0.05 then
+		return
+	end
+	movementDirection = movementDirection.Unit
+
+	local localDirection = root.CFrame:VectorToObjectSpace(movementDirection)
+	local direction = if math.abs(localDirection.X) > math.abs(localDirection.Z)
+		then (if localDirection.X > 0 then "Right" else "Left")
+		else (if localDirection.Z < 0 then "Forward" else "Back")
+
+	superDashActive = true
+	superDashQueued = false
+	superDashWindowUntil = 0
+	lastSuperDashTime = now
+	Client.Dashing = true
+
+	local transparencyByInstance = {}
+	for _, descendant in character:GetDescendants() do
+		if descendant:IsA("BasePart") or descendant:IsA("Decal") then
+			transparencyByInstance[descendant] = descendant.Transparency
+		end
+	end
+
+	local function setInvisible(invisible: boolean)
+		for instance, originalTransparency in pairs(transparencyByInstance) do
+			if instance.Parent then
+				instance.Transparency = if invisible then 1 else originalTransparency
+			end
+		end
+	end
+
+	local velocity = Instance.new("BodyVelocity")
+	velocity.Name = "SuperDashVelocity"
+	velocity.MaxForce = Vector3.new(1e5, 0, 1e5) * root.AssemblyMass
+	velocity.P = 10000
+	velocity.Parent = root
+
+	playEffects(character, root, direction)
+	startAfterImages(character)
+
+	local startedAt = os.clock()
+	local nextBlinkAt = startedAt
+	local visibleAgainAt = 0
+	while os.clock() - startedAt < SUPER_DASH_DURATION and character.Parent and humanoid.Health > 0 do
+		if #Client.Actions > 0 or #Client.Stuns > 0 then
+			break
+		end
+
+		local currentTime = os.clock()
+		if currentTime >= nextBlinkAt then
+			setInvisible(true)
+			visibleAgainAt = currentTime + 0.08
+			nextBlinkAt = currentTime + 0.23
+		elseif currentTime >= visibleAgainAt then
+			setInvisible(false)
+		end
+
+		local obstruction = isObstructed(root)
+		if obstruction then
+			markDashWallContact(character, obstruction)
+			break
+		end
+
+		velocity.Velocity = movementDirection * SUPER_DASH_SPEED
+		Client.Service.RunService.Heartbeat:Wait()
+	end
+
+	setInvisible(false)
+	if velocity.Parent then
+		velocity:Destroy()
+	end
+	AfterImages.Play({Model = character, Stop = true})
+	Client.Dashing = false
+	superDashActive = false
+end
+
 --// Move \\--
 
 function Dash.Activate(direction: string)
@@ -352,12 +444,27 @@ function Dash.Activate(direction: string)
 		return
 	end
 
+	obstructionParams.FilterDescendantsInstances = {character}
+
+	if Client.Dashing then
+		if not superDashActive then
+			superDashQueued = true
+		end
+		return
+	end
+
+	if superDashWindowUntil > os.clock() then
+		superDashWindowUntil = 0
+		runSuperDash(character, humanoid, root)
+		return
+	end
+
 	if not canDash(character) then
 		return
 	end
 
 	clearVelocities(character)
-	obstructionParams.FilterDescendantsInstances = {character}
+	superDashQueued = false
 
 	Client.Library.SetCooldown(character, MOVE_NAME, Info.Cooldown)
 	Client.Dashing = true
@@ -374,6 +481,12 @@ function Dash.Activate(direction: string)
 	AfterImages.Play({Model = character, Stop = true})
 
 	Client.Dashing = false
+	if superDashQueued then
+		superDashQueued = false
+		runSuperDash(character, humanoid, root)
+	else
+		superDashWindowUntil = os.clock() + SUPER_DASH_WINDOW
+	end
 end
 
 return Dash

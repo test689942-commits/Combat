@@ -3,7 +3,9 @@
 local Debris = game:GetService("Debris")
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local SFX = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Sounds"):WaitForChild("SFX"))
+local Modules = ReplicatedStorage:WaitForChild("Modules")
+local SFX = require(Modules:WaitForChild("Sounds"):WaitForChild("SFX"))
+local MovementFX = require(Modules:WaitForChild("ClientSystem"):WaitForChild("MovementFX"))
 
 --// FootSteps \\--
 
@@ -51,7 +53,34 @@ FootSteps.MaterialMap = {
 	[Enum.HumanoidStateType.Jumping] = FootSteps.SoundIds.Jump;
 }
 
-function FootSteps.PlayStep(rootPart: BasePart?, materialOrState: any, volume: number?, playbackSpeed: number?)
+local function playFootstepVFX(rootPart: BasePart)
+	local character = rootPart.Parent
+	if not character then
+		return
+	end
+
+	local rayParams = RaycastParams.new()
+	rayParams.FilterType = Enum.RaycastFilterType.Exclude
+	rayParams.FilterDescendantsInstances = {character}
+	local hit = workspace:Raycast(rootPart.Position + Vector3.new(0, 1, 0), Vector3.new(0, -7, 0), rayParams)
+	if not hit then
+		return
+	end
+
+	local up = hit.Normal
+	local forward = rootPart.CFrame.LookVector
+	local right = forward:Cross(up)
+	if right.Magnitude < 0.01 then
+		right = Vector3.xAxis
+	else
+		right = right.Unit
+	end
+	forward = up:Cross(right).Unit
+	local footstepCFrame = CFrame.fromMatrix(hit.Position + up * 0.025, right, up, -forward)
+	MovementFX.PlayAt({"FootStep"}, footstepCFrame, 8)
+end
+
+function FootSteps.PlayStep(rootPart: BasePart?, materialOrState: any, volume: number?, playbackSpeed: number?, emitVFX: boolean?)
 	if not rootPart or not rootPart.Parent then
 		return
 	end
@@ -68,6 +97,11 @@ function FootSteps.PlayStep(rootPart: BasePart?, materialOrState: any, volume: n
 	sound.RollOffMaxDistance = 65
 	sound.Parent = rootPart
 	sound:Play()
+
+	-- The ground-step VFX is opt-in so jumping and landing sounds stay particle-free.
+	if emitVFX and typeof(materialOrState) == "EnumItem" and materialOrState.EnumType == Enum.Material then
+		playFootstepVFX(rootPart)
+	end
 
 	Debris:AddItem(sound, 2)
 end

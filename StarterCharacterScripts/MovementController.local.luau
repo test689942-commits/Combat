@@ -89,7 +89,7 @@ local heartbeatConn = RunService.Heartbeat:Connect(function(dt: number)
 			local sprinting = Humanoid:GetAttribute("Sprint") == true or Character:GetAttribute("Sprint") == true
 			local volume = if sprinting then 0.42 else 0.28
 			local pitch = if sprinting then (1.02 + math.random() * 0.08) else (0.94 + math.random() * 0.08)
-			FootSteps.PlayStep(Root, Humanoid.FloorMaterial, volume, pitch)
+			FootSteps.PlayStep(Root, Humanoid.FloorMaterial, volume, pitch, true)
 		end
 	else
 		stepAccumulator = 0

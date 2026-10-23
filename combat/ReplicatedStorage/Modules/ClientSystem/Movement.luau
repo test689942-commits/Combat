@@ -346,6 +346,7 @@ local function tryDashWallJump(Character: Model, Humanoid: Humanoid, Root: BaseP
 	Character:SetAttribute("DashWallContactAt", nil)
 	Character:SetAttribute("DashWallNormal", nil)
 	Character:SetAttribute("WallJumpLock", true)
+	MovementFX.PlayOnce(Character, {"WallJump"}, "HumanoidRootPart", 3)
 	Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 	return true
 end

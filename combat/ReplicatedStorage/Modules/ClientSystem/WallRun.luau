@@ -4,6 +4,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local Client = require(script.Parent)
+local MovementFX = require(script.Parent:WaitForChild("MovementFX"))
 
 local WallRun = {}
 
@@ -239,6 +240,8 @@ function WallRun.Start(Character: Model)
 			ActiveRunTrack:Play(0.1, 1, WALL_RUN_ANIM_SPEED)
 		end
 
+		local grabEffect = if S == "RightVector" then "RightWallGrab" else "LeftWallGrab"
+		MovementFX.PlayOnce(Character, {grabEffect}, "HumanoidRootPart", 2.5)
 	end
 
 	local function Release()
@@ -269,6 +272,7 @@ function WallRun.Start(Character: Model)
 		Detach(0.25)
 
 		if Root.Parent then
+			MovementFX.PlayOnce(Character, {"WallJump"}, "HumanoidRootPart", 3)
 			-- Enter the normal jump state so Animate plays the regular Jump track;
 			-- wall-jump-specific left/right tracks are intentionally not used.
 			Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
