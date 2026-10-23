@@ -1,6 +1,7 @@
 --// SPRINT VISUALS (Arm Trails, FOV Tween & Camera Sway) \\--
 
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
@@ -48,55 +49,55 @@ function SprintVisuals.Start(Character: Model)
 		return nil
 	end
 
-	local function createTrail(limb: BasePart?)
-		if not limb then
-			return
+	local function findDashTrailAttachment(): Attachment?
+		local assets = ReplicatedStorage:FindFirstChild("Assets")
+		local effects = assets and assets:FindFirstChild("Effects")
+		local movementEffects = effects and effects:FindFirstChild("Movement")
+		local trailAsset = movementEffects and movementEffects:FindFirstChild("Trail")
+
+		if not trailAsset then
+			return nil
 		end
 
-		local a0 = Instance.new("Attachment")
-		a0.Name = "SprintTrail_A0"
-		a0.Position = Vector3.new(0, 0.12, 0)
-		a0.Parent = limb
+		if trailAsset:IsA("Attachment") then
+			return trailAsset
+		end
 
-		local a1 = Instance.new("Attachment")
-		a1.Name = "SprintTrail_A1"
-		a1.Position = Vector3.new(0, -0.12, 0)
-		a1.Parent = limb
-
-		local trail = Instance.new("Trail")
-		trail.Name = "SprintTrail"
-		trail.Attachment0 = a0
-		trail.Attachment1 = a1
-		trail.Lifetime = 0.14
-		trail.MinLength = 0.05
-		trail.LightEmission = 0.45
-		trail.LightInfluence = 0
-		trail.FaceCamera = false
-		trail.Color = ColorSequence.new(Color3.fromRGB(235, 244, 255))
-		trail.Transparency = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 0.72),
-			NumberSequenceKeypoint.new(0.45, 0.82),
-			NumberSequenceKeypoint.new(1, 1),
-		})
-		trail.WidthScale = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 0.55),
-			NumberSequenceKeypoint.new(1, 0),
-		})
-		trail.Enabled = false
-		trail.Parent = limb
-
-		table.insert(sprintAttachments, a0)
-		table.insert(sprintAttachments, a1)
-		table.insert(sprintTrails, trail)
+		local attachment = trailAsset:FindFirstChild("LimbAtt", true)
+			or trailAsset:FindFirstChildWhichIsA("Attachment", true)
+		return if attachment and attachment:IsA("Attachment") then attachment else nil
 	end
 
 	local function ensureTrails()
-		if #sprintTrails > 0 then
+		if #sprintAttachments > 0 then
 			return
 		end
 
-		createTrail(getLimb("Left Arm", "LeftHand", "LeftLowerArm"))
-		createTrail(getLimb("Right Arm", "RightHand", "RightLowerArm"))
+		local template = findDashTrailAttachment()
+		if not template then
+			return
+		end
+
+		local function attachTrail(limb: BasePart?)
+			if not limb then
+				return
+			end
+
+			local attachment = template:Clone()
+			attachment.Name = "SprintDashTrail"
+			attachment.Parent = limb
+			table.insert(sprintAttachments, attachment)
+
+			for _, descendant in attachment:GetDescendants() do
+				if descendant:IsA("Trail") then
+					descendant.Enabled = false
+					table.insert(sprintTrails, descendant)
+				end
+			end
+		end
+
+		attachTrail(getLimb("Left Arm", "LeftHand", "LeftLowerArm"))
+		attachTrail(getLimb("Right Arm", "RightHand", "RightLowerArm"))
 	end
 
 	local function setTrailsEnabled(enabled: boolean)

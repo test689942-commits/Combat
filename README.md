@@ -224,10 +224,10 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
   - Automatically resets to neutral pose when idle (`> 2s`), facing a wall within `2` studs, or in any combat/stun/action state (`Stun`, `DoingCombat`, `DoingMove`, `Blocking`).
 - **Double-Tap `W` Sprint, FastSprint & Sprint Visuals (`ClientSystem/Inputs/Sprint.luau`, `ClientSystem/SprintVisuals.luau`)**:
   - Double-tapping `W` starts with the `FastSprint` animation (`92394376692356`) at `SprintSpeed = 24`, then switches to `Sprint` (`70903321662399`) at `FastSprintSpeed = 32` after 3 seconds of continuous sprinting.
-  - Arm trails and camera visuals activate immediately. The `SpeedSprinting` effect from `ReplicatedStorage.Assets.Effects.Movement` starts only after that 3-second delay.
+  - Sprint immediately clones `Movement.Trail` onto both arms; camera visuals activate immediately too. The `SpeedSprinting` effect from `ReplicatedStorage.Assets.Effects.Movement` starts only after that 3-second delay.
 - **Movement VFX Location (`ReplicatedStorage.Assets.Effects.Movement`)**:
-  - Movement and dash VFX are stored in the `Movement` folder: `Ring`, `Arm Trail`, `Back`, `Forward`, `Left`, `Right`, `SideDust`, `SpeedSprinting`, `Trail`, and `TransparentArmTrail`.
-  - Dash now looks in `Effects.Movement` first for direction bursts, `Ring`, `SideDust`, and arm-trail attachments (with legacy `Dash` / `DashVFX` fallback). `SideDust` emits on each dash.
+  - Movement and dash VFX are stored in the `Movement` folder: `Ring`, `Back`, `Forward`, `Left`, `Right`, `SideDust`, `SpeedSprinting`, and `Trail`.
+  - Dash looks in `Effects.Movement` for direction bursts, `Ring`, `SideDust`, and the `Trail` attachment template. Sprint reuses the same `Trail` template on both arms; `SideDust` emits on each dash.
 - **Slide, LongJump, WallClimb, Vault & WallRun (`ClientSystem/Movement.luau`, `ClientSystem/WallRun.luau`)**:
   - `LeftControl` performs the slide animation (`Sliding` = `134302481749326`) and plays `Sounds/SFX.Slide` (`rbxassetid://6429226498`). Pressing `Space` during slide triggers the forward-upward **LongJump** animation (`71457670921368`).
   - Jump input near a wall performs either a vertical **WallClimb** boost or a ledge **Vault** (alternating `Vault1` = `111806598954502` and `Vault2` = `87942706676175`). WallRun plays left/right run animations at `1.25x`; the wall-jump animation is removed. Auto wall-run re-entry remains disabled until landing after a wall jump.

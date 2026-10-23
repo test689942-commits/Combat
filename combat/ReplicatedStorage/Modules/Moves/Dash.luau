@@ -126,18 +126,12 @@ local function playLimbTrails(character: Model)
 	end
 
 	local dashEffects = getDashEffectsFolder()
-	local limbTrailTemplate = dashEffects and (dashEffects:FindFirstChild("Arm Trail") or dashEffects:FindFirstChild("TransparentArmTrail"))
+	local trailAsset = dashEffects and dashEffects:FindFirstChild("Trail")
+	local limbTrailTemplate = trailAsset
 
-	if not limbTrailTemplate then
-		local trailFolder = dashEffects and dashEffects:FindFirstChild("Trail")
-		limbTrailTemplate = trailFolder and (
-			trailFolder:FindFirstChild("LimbAtt", true)
-			or trailFolder:FindFirstChildWhichIsA("Attachment", true)
-			or (trailFolder:IsA("Attachment") and trailFolder)
-		)
-	elseif not limbTrailTemplate:IsA("Attachment") then
-		limbTrailTemplate = limbTrailTemplate:FindFirstChild("LimbAtt", true)
-			or limbTrailTemplate:FindFirstChildWhichIsA("Attachment", true)
+	if trailAsset and not trailAsset:IsA("Attachment") then
+		limbTrailTemplate = trailAsset:FindFirstChild("LimbAtt", true)
+			or trailAsset:FindFirstChildWhichIsA("Attachment", true)
 	end
 
 	if not limbTrailTemplate or not limbTrailTemplate:IsA("Attachment") then
