@@ -77,107 +77,9 @@ return table.freeze({
 			run = "rbxassetid://101575350826559";
 		});
 
-		["Steel Greatsword"] = table.freeze({
-			Combat1 = "rbxassetid://115188779775067";
-			Combat2 = "rbxassetid://77991701531557";
-			Combat3 = "rbxassetid://74359229331028";
-			Combat4 = "rbxassetid://123311420326858";
-			Combat5 = "rbxassetid://98746439901076";
-			Critical = "rbxassetid://0";
-			Equip = "rbxassetid://98629484644888";
-			Blocking = "rbxassetid://83625987534708";
-			Idle = "rbxassetid://99524115688566";
-			walk = "rbxassetid://0";
-			run = "rbxassetid://0";
-		});
-
-		["Nnoitras Blade"] = table.freeze({
-			Combat1 = "rbxassetid://115188779775067";
-			Combat2 = "rbxassetid://77991701531557";
-			Combat3 = "rbxassetid://74359229331028";
-			Combat4 = "rbxassetid://123311420326858";
-			Combat5 = "rbxassetid://98746439901076";
-			Critical = "rbxassetid://0";
-			Equip = "rbxassetid://98629484644888";
-			Blocking = "rbxassetid://83625987534708";
-			Idle = "rbxassetid://99524115688566";
-			walk = "rbxassetid://0";
-			run = "rbxassetid://0";
-		});
-
 		--// Longswords \\--
 
 		LongSword = table.freeze({
-			Combat1 = "rbxassetid://104350674835028";
-			Combat2 = "rbxassetid://136916892053502";
-			Combat3 = "rbxassetid://137545625296970";
-			Combat4 = "rbxassetid://72817778851446";
-			Combat5 = "rbxassetid://129033506735142";
-			Critical = "rbxassetid://79689855601446";
-			Equip = "rbxassetid://84342583369737";
-			Blocking = "rbxassetid://83625987534708";
-			Idle = "rbxassetid://94310549255164";
-			walk = "rbxassetid://122649312804233";
-			run = "rbxassetid://113551530261645";
-		});
-
-		["Steel Longsword"] = table.freeze({
-			Combat1 = "rbxassetid://104350674835028";
-			Combat2 = "rbxassetid://136916892053502";
-			Combat3 = "rbxassetid://137545625296970";
-			Combat4 = "rbxassetid://72817778851446";
-			Combat5 = "rbxassetid://129033506735142";
-			Critical = "rbxassetid://79689855601446";
-			Equip = "rbxassetid://84342583369737";
-			Blocking = "rbxassetid://83625987534708";
-			Idle = "rbxassetid://94310549255164";
-			walk = "rbxassetid://122649312804233";
-			run = "rbxassetid://113551530261645";
-		});
-
-		["Serpent's Fang"] = table.freeze({
-			Combat1 = "rbxassetid://104350674835028";
-			Combat2 = "rbxassetid://136916892053502";
-			Combat3 = "rbxassetid://137545625296970";
-			Combat4 = "rbxassetid://72817778851446";
-			Combat5 = "rbxassetid://129033506735142";
-			Critical = "rbxassetid://79689855601446";
-			Equip = "rbxassetid://84342583369737";
-			Blocking = "rbxassetid://83625987534708";
-			Idle = "rbxassetid://94310549255164";
-			walk = "rbxassetid://122649312804233";
-			run = "rbxassetid://113551530261645";
-		});
-
-		["Crescent Blade"] = table.freeze({
-			Combat1 = "rbxassetid://104350674835028";
-			Combat2 = "rbxassetid://136916892053502";
-			Combat3 = "rbxassetid://137545625296970";
-			Combat4 = "rbxassetid://72817778851446";
-			Combat5 = "rbxassetid://129033506735142";
-			Critical = "rbxassetid://79689855601446";
-			Equip = "rbxassetid://84342583369737";
-			Blocking = "rbxassetid://83625987534708";
-			Idle = "rbxassetid://94310549255164";
-			walk = "rbxassetid://122649312804233";
-			run = "rbxassetid://113551530261645";
-		});
-
-		Duskblade = table.freeze({
-			Combat1 = "rbxassetid://104350674835028";
-			Combat2 = "rbxassetid://136916892053502";
-			Combat3 = "rbxassetid://137545625296970";
-			Combat4 = "rbxassetid://72817778851446";
-			Combat5 = "rbxassetid://129033506735142";
-			Critical = "rbxassetid://79689855601446";
-			Equip = "rbxassetid://84342583369737";
-			Blocking = "rbxassetid://83625987534708";
-			Idle = "rbxassetid://94310549255164";
-			walk = "rbxassetid://122649312804233";
-			run = "rbxassetid://113551530261645";
-		});
-
-		["Steel Mourn"] = table.freeze({
 			Combat1 = "rbxassetid://104350674835028";
 			Combat2 = "rbxassetid://136916892053502";
 			Combat3 = "rbxassetid://137545625296970";
@@ -224,20 +126,6 @@ return table.freeze({
 		});
 
 		--// Katanas \\--
-
-		["Steel Katana"] = table.freeze({
-			Combat1 = "rbxassetid://112031708997344";
-			Combat2 = "rbxassetid://134829246696146";
-			Combat3 = "rbxassetid://113484150880019";
-			Combat4 = "rbxassetid://133697597189292";
-			Combat5 = "rbxassetid://0";
-			Critical = "rbxassetid://0";
-			Equip = "rbxassetid://0";
-			Blocking = "rbxassetid://130271994451347";
-			Idle = "rbxassetid://94310549255164";
-			walk = "rbxassetid://104436812740050";
-			run = "rbxassetid://113551530261645";
-		});
 
 		["Mortal Blade"] = table.freeze({
 			Combat1 = "rbxassetid://112031708997344";
@@ -317,65 +205,9 @@ return table.freeze({
 			run = "rbxassetid://101575350826559";
 		});
 
-		["Nocturnal Edge"] = table.freeze({
-			Combat1 = "rbxassetid://115900848366455";
-			Combat2 = "rbxassetid://78529367124708";
-			Combat3 = "rbxassetid://115900848366455";
-			Combat4 = "rbxassetid://77314274708168";
-			Combat5 = "rbxassetid://0";
-			Critical = "rbxassetid://0";
-			Equip = "rbxassetid://117585018448339";
-			Blocking = "rbxassetid://83625987534708";
-			Idle = "rbxassetid://129537870849720";
-			walk = "rbxassetid://76980887133888";
-			run = "rbxassetid://101575350826559";
-		});
-
 		--// Fists / Gauntlets \\--
 
 		Fists = table.freeze({
-			Combat1 = "rbxassetid://131985175663129";
-			Combat2 = "rbxassetid://121603729341695";
-			Combat3 = "rbxassetid://98116898772008";
-			Combat4 = "rbxassetid://140218265622686";
-			Combat5 = "rbxassetid://90828170591239";
-			Critical = "rbxassetid://0";
-			Equip = "rbxassetid://0";
-			Blocking = "rbxassetid://129637547540775";
-			Idle = "rbxassetid://11361002294";
-			walk = "rbxassetid://0";
-			run = "rbxassetid://0";
-		});
-
-		Vylis = table.freeze({
-			Combat1 = "rbxassetid://131985175663129";
-			Combat2 = "rbxassetid://121603729341695";
-			Combat3 = "rbxassetid://98116898772008";
-			Combat4 = "rbxassetid://140218265622686";
-			Combat5 = "rbxassetid://90828170591239";
-			Critical = "rbxassetid://0";
-			Equip = "rbxassetid://0";
-			Blocking = "rbxassetid://129637547540775";
-			Idle = "rbxassetid://11361002294";
-			walk = "rbxassetid://0";
-			run = "rbxassetid://0";
-		});
-
-		Wraps = table.freeze({
-			Combat1 = "rbxassetid://131985175663129";
-			Combat2 = "rbxassetid://121603729341695";
-			Combat3 = "rbxassetid://98116898772008";
-			Combat4 = "rbxassetid://140218265622686";
-			Combat5 = "rbxassetid://90828170591239";
-			Critical = "rbxassetid://0";
-			Equip = "rbxassetid://0";
-			Blocking = "rbxassetid://129637547540775";
-			Idle = "rbxassetid://11361002294";
-			walk = "rbxassetid://0";
-			run = "rbxassetid://0";
-		});
-
-		["Steel Gauntlets"] = table.freeze({
 			Combat1 = "rbxassetid://131985175663129";
 			Combat2 = "rbxassetid://121603729341695";
 			Combat3 = "rbxassetid://98116898772008";
