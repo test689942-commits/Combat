@@ -63,6 +63,7 @@ local FOLDER_LAYOUT = {
 		"SlashLast",
 		"Startup",
 		"Spin",
+		"End",
 	},
 	Dagger = {
 		"Cut",
@@ -1293,7 +1294,7 @@ local SPIN_EVENT_ALIASES = {
 }
 
 local THRUST_SIBLING_HINTS = {"Slashup", "SlashLast"}
-local SPIN_SIBLING_HINTS = {"Startup", "Spin"}
+local SPIN_SIBLING_HINTS = {"Startup", "Spin", "End"}
 
 local activeSpinEffects = setmetatable({}, {__mode = "k"})
 local boundThrustTracks = setmetatable({}, {__mode = "k"})
@@ -1559,11 +1560,6 @@ end
 local function handleSpinPhase(character: Model, root: BasePart?, phase: string)
 	local resolvedRoot = root or character:FindFirstChild("HumanoidRootPart")
 
-	if phase == "End" then
-		disableSpinEffects(character)
-		return
-	end
-
 	if not resolvedRoot or not resolvedRoot:IsA("BasePart") then
 		return
 	end
@@ -1573,6 +1569,9 @@ local function handleSpinPhase(character: Model, root: BasePart?, phase: string)
 	local template = getAxeTemplate(phase, SPIN_SIBLING_HINTS)
 
 	if not template then
+		if phase == "End" then
+			disableSpinEffects(character)
+		end
 		return
 	end
 
@@ -1815,7 +1814,7 @@ function Effects.Spin(data)
 		SPIN_EVENT_ALIASES,
 		normalizeSpinEvent,
 		handleSpinPhase,
-		true,
+		false,
 		data.onEvent
 	)
 end

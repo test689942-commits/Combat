@@ -1521,18 +1521,12 @@ do
 			return nil
 		end
 
-		local function cancelSpin(player: Player?, character: Model, root: BasePart?, state, settings)
+		local function cancelSpin(_player: Player?, character: Model, _root: BasePart?, state, _settings)
 			state.Ended = true
 
 			if activeSpins[character] == state then
 				activeSpins[character] = nil
 			end
-
-			broadcastToOthers(player, settings.EntryName, {
-				char = character,
-				root = root,
-				phase = "End",
-			})
 		end
 
 		local function runPhase(player: Player?, character: Model, settings, rawPhaseName: any)
@@ -1557,13 +1551,6 @@ do
 			local humanoid, root = getAliveParts(character)
 
 			if not humanoid or character:FindFirstChild("Stun") then
-				if phaseName == "End" or character:FindFirstChild("Stun") then
-					cancelSpin(player, character, root, state, settings)
-				end
-				return
-			end
-
-			if phaseName == "End" then
 				cancelSpin(player, character, root, state, settings)
 				return
 			end
@@ -1592,7 +1579,7 @@ do
 					phase = "Thrust",
 				})
 			elseif phaseName == "Spin" then
-				if not applyHitPass(character, root, settings.SpinDamage, settings.SpinStun, true, settings) then
+				if not applyHitPass(character, root, settings.SpinDamage, settings.SpinStun, false, settings) then
 					cancelSpin(player, character, root, state, settings)
 					return
 				end
@@ -1602,6 +1589,22 @@ do
 					root = root,
 					phase = "Spin",
 				})
+			elseif phaseName == "End" then
+				if not applyHitPass(character, root, settings.EndDamage or settings.SpinDamage, settings.EndStun or settings.SpinStun, true, settings) then
+					cancelSpin(player, character, root, state, settings)
+					return
+				end
+
+				broadcastToOthers(player, settings.EntryName, {
+					char = character,
+					root = root,
+					phase = "End",
+				})
+
+				state.Ended = true
+				if activeSpins[character] == state then
+					activeSpins[character] = nil
+				end
 			end
 		end
 
@@ -1641,7 +1644,7 @@ do
 				MOVE_NAME,
 				FALLBACK_DIGITS,
 				SPIN_ALIASES,
-				true,
+				false,
 				runPhase,
 				player,
 				character,
@@ -1651,8 +1654,9 @@ do
 			)
 
 			task.delay(settings.PhaseWindow, function()
-				if activeSpins[character] == state and not state.Ended then
-					runPhase(player, character, settings, "End")
+				if activeSpins[character] == state then
+					state.Ended = true
+					activeSpins[character] = nil
 				end
 			end)
 		end

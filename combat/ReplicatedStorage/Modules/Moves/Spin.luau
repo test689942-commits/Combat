@@ -1,6 +1,7 @@
 --// Services \\--
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 --// Modules \\--
 
@@ -57,6 +58,41 @@ local function faceAim(root: BasePart, aimPosition: Vector3?)
 	end
 end
 
+local function lungeForward(character: Model, humanoid: Humanoid, root: BasePart, lungeState)
+	local waited = 0
+
+	while not lungeState.Start and not lungeState.Stop and waited < Info.LungeStart do
+		if MoveClient.IsInterrupted(character, humanoid) then
+			return
+		end
+
+		waited += RunService.Heartbeat:Wait()
+	end
+
+	if lungeState.Stop or MoveClient.IsInterrupted(character, humanoid) then
+		return
+	end
+
+	local elapsed = 0
+
+	while elapsed < Info.LungeDuration and not lungeState.Stop and root.Parent and not MoveClient.IsInterrupted(character, humanoid) do
+		elapsed += RunService.Heartbeat:Wait()
+
+		local direction = root.CFrame.LookVector * Vector3.new(1, 0, 1)
+
+		if direction.Magnitude > 0.1 then
+			direction = direction.Unit
+			local velocity = root.AssemblyLinearVelocity
+			root.AssemblyLinearVelocity = Vector3.new(direction.X * Info.MoveSpeed, velocity.Y, direction.Z * Info.MoveSpeed)
+		end
+	end
+
+	if root.Parent then
+		local velocity = root.AssemblyLinearVelocity
+		root.AssemblyLinearVelocity = Vector3.new(0, velocity.Y, 0)
+	end
+end
+
 local function run()
 	local character, humanoid, root = MoveClient.GetCharacterParts()
 
@@ -77,9 +113,21 @@ local function run()
 	local track = MoveClient.LoadTrack(humanoid, MOVE_NAME)
 	local duration = Info.LockDuration
 
+	local lungeState = {
+		Start = false,
+		Stop = false,
+	}
+
 	local function reportPhase(eventName: string)
-		if eventName ~= "End" and MoveClient.IsInterrupted(character, humanoid) then
+		if MoveClient.IsInterrupted(character, humanoid) then
+			lungeState.Stop = true
 			return
+		end
+
+		if eventName == "Thrust" or eventName == "Spin" then
+			lungeState.Start = true
+		elseif eventName == "End" then
+			lungeState.Stop = true
 		end
 
 		phaseRemote:FireServer(MOVE_NAME, eventName)
@@ -103,10 +151,10 @@ local function run()
 		activeRemote:FireServer(MOVE_NAME, aimPosition)
 	end
 
-	MoveClient.WaitForMove(character, humanoid, duration, track)
+	task.spawn(lungeForward, character, humanoid, root, lungeState)
 
-	Effects.Spin({char = character, root = root, phase = "End"})
-	reportPhase("End")
+	MoveClient.WaitForMove(character, humanoid, duration, track)
+	lungeState.Stop = true
 
 	MoveClient.UnlockMovement(MOVE_NAME, humanoid, lock)
 	active = false

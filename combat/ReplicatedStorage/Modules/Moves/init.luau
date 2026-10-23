@@ -233,10 +233,15 @@ return table.freeze({
 		Cooldown = 8;
 		LockDuration = 2.6;
 		PhaseWindow = 4.5;
+		MoveSpeed = 42;
+		LungeStart = 0.25;
+		LungeDuration = 1.15;
 		ThrustDamage = 12;
 		ThrustStun = 0.75;
-		SpinDamage = 18;
-		SpinStun = 1.2;
+		SpinDamage = 14;
+		SpinStun = 0.9;
+		EndDamage = 18;
+		EndStun = 1.2;
 		KnockbackForce = 45;
 		KnockbackLift = 14;
 		Range = 12;

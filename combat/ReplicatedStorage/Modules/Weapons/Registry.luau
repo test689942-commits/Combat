@@ -159,8 +159,8 @@ return table.freeze({
 		Model = "Axe";
 		GripPart = "Right Arm";
 		JointName = "Handle";
-		GripC0 = CFrame.new(0.0623931885, 0.958690643, 0.037612915);
-		GripC1 = CFrame.new(0, 1.99999738, 0);
+		GripC0 = CFrame.new(0.0623931885, -1.04130674, 0.037612915);
+		GripC1 = CFrame.new();
 		Hitbox = table.freeze({Offset = 5; Size = Vector3.new(9, 6, 9)});
 		Moves = table.freeze({"Thrust", "Spin"});
 	});
