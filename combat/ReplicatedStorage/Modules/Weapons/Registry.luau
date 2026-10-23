@@ -124,7 +124,7 @@ return table.freeze({
 		Category = "Fists";
 		DisplayName = "Fists";
 		Order = 3;
-		Moves = table.freeze({"GroundSlam", "FistBarrage", "DropKick"});
+		Moves = table.freeze({"GroundSlam", "FistBarrage"});
 	});
 
 	Staff = table.freeze({
@@ -162,6 +162,7 @@ return table.freeze({
 		GripC0 = CFrame.new(0.0623931885, 0.958690643, 0.037612915);
 		GripC1 = CFrame.new(0, 1.99999738, 0);
 		Hitbox = table.freeze({Offset = 5; Size = Vector3.new(9, 6, 9)});
+		Moves = table.freeze({"Thrust", "Spin"});
 	});
 
 	["Mortal Blade"] = table.freeze({

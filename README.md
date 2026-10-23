@@ -51,12 +51,13 @@ This repository contains the modular Roblox Luau combat, weapon, animation, and 
     │   ├── Dash.luau                   # Directional dash & air dash
     │   ├── GroundSlam.luau             # Fists move (Z)
     │   ├── FistBarrage.luau            # Fists move (X)
-    │   ├── DropKick.luau               # Fists move (C)
-    │   ├── Rage.luau                   # Greatsword move (Z)
-    │   ├── Leap.luau                   # Greatsword move (X)
-    │   ├── Cut.luau                    # Greatsword move (C)
-    │   ├── DaggerThrow.luau            # Dagger move (Z)
-    │   └── DaggerDance.luau            # Dagger move (X)
+    │   ├── Rage.luau                   # Greatsword move (R)
+    │   ├── Leap.luau                   # Greatsword move (E)
+    │   ├── Cut.luau                    # Dagger/Greatsword move (V)
+    │   ├── DaggerThrow.luau            # Dagger move (G)
+    │   ├── DaggerDance.luau            # Dagger move (B)
+    │   ├── Thrust.luau                 # Axe move 1 (C) - yayy
+    │   └── Spin.luau                   # Axe move 2 (T) - idk
     ├── Weapons/
     │   ├── init.luau                   # Weapon resolver (merges Category defaults + Registry overrides)
     │   ├── Registry.luau               # All weapon definitions (10 category primaries + DragonSlayer)
@@ -90,16 +91,16 @@ Replaced the separate per-move `Moves/<MoveName>/Effect.luau` and `Moves/<MoveNa
 ```text
 ReplicatedStorage.Assets.Effects
 ├── Fists/
-│   ├── GroundSlam
-│   ├── BarrageSwing
-│   └── DropKickHit
+│   ├── Stab2, Wind1, Wind2, groundslam, Impact, inversRing
+│   └── Barrage
 ├── Greatsword/
-│   ├── Rage
-│   ├── Leap
-│   └── Cut
+│   ├── Scream, RageAura
+│   └── Jump, SlamFX, Slam, TrailPart
+├── Axe/
+│   ├── Thrust, Slashup, SlashLast
+│   └── Startup, Thrust, Spin
 ├── Dagger/
-│   ├── DaggerThrow
-│   ├── DaggerThrowHit
+│   ├── Cut
 │   ├── Dagger Slash
 │   ├── Idk
 │   ├── Slash Move
@@ -223,10 +224,10 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
 | :--- | :--- | :---: | :---: | :--- | :--- |
 | **`GreatSword`** | `Greatsword` | 5 | Yes (`Crit_Slash`) | `Rage`, `Leap`, `Cut` | Emits `M1_Slash`..`M4_Slash` & `Crit_Slash` on markers |
 | **`DragonSlayer`** | `Greatsword` | 4 | No (`NoCritical`) | `Rage`, `Leap`, `Cut` | No Idle/walk/run; emits `M1Swing`..`M4Swing` & Floor/Slam markers |
-| **`Fists`** | `Fists` | 5 | Yes | `GroundSlam`, `FistBarrage`, `DropKick` | Unarmed combat style |
+| **`Fists`** | `Fists` | 5 | Yes | `GroundSlam`, `FistBarrage` | Unarmed combat style |
 | **`Staff`** | `Staff` | 4 | Yes | `GroundSlam`, `Leap` | Blunt staff style |
 | **`LongSword`** | `Longsword` | 4 | Yes | `Cut`, `Leap` | Balanced blade style |
-| **`Axe`** | `Axe` | 4 | Yes | `Rage`, `GroundSlam`, `Cut` | Heavy axe style |
+| **`Axe`** | `Axe` | 4 | Yes | `Thrust`, `Spin` | Heavy axe style (`yayy` & `idk` moves) |
 | **`Mortal Blade`** | `Katana` | 5 | Yes | `Cut`, `Leap` | Fast katana style |
 | **`Dual KT`** | `DualKatana` | 5 | Yes | `Cut`, `FistBarrage`, `Leap` | Dual-wield katana style |
 | **`Steel Dagger`** | `Dagger` | 4 | Yes | `DaggerThrow`, `DaggerDance` | Quick dagger style |
@@ -241,18 +242,21 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
 | :--- | :--- | :---: | :--- | :--- | :--- | :--- |
 | **`GroundSlam`** | `Fists` | Yes | `Moves/GroundSlam.luau` | `Effects.GroundSlam` | `Server.GroundSlam` | AoE ground impact with crater, rocks & knockup |
 | **`FistBarrage`** | `Fists` | Yes | `Moves/FistBarrage.luau` | `Effects.FistBarrage` | `Server.FistBarrage` | Rapid multi-hit flurry of punches |
-| **`DropKick`** | `Fists` | Yes | `Moves/DropKick.luau` | `Effects.DropKick` | `Server.DropKick` | Forward dash kick with heavy knockback |
 | **`Rage`** | `Greatsword` | **No** | `Moves/Rage.luau` | `Effects.Rage` | `Server.Rage` | Unparryable warcry AoE shockwave + temporary damage buff |
 | **`Leap`** | `Greatsword` | Yes | `Moves/Leap.luau` | `Effects.Leap` | `Server.Leap` | High-arcing jump slam with landing shockwave |
 | **`Cut`** | `Greatsword` | Yes | `Moves/Cut.luau` | `Effects.Cut` | `Server.Cut` | Heavy forward cleaving slash |
 | **`DaggerThrow`** | `Dagger` | Yes | `Moves/DaggerThrow.luau` | `Effects.DaggerThrow` | `Server.DaggerThrow` | Ranged dagger projectile triggered on `Throw` marker |
 | **`DaggerDance`** | `Dagger` | Yes | `Moves/DaggerDance.luau` | `Effects.DaggerDance` | `Server.DaggerDance` | Key-event combo (`Dagger Slash` single hit + `Slash Move` multi-hit ticks until `End`) |
+| **`Thrust`** | `Axe` | Yes | `Moves/Thrust.luau` | `Effects.Thrust` | `Server.Thrust` | Axe combo (`Thrust`, `Slashup`, `SlashLast` key events on `HumanoidRootPart`) |
+| **`Spin`** | `Axe` | Yes | `Moves/Spin.luau` | `Effects.Spin` | `Server.Spin` | Axe spin combo (`Startup` on weapon `Handle`, `Thrust` & `Spin` on `HumanoidRootPart`, `End` cleanup) |
 
 ---
 
 ## 5. Commit History Summary
 
-- **Latest** — Add skill parry & cancel system across `Moves/MoveHit.luau`, `Moves/Server.luau`, `Moves/Effects.luau`, `Moves/MoveClient.luau`, `Moves/Combat/init.luau`, and all 8 client move modules.
+- **Latest** — Add Axe `Thrust` (`yayy`) and `Spin` (`idk`) moves and remove `DropKick`.
+- **`68bdeaa`** — Add per-skill `Parryable` setting and make `Rage` unparryable.
+- **`fa2cd9a`** — Add skill parry & cancel system across `Moves/MoveHit.luau`, `Moves/Server.luau`, `Moves/Effects.luau`, `Moves/MoveClient.luau`, `Moves/Combat/init.luau`, and all client move modules.
 - **`b562d47`** — Update `DragonSlayer` `M1`–`M4` (`Combat1`–`Combat4`) animation IDs in `Animations/Anims.luau`.
 - **`c6583f7`** — Add `DragonSlayer` Greatsword with 4 swings (`MaxCombo = 4`), no `Idle`/`walk`/`run`/`Critical`, and key-event VFX (`M1Swing`, `M1Floor`, `M2Swing`, `M2Floor`, `M3Swing`, `M3Slam`, `M3Floor`, `M4Swing`).
 - **`6f9dc9d`** — Trim weapon registry and animation tables down to 1 primary weapon per category (10 base weapons).

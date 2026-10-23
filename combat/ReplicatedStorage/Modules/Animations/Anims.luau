@@ -239,11 +239,12 @@ return table.freeze({
 	Moves = table.freeze({
 		GroundSlam = "rbxassetid://110883531326106";
 		FistBarrage = "rbxassetid://123461980692619";
-		DropKick = "rbxassetid://104602206907674";
 		Rage = "rbxassetid://128149826268230";
 		Leap = "rbxassetid://103107472675002";
 		Cut = "rbxassetid://129777736102447";
 		DaggerThrow = "rbxassetid://106448451892609";
 		DaggerDance = "rbxassetid://111287464837255";
+		Thrust = "rbxassetid://86677978686885";
+		Spin = "rbxassetid://102759962289170";
 	});
 });

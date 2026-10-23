@@ -47,8 +47,6 @@ local FOLDER_LAYOUT = {
 		"Impact",
 		"inversRing",
 		"Barrage",
-		"Startup",
-		"Swing",
 	},
 	Greatsword = {
 		"Scream",
@@ -57,6 +55,14 @@ local FOLDER_LAYOUT = {
 		"SlamFX",
 		"Slam",
 		"TrailPart",
+	},
+	Axe = {
+		"Thrust",
+		"Slashup",
+		"SlashUp",
+		"SlashLast",
+		"Startup",
+		"Spin",
 	},
 	Dagger = {
 		"Cut",
@@ -93,12 +99,15 @@ function Effects.OrganizeFolder()
 
 	for categoryName, effectNames in pairs(FOLDER_LAYOUT) do
 		local categoryFolder = ensureCategoryFolder(categoryName)
+		local targetKeys = {}
 
 		for _, effectName in ipairs(effectNames) do
-			local looseEffect = effectsFolder:FindFirstChild(effectName)
+			targetKeys[normalizeKey(effectName)] = true
+		end
 
-			if looseEffect and not looseEffect:IsA("Folder") and not categoryFolder:FindFirstChild(effectName) then
-				looseEffect.Parent = categoryFolder
+		for _, child in ipairs(effectsFolder:GetChildren()) do
+			if not child:IsA("Folder") and targetKeys[normalizeKey(child.Name)] then
+				child.Parent = categoryFolder
 			end
 		end
 	end
@@ -398,53 +407,7 @@ function Effects.FistBarrage(data)
 	end
 end
 
---// 3. DropKick (Fists) \\--
-
-local DROPKICK_PHASE_EFFECTS = {
-	Startup = {
-		Template = "Startup",
-		AttachParts = {"Right Leg"},
-	},
-	Swing = {
-		Template = "Swing",
-		AttachParts = {"Torso"},
-	},
-}
-
-local function findAttachPart(character: Model, partNames: {string}): BasePart?
-	for _, partName in ipairs(partNames) do
-		local part = character:FindFirstChild(partName)
-
-		if part and part:IsA("BasePart") then
-			return part
-		end
-	end
-
-	return nil
-end
-
-function Effects.DropKick(data)
-	local character = data.char
-	local phaseEffect = DROPKICK_PHASE_EFFECTS[data.phase]
-
-	if typeof(character) ~= "Instance" or not phaseEffect then
-		return
-	end
-
-	local attachPart = findAttachPart(character, phaseEffect.AttachParts)
-	local template = Effects.GetTemplate("Fists", phaseEffect.Template)
-
-	if not attachPart or not template then
-		return
-	end
-
-	local effect = template:Clone()
-	effect.Parent = attachPart
-
-	EmitModule.EmitAndRemove(effect, nil, {dontClone = true, noAutoSmoke = true})
-end
-
---// 4. Rage (Greatsword) \\--
+--// 3. Rage (Greatsword) \\--
 
 local RAGE_SOUND_LIFETIME = 6
 
@@ -1298,6 +1261,565 @@ function Effects.DaggerDance(data)
 	attachToCharacterDanceTrack(character, root, data.track, data.onEvent)
 end
 
+--// 8 & 9. Axe Moves: Thrust (yayy) & Spin (idk) \\--
+
+local THRUST_MOVE_NAME = "Thrust"
+local SPIN_MOVE_NAME = "Spin"
+
+local THRUST_EVENT_ALIASES = {
+	["Thrust"] = "Thrust",
+	["thrust"] = "Thrust",
+	["Slashup"] = "Slashup",
+	["SlashUp"] = "Slashup",
+	["slashup"] = "Slashup",
+	["Slash_Up"] = "Slashup",
+	["SlashLast"] = "SlashLast",
+	["Slashlast"] = "SlashLast",
+	["slashlast"] = "SlashLast",
+	["Slash_Last"] = "SlashLast",
+}
+
+local SPIN_EVENT_ALIASES = {
+	["Startup"] = "Startup",
+	["startup"] = "Startup",
+	["StartUp"] = "Startup",
+	["Thrust"] = "Thrust",
+	["thrust"] = "Thrust",
+	["Spin"] = "Spin",
+	["spin"] = "Spin",
+	["End"] = "End",
+	["end"] = "End",
+	["END"] = "End",
+}
+
+local THRUST_SIBLING_HINTS = {"Slashup", "SlashLast"}
+local SPIN_SIBLING_HINTS = {"Startup", "Spin"}
+
+local activeSpinEffects = setmetatable({}, {__mode = "k"})
+local boundThrustTracks = setmetatable({}, {__mode = "k"})
+local boundSpinTracks = setmetatable({}, {__mode = "k"})
+
+local function normalizeThrustEvent(rawName: any): string?
+	if type(rawName) ~= "string" or rawName == "" then
+		return nil
+	end
+
+	if THRUST_EVENT_ALIASES[rawName] then
+		return THRUST_EVENT_ALIASES[rawName]
+	end
+
+	local key = normalizeKey(rawName)
+
+	if key == "thrust" then
+		return "Thrust"
+	elseif key == "slashup" then
+		return "Slashup"
+	elseif key == "slashlast" then
+		return "SlashLast"
+	end
+
+	return nil
+end
+
+local function normalizeSpinEvent(rawName: any): string?
+	if type(rawName) ~= "string" or rawName == "" then
+		return nil
+	end
+
+	if SPIN_EVENT_ALIASES[rawName] then
+		return SPIN_EVENT_ALIASES[rawName]
+	end
+
+	local key = normalizeKey(rawName)
+
+	if key == "startup" then
+		return "Startup"
+	elseif key == "thrust" then
+		return "Thrust"
+	elseif key == "spin" then
+		return "Spin"
+	elseif key == "end" then
+		return "End"
+	end
+
+	return nil
+end
+
+local function findWeaponHandle(character: Model): BasePart?
+	local equipped = character:FindFirstChild(EQUIPPED_NAME)
+
+	if equipped then
+		local handle = equipped:FindFirstChild("Handle", true)
+
+		if handle and handle:IsA("BasePart") then
+			return handle
+		end
+
+		local firstPart = equipped:FindFirstChildWhichIsA("BasePart", true)
+
+		if firstPart then
+			return firstPart
+		end
+	end
+
+	for _, child in ipairs(character:GetChildren()) do
+		if child:IsA("Tool") or (child:IsA("Model") and child.Name ~= "HumanoidRootPart") then
+			local handle = child:FindFirstChild("Handle", true)
+
+			if handle and handle:IsA("BasePart") then
+				return handle
+			end
+		end
+	end
+
+	local rightArm = character:FindFirstChild(RIGHT_ARM_NAME)
+
+	if rightArm and rightArm:IsA("BasePart") then
+		return rightArm
+	end
+
+	return character:FindFirstChild("HumanoidRootPart") :: BasePart?
+end
+
+local function getAxeTemplate(effectName: string, siblingHints: {string}?): Instance?
+	local targetKey = normalizeKey(effectName)
+	local candidates = {}
+	local searchContainers = {}
+
+	local axeFolder = Effects.GetCategoryFolder("Axe")
+	if axeFolder then
+		table.insert(searchContainers, axeFolder)
+	end
+	table.insert(searchContainers, effectsFolder)
+
+	for _, container in ipairs(searchContainers) do
+		local children = container:GetChildren()
+
+		for index, child in ipairs(children) do
+			if not child:IsA("Folder") and normalizeKey(child.Name) == targetKey then
+				table.insert(candidates, {
+					instance = child,
+					container = container,
+					index = index,
+				})
+			end
+		end
+	end
+
+	if #candidates == 1 then
+		return candidates[1].instance
+	elseif #candidates > 1 and siblingHints then
+		local hintKeys = {}
+
+		for _, hint in ipairs(siblingHints) do
+			hintKeys[normalizeKey(hint)] = true
+		end
+
+		local bestCandidate = candidates[1].instance
+		local bestDistance = math.huge
+
+		for _, candidate in ipairs(candidates) do
+			local siblings = candidate.container:GetChildren()
+
+			for siblingIndex, sibling in ipairs(siblings) do
+				if hintKeys[normalizeKey(sibling.Name)] then
+					local distance = math.abs(candidate.index - siblingIndex)
+
+					if distance < bestDistance then
+						bestDistance = distance
+						bestCandidate = candidate.instance
+					end
+				end
+			end
+		end
+
+		return bestCandidate
+	end
+
+	return Effects.GetTemplate("Axe", effectName)
+end
+
+local function emitAxeAttributes(container: Instance): number
+	local maxLifetime = 1
+
+	for _, obj in ipairs(getAllObjects(container)) do
+		if obj:IsA("ParticleEmitter") then
+			local emitCount = obj:GetAttribute("EmitCount") or obj:GetAttribute("Amount")
+			local emitDelay = obj:GetAttribute("EmitDelay") or 0
+			local emitDuration = obj:GetAttribute("EmitDuration") or 0
+
+			local totalTime = emitDelay + emitDuration + obj.Lifetime.Max
+
+			if totalTime > maxLifetime then
+				maxLifetime = totalTime
+			end
+
+			task.delay(emitDelay, function()
+				if not obj.Parent then
+					return
+				end
+
+				if emitDuration and emitDuration > 0 then
+					obj.Enabled = true
+					task.delay(emitDuration, function()
+						if obj.Parent then
+							obj.Enabled = false
+						end
+					end)
+				end
+
+				if emitCount and emitCount > 0 then
+					obj:Emit(emitCount)
+				elseif not emitDuration or emitDuration <= 0 then
+					obj:Emit(1)
+				end
+			end)
+		elseif obj:IsA("Trail") or obj:IsA("Beam") then
+			local emitDelay = obj:GetAttribute("EmitDelay") or 0
+			local emitDuration = obj:GetAttribute("EmitDuration") or 0
+
+			if emitDuration and emitDuration > 0 then
+				if emitDelay + emitDuration > maxLifetime then
+					maxLifetime = emitDelay + emitDuration
+				end
+
+				task.delay(emitDelay, function()
+					if obj.Parent then
+						obj.Enabled = true
+						task.delay(emitDuration, function()
+							if obj.Parent then
+								obj.Enabled = false
+							end
+						end)
+					end
+				end)
+			end
+		end
+	end
+
+	return maxLifetime
+end
+
+local function spawnAxeEffect(template: Instance, targetPart: BasePart): (Instance, number)
+	local effectsParent = workspace:FindFirstChild("Effects") or workspace
+	local parent = if template:IsA("Attachment") then targetPart else effectsParent
+	local attached = attachEffectToPart(template, targetPart, parent)
+	local lifetime = emitAxeAttributes(attached)
+
+	DebrisService:AddItem(attached, lifetime + 0.75)
+
+	return attached, lifetime
+end
+
+local function disableSpinEffects(character: Model)
+	local instances = activeSpinEffects[character]
+
+	if not instances then
+		return
+	end
+
+	for _, inst in ipairs(instances) do
+		if inst and inst.Parent then
+			setEffectsEnabled(inst, false)
+			DebrisService:AddItem(inst, DEFAULT_CLEANUP_DELAY)
+		end
+	end
+
+	activeSpinEffects[character] = nil
+end
+
+local function handleThrustPhase(character: Model, root: BasePart?, phase: string)
+	local resolvedRoot = root or character:FindFirstChild("HumanoidRootPart")
+
+	if not resolvedRoot or not resolvedRoot:IsA("BasePart") then
+		return
+	end
+
+	playMoveSound("Slash", "Moves.Thrust", resolvedRoot)
+
+	local template = getAxeTemplate(phase, THRUST_SIBLING_HINTS)
+
+	if template then
+		spawnAxeEffect(template, resolvedRoot)
+	end
+end
+
+local function shouldAttachToWeaponHandle(phase: string, template: Instance): boolean
+	if phase == "Startup" and template:IsA("Attachment") then
+		return true
+	end
+
+	if template:GetAttribute("AttachToHandle") == true or normalizeKey(template.Name) == "handle" then
+		return true
+	end
+
+	return false
+end
+
+local function handleSpinPhase(character: Model, root: BasePart?, phase: string)
+	local resolvedRoot = root or character:FindFirstChild("HumanoidRootPart")
+
+	if phase == "End" then
+		disableSpinEffects(character)
+		return
+	end
+
+	if not resolvedRoot or not resolvedRoot:IsA("BasePart") then
+		return
+	end
+
+	playMoveSound("Slash", "Moves.Spin", resolvedRoot)
+
+	local template = getAxeTemplate(phase, SPIN_SIBLING_HINTS)
+
+	if not template then
+		return
+	end
+
+	local targetPart: BasePart = resolvedRoot
+
+	if shouldAttachToWeaponHandle(phase, template) then
+		targetPart = findWeaponHandle(character) or resolvedRoot
+	end
+
+	local instance = spawnAxeEffect(template, targetPart)
+
+	local list = activeSpinEffects[character]
+	if not list then
+		list = {}
+		activeSpinEffects[character] = list
+	end
+
+	table.insert(list, instance)
+end
+
+local function isMoveAnimationTrack(track: AnimationTrack, moveName: string, targetAnimId: string?, fallbackDigits: string?): boolean
+	if track.Name == moveName then
+		return true
+	end
+
+	local anim = track.Animation
+	if anim then
+		if anim.Name == moveName then
+			return true
+		end
+
+		if targetAnimId and anim.AnimationId == targetAnimId then
+			return true
+		end
+
+		if fallbackDigits and string.find(anim.AnimationId, fallbackDigits, 1, true) ~= nil then
+			return true
+		end
+	end
+
+	return false
+end
+
+local function bindAxeTrackEvents(
+	boundTable,
+	character: Model,
+	root: BasePart?,
+	track: AnimationTrack,
+	aliases: {[string]: string},
+	normalizeFn: (any) -> string?,
+	phaseHandler: (Model, BasePart?, string) -> (),
+	hasEndPhase: boolean,
+	onEvent: ((string) -> ())?
+)
+	if boundTable[character] == track then
+		return
+	end
+
+	boundTable[character] = track
+
+	local connections = {}
+	local ended = false
+
+	local function dispatch(rawName: any)
+		local eventName = normalizeFn(rawName)
+
+		if not eventName then
+			return
+		end
+
+		if eventName == "End" then
+			if ended then
+				return
+			end
+
+			ended = true
+		end
+
+		phaseHandler(character, root, eventName)
+
+		if onEvent then
+			onEvent(eventName)
+		end
+	end
+
+	table.insert(connections, track.KeyframeReached:Connect(function(keyframeName: string)
+		dispatch(keyframeName)
+	end))
+
+	for aliasName in pairs(aliases) do
+		table.insert(connections, track:GetMarkerReachedSignal(aliasName):Connect(function(param)
+			dispatch(aliasName)
+			if param and param ~= "" then
+				dispatch(param)
+			end
+		end))
+	end
+
+	for _, genericName in ipairs(GENERIC_MARKER_NAMES) do
+		table.insert(connections, track:GetMarkerReachedSignal(genericName):Connect(function(param)
+			dispatch(param)
+		end))
+	end
+
+	table.insert(connections, track.Stopped:Once(function()
+		for _, connection in ipairs(connections) do
+			connection:Disconnect()
+		end
+
+		if hasEndPhase then
+			dispatch("End")
+		end
+
+		if boundTable[character] == track then
+			boundTable[character] = nil
+		end
+	end))
+end
+
+local function attachToAxeTrack(
+	boundTable,
+	moveName: string,
+	fallbackDigits: string,
+	character: Model,
+	root: BasePart?,
+	providedTrack: AnimationTrack?,
+	aliases: {[string]: string},
+	normalizeFn: (any) -> string?,
+	phaseHandler: (Model, BasePart?, string) -> (),
+	hasEndPhase: boolean,
+	onEvent: ((string) -> ())?
+)
+	if providedTrack then
+		bindAxeTrackEvents(boundTable, character, root, providedTrack, aliases, normalizeFn, phaseHandler, hasEndPhase, onEvent)
+		return
+	end
+
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	local animator = humanoid and humanoid:FindFirstChildOfClass("Animator")
+
+	if not animator then
+		return
+	end
+
+	local targetAnimId = AnimationsModule.GetAnimationId("Moves", moveName)
+
+	for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+		if isMoveAnimationTrack(track, moveName, targetAnimId, fallbackDigits) then
+			bindAxeTrackEvents(boundTable, character, root, track, aliases, normalizeFn, phaseHandler, hasEndPhase, onEvent)
+			return
+		end
+	end
+
+	local connection
+	connection = animator.AnimationPlayed:Connect(function(track: AnimationTrack)
+		if isMoveAnimationTrack(track, moveName, targetAnimId, fallbackDigits) then
+			if connection then
+				connection:Disconnect()
+				connection = nil
+			end
+
+			bindAxeTrackEvents(boundTable, character, root, track, aliases, normalizeFn, phaseHandler, hasEndPhase, onEvent)
+		end
+	end)
+
+	task.delay(TRACK_WAIT_TIMEOUT, function()
+		if connection then
+			connection:Disconnect()
+			connection = nil
+		end
+	end)
+end
+
+function Effects.Thrust(data)
+	if type(data) ~= "table" then
+		return
+	end
+
+	local character = data.char
+	local root = data.root
+	local phase = normalizeThrustEvent(data.phase)
+
+	if typeof(character) ~= "Instance" or not character:IsA("Model") then
+		return
+	end
+
+	if not root then
+		root = character:FindFirstChild("HumanoidRootPart")
+	end
+
+	if phase then
+		handleThrustPhase(character, root, phase)
+		return
+	end
+
+	attachToAxeTrack(
+		boundThrustTracks,
+		THRUST_MOVE_NAME,
+		"86677978686885",
+		character,
+		root,
+		data.track,
+		THRUST_EVENT_ALIASES,
+		normalizeThrustEvent,
+		handleThrustPhase,
+		false,
+		data.onEvent
+	)
+end
+
+function Effects.Spin(data)
+	if type(data) ~= "table" then
+		return
+	end
+
+	local character = data.char
+	local root = data.root
+	local phase = normalizeSpinEvent(data.phase)
+
+	if typeof(character) ~= "Instance" or not character:IsA("Model") then
+		return
+	end
+
+	if not root then
+		root = character:FindFirstChild("HumanoidRootPart")
+	end
+
+	if phase then
+		handleSpinPhase(character, root, phase)
+		return
+	end
+
+	attachToAxeTrack(
+		boundSpinTracks,
+		SPIN_MOVE_NAME,
+		"102759962289170",
+		character,
+		root,
+		data.track,
+		SPIN_EVENT_ALIASES,
+		normalizeSpinEvent,
+		handleSpinPhase,
+		true,
+		data.onEvent
+	)
+end
+
 --// Cancel Move (On Parry / Interrupt) \\--
 
 function Effects.CancelMove(data)
@@ -1312,6 +1834,7 @@ function Effects.CancelMove(data)
 	end
 
 	disableSlashMove(character)
+	disableSpinEffects(character)
 
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	local animator = humanoid and humanoid:FindFirstChildOfClass("Animator")
@@ -1327,7 +1850,9 @@ function Effects.CancelMove(data)
 
 			if (targetMove and (trackName == targetMove or animName == targetMove))
 				or (movesTree and (movesTree[trackName] ~= nil or (animName and movesTree[animName] ~= nil)))
-				or isDaggerDanceTrack(track, AnimationsModule.GetAnimationId("Moves", DAGGER_DANCE_NAME)) then
+				or isDaggerDanceTrack(track, AnimationsModule.GetAnimationId("Moves", DAGGER_DANCE_NAME))
+				or isMoveAnimationTrack(track, THRUST_MOVE_NAME, AnimationsModule.GetAnimationId("Moves", THRUST_MOVE_NAME), "86677978686885")
+				or isMoveAnimationTrack(track, SPIN_MOVE_NAME, AnimationsModule.GetAnimationId("Moves", SPIN_MOVE_NAME), "102759962289170") then
 				track:Stop(0.1)
 			end
 		end

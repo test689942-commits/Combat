@@ -70,40 +70,14 @@ return table.freeze({
 		EffectOffset = 1.5;
 	});
 
-	--// Drop Kick \\--
-
-	DropKick = table.freeze({
-		DisplayName = "Drop Kick";
-		EntryName = "DropKick";
-		Skill = true;
-		Parryable = true;
-		Order = 3;
-		RequiresFist = true;
-		Key = Enum.KeyCode.C;
-		Cooldown = 0;
-		LockDuration = 1.5;
-		Damage = 18;
-		StunTime = 1.2;
-		HitboxOffset = 4.5;
-		HitboxSize = Vector3.new(7, 6, 8);
-		KnockbackForce = 85;
-		KnockbackLift = 18;
-		KnockbackDuration = 0.35;
-		MinSwingTime = 0.1;
-		PhaseWindow = 2.5;
-		StartupFallback = 0.1;
-		SwingFallback = 0.45;
-		SwingTimeout = 1.2;
-	});
-
-	--// Rage \\--
+	--//Rage \\--
 
 	Rage = table.freeze({
 		DisplayName = "Rage";
 		EntryName = "Rage";
 		Skill = true;
 		Parryable = false;
-		Order = 4;
+		Order = 3;
 		RequiresFist = false;
 		Key = Enum.KeyCode.R;
 		Cooldown = 30;
@@ -126,7 +100,7 @@ return table.freeze({
 		EntryName = "Leap";
 		Skill = true;
 		Parryable = true;
-		Order = 5;
+		Order = 4;
 		RequiresFist = false;
 		Key = Enum.KeyCode.E;
 		Cooldown = 0;
@@ -149,7 +123,7 @@ return table.freeze({
 		EntryName = "Cut";
 		Skill = true;
 		Parryable = true;
-		Order = 6;
+		Order = 5;
 		RequiresFist = false;
 		Key = Enum.KeyCode.V;
 		Cooldown = 10;
@@ -178,7 +152,7 @@ return table.freeze({
 		EntryName = "DaggerThrow";
 		Skill = true;
 		Parryable = true;
-		Order = 7;
+		Order = 6;
 		RequiresFist = false;
 		Key = Enum.KeyCode.G;
 		Cooldown = 8;
@@ -200,7 +174,7 @@ return table.freeze({
 		EntryName = "DaggerDance";
 		Skill = true;
 		Parryable = true;
-		Order = 8;
+		Order = 7;
 		RequiresFist = false;
 		Key = Enum.KeyCode.B;
 		Cooldown = 0;
@@ -216,6 +190,60 @@ return table.freeze({
 		Height = 8;
 		HitboxSize = Vector3.new(8, 8, 12);
 		HitboxOffset = -6;
+	});
+
+	--// Thrust (Axe Move 1 - yayy) \\--
+
+	Thrust = table.freeze({
+		DisplayName = "Thrust";
+		EntryName = "Thrust";
+		Skill = true;
+		Parryable = true;
+		Order = 8;
+		RequiresFist = false;
+		Key = Enum.KeyCode.C;
+		Cooldown = 6;
+		LockDuration = 2.2;
+		PhaseWindow = 4;
+		ThrustDamage = 12;
+		ThrustStun = 0.75;
+		SlashupDamage = 12;
+		SlashupStun = 0.8;
+		SlashLastDamage = 18;
+		SlashLastStun = 1.2;
+		KnockbackForce = 45;
+		KnockbackLift = 15;
+		Range = 12;
+		Width = 9;
+		Height = 8;
+		HitboxSize = Vector3.new(9, 8, 12);
+		HitboxOffset = -6;
+	});
+
+	--// Spin (Axe Move 2 - idk) \\--
+
+	Spin = table.freeze({
+		DisplayName = "Spin";
+		EntryName = "Spin";
+		Skill = true;
+		Parryable = true;
+		Order = 9;
+		RequiresFist = false;
+		Key = Enum.KeyCode.T;
+		Cooldown = 8;
+		LockDuration = 2.6;
+		PhaseWindow = 4.5;
+		ThrustDamage = 12;
+		ThrustStun = 0.75;
+		SpinDamage = 18;
+		SpinStun = 1.2;
+		KnockbackForce = 45;
+		KnockbackLift = 14;
+		Range = 12;
+		Width = 12;
+		Height = 8;
+		HitboxSize = Vector3.new(12, 8, 12);
+		HitboxOffset = -4;
 	});
 
 

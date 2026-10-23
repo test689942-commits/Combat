@@ -203,6 +203,16 @@ return table.freeze({
 			Impact = table.freeze({Pool = "Pools.Hits.Blade"});
 		});
 
+		Thrust = table.freeze({
+			Slash = table.freeze({Pool = "Pools.Swings.Heavy"; PlaybackSpeed = 1.1});
+			Impact = table.freeze({Pool = "Pools.Hits.Blade"; PlaybackSpeed = 0.85});
+		});
+
+		Spin = table.freeze({
+			Slash = table.freeze({Pool = "Pools.Swings.Heavy"; PlaybackSpeed = 1.1});
+			Impact = table.freeze({Pool = "Pools.Hits.Blade"; PlaybackSpeed = 0.85});
+		});
+
 
 		Leap = table.freeze({
 			Takeoff = "rbxassetid://1598682218";

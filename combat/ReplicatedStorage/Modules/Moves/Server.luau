@@ -309,108 +309,7 @@ do
 end
 Server.FistBarrage = FistBarrage
 
---// 3. DropKick \\--
-
-local DropKick = {}
-do
-	local activeKicks = setmetatable({}, {__mode = "k"})
-
-	local function getLookDirection(root: BasePart): Vector3
-		local flatLook = root.CFrame.LookVector * Vector3.new(1, 0, 1)
-
-		if flatLook.Magnitude > 0.1 then
-			return flatLook.Unit
-		end
-
-		return root.CFrame.LookVector
-	end
-
-	local function hitTarget(character: Model, root: BasePart, settings): boolean
-		local boxCFrame = root.CFrame * CFrame.new(0, 0, -settings.HitboxOffset)
-		local target = MoveHit.FindClosestTarget(character, root, boxCFrame, settings.HitboxSize)
-
-		if not target then
-			return true
-		end
-
-		if not MoveHit.ApplyDamage(character, target, settings.Damage, settings.StunTime, settings.EntryName) then
-			return false
-		end
-
-		MoveHit.Knockback(target, getLookDirection(root), settings.KnockbackForce, settings.KnockbackLift, settings.KnockbackDuration)
-		return true
-	end
-
-	local function handleStartup(caster: Player, character: Model, root: BasePart, state, settings)
-		if state.Startup then
-			return
-		end
-
-		state.Startup = true
-		broadcastToOthers(caster, settings.EntryName, {phase = "Startup", char = character, root = root})
-	end
-
-	local function handleSwing(caster: Player, character: Model, humanoid: Humanoid, root: BasePart, state, settings, elapsed: number)
-		if state.Swung or elapsed < settings.MinSwingTime then
-			return
-		end
-
-		state.Swung = true
-
-		if not MoveHit.CanAct(character, humanoid, root) then
-			return
-		end
-
-		if not hitTarget(character, root, settings) then
-			activeKicks[character] = nil
-			return
-		end
-
-		broadcastToOthers(caster, settings.EntryName, {phase = "Swing", char = character, root = root})
-	end
-
-	function DropKick.Activate(_player: Player, character: Model, settings, _aimPosition: Vector3?)
-		local state = {
-			StartTime = os.clock(),
-			Startup = false,
-			Swung = false,
-		}
-
-		activeKicks[character] = state
-
-		task.delay(settings.PhaseWindow, function()
-			if activeKicks[character] == state then
-				activeKicks[character] = nil
-			end
-		end)
-	end
-
-	function DropKick.Phase(player: Player, character: Model, settings, phaseName: string)
-		local state = activeKicks[character]
-		local humanoid = character:FindFirstChildOfClass("Humanoid")
-		local root = character:FindFirstChild("HumanoidRootPart")
-
-		if not state or not humanoid or not root then
-			return
-		end
-
-		local elapsed = os.clock() - state.StartTime
-
-		if elapsed > settings.PhaseWindow then
-			activeKicks[character] = nil
-			return
-		end
-
-		if phaseName == "Startup" then
-			handleStartup(player, character, root, state, settings)
-		elseif phaseName == "Swing" then
-			handleSwing(player, character, humanoid, root, state, settings, elapsed)
-		end
-	end
-end
-Server.DropKick = DropKick
-
---// 4. Rage \\--
+--// 3. Rage \\--
 
 local Rage = {}
 do
@@ -1201,6 +1100,583 @@ do
 	end
 end
 Server.DaggerDance = DaggerDance
+
+--// 8 & 9. Axe Moves: Thrust (yayy) & Spin (idk) \\--
+
+do
+	local TRACK_WAIT_TIMEOUT = 1
+	local GENERIC_MARKER_NAMES = {"Event", "Marker", "KeyframeMarker", "KeyEvent"}
+
+	local function normalizeKey(text: string): string
+		return string.lower((string.gsub(text, "[%s_]+", "")))
+	end
+
+	local function getAliveParts(character: Model)
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		local root = character:FindFirstChild("HumanoidRootPart")
+
+		if not humanoid or not root or humanoid.Health <= 0 then
+			return nil, nil
+		end
+
+		return humanoid, root
+	end
+
+	local function getTargets(character: Model, root: BasePart, settings)
+		local size = settings.HitboxSize or Vector3.new(settings.Width or 9, settings.Height or 8, settings.Range or 12)
+		local offset = settings.HitboxOffset or -(settings.Range or 12) * 0.5
+
+		local models = HitDetection.GetCharactersInBox(
+			root.CFrame * CFrame.new(0, 0, offset),
+			size,
+			{workspace.Effects, workspace.Debris, character},
+			settings.EntryName
+		)
+
+		local targets = {}
+
+		for _, model in ipairs(models) do
+			local enemyHumanoid = model:FindFirstChildOfClass("Humanoid")
+			local enemyRoot = model:FindFirstChild("HumanoidRootPart")
+
+			if enemyHumanoid and enemyRoot and enemyHumanoid.Health > 0 then
+				table.insert(targets, {Model = model, Humanoid = enemyHumanoid, Root = enemyRoot})
+			end
+		end
+
+		return targets
+	end
+
+	local function applyHitPass(character: Model, root: BasePart, damage: number, stunDuration: number, withKnockback: boolean, settings): boolean
+		local targets = getTargets(character, root, settings)
+
+		if MoveHit.TryParryGroup(character, targets, settings.EntryName) then
+			return false
+		end
+
+		local lookDirection = root.CFrame.LookVector * Vector3.new(1, 0, 1)
+		if lookDirection.Magnitude > 0.1 then
+			lookDirection = lookDirection.Unit
+		else
+			lookDirection = root.CFrame.LookVector
+		end
+
+		for _, target in ipairs(targets) do
+			if not MoveHit.ApplyDamage(character, target, damage, stunDuration, settings.EntryName) then
+				return false
+			end
+
+			if withKnockback and settings.KnockbackForce then
+				MoveHit.Knockback(target, lookDirection, settings.KnockbackForce, settings.KnockbackLift or 0, 0.25)
+			end
+		end
+
+		return true
+	end
+
+	local function isMatchingTrack(track: AnimationTrack, moveName: string, targetAnimId: string?, fallbackDigits: string): boolean
+		if track.Name == moveName then
+			return true
+		end
+
+		local anim = track.Animation
+		if anim then
+			if anim.Name == moveName then
+				return true
+			end
+
+			if targetAnimId and anim.AnimationId == targetAnimId then
+				return true
+			end
+
+			if string.find(anim.AnimationId, fallbackDigits, 1, true) ~= nil then
+				return true
+			end
+		end
+
+		return false
+	end
+
+	local function watchAxeAnimator(
+		activeTable,
+		moveName: string,
+		fallbackDigits: string,
+		aliases: {[string]: string},
+		hasEndPhase: boolean,
+		runPhaseFn,
+		player: Player,
+		character: Model,
+		humanoid: Humanoid,
+		settings,
+		state
+	)
+		local animator = humanoid:FindFirstChildOfClass("Animator")
+
+		if not animator then
+			return
+		end
+
+		local targetAnimId = AnimationsModule.GetAnimationId("Moves", moveName)
+
+		local function bindTrack(track: AnimationTrack)
+			if state.BoundTrack == track then
+				return
+			end
+
+			state.BoundTrack = track
+
+			local connections = {}
+
+			local function dispatch(rawName: any)
+				if activeTable[character] ~= state then
+					return
+				end
+
+				runPhaseFn(player, character, settings, rawName)
+			end
+
+			table.insert(connections, track.KeyframeReached:Connect(function(keyframeName: string)
+				dispatch(keyframeName)
+			end))
+
+			for aliasName in pairs(aliases) do
+				table.insert(connections, track:GetMarkerReachedSignal(aliasName):Connect(function(param)
+					dispatch(aliasName)
+					if param and param ~= "" then
+						dispatch(param)
+					end
+				end))
+			end
+
+			for _, genericName in ipairs(GENERIC_MARKER_NAMES) do
+				table.insert(connections, track:GetMarkerReachedSignal(genericName):Connect(function(param)
+					dispatch(param)
+				end))
+			end
+
+			table.insert(connections, track.Stopped:Once(function()
+				for _, connection in ipairs(connections) do
+					connection:Disconnect()
+				end
+
+				if hasEndPhase then
+					dispatch("End")
+				end
+			end))
+		end
+
+		for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+			if isMatchingTrack(track, moveName, targetAnimId, fallbackDigits) then
+				bindTrack(track)
+				return
+			end
+		end
+
+		local connection
+		connection = animator.AnimationPlayed:Connect(function(track: AnimationTrack)
+			if isMatchingTrack(track, moveName, targetAnimId, fallbackDigits) then
+				if connection then
+					connection:Disconnect()
+					connection = nil
+				end
+
+				bindTrack(track)
+			end
+		end)
+
+		task.delay(TRACK_WAIT_TIMEOUT, function()
+			if connection then
+				connection:Disconnect()
+				connection = nil
+			end
+		end)
+	end
+
+	--// Move 1: Thrust (yayy) \\--
+
+	local Thrust = {}
+	do
+		local MOVE_NAME = "Thrust"
+		local FALLBACK_DIGITS = "86677978686885"
+
+		local THRUST_ALIASES = {
+			["Thrust"] = "Thrust",
+			["thrust"] = "Thrust",
+			["Slashup"] = "Slashup",
+			["SlashUp"] = "Slashup",
+			["slashup"] = "Slashup",
+			["Slash_Up"] = "Slashup",
+			["SlashLast"] = "SlashLast",
+			["Slashlast"] = "SlashLast",
+			["slashlast"] = "SlashLast",
+			["Slash_Last"] = "SlashLast",
+		}
+
+		local activeThrusts = {}
+
+		local function normalizeEvent(rawName: any): string?
+			if type(rawName) ~= "string" or rawName == "" then
+				return nil
+			end
+
+			if THRUST_ALIASES[rawName] then
+				return THRUST_ALIASES[rawName]
+			end
+
+			local key = normalizeKey(rawName)
+
+			if key == "thrust" then
+				return "Thrust"
+			elseif key == "slashup" then
+				return "Slashup"
+			elseif key == "slashlast" then
+				return "SlashLast"
+			end
+
+			return nil
+		end
+
+		local function runPhase(player: Player?, character: Model, settings, rawPhaseName: any)
+			local phaseName = normalizeEvent(rawPhaseName)
+
+			if not phaseName then
+				return
+			end
+
+			local state = activeThrusts[character]
+
+			if not state or state.Ended then
+				return
+			end
+
+			if os.clock() - state.StartTime > settings.PhaseWindow then
+				state.Ended = true
+				activeThrusts[character] = nil
+				return
+			end
+
+			local humanoid, root = getAliveParts(character)
+
+			if not humanoid or character:FindFirstChild("Stun") then
+				state.Ended = true
+				activeThrusts[character] = nil
+				return
+			end
+
+			if state.DonePhases[phaseName] then
+				return
+			end
+
+			state.DonePhases[phaseName] = true
+
+			local damage = settings.ThrustDamage
+			local stun = settings.ThrustStun
+			local isFinisher = false
+
+			if phaseName == "Slashup" then
+				damage = settings.SlashupDamage
+				stun = settings.SlashupStun
+			elseif phaseName == "SlashLast" then
+				damage = settings.SlashLastDamage
+				stun = settings.SlashLastStun
+				isFinisher = true
+			end
+
+			if not applyHitPass(character, root, damage, stun, isFinisher, settings) then
+				state.Ended = true
+				activeThrusts[character] = nil
+				return
+			end
+
+			broadcastToOthers(player, settings.EntryName, {
+				char = character,
+				root = root,
+				phase = phaseName,
+			})
+
+			if isFinisher then
+				state.Ended = true
+				if activeThrusts[character] == state then
+					activeThrusts[character] = nil
+				end
+			end
+		end
+
+		function Thrust.Activate(player: Player, character: Model, settings, aimOrPhase: any)
+			if type(aimOrPhase) == "string" then
+				runPhase(player, character, settings, aimOrPhase)
+				return
+			end
+
+			local previous = activeThrusts[character]
+			if previous then
+				previous.Ended = true
+			end
+
+			local humanoid, root = getAliveParts(character)
+
+			if not humanoid then
+				return
+			end
+
+			local state = {
+				StartTime = os.clock(),
+				DonePhases = {},
+				Ended = false,
+				BoundTrack = nil,
+			}
+
+			activeThrusts[character] = state
+
+			effectsRemote:FireAllClients(settings.EntryName, {
+				char = character,
+				root = root,
+			})
+
+			watchAxeAnimator(
+				activeThrusts,
+				MOVE_NAME,
+				FALLBACK_DIGITS,
+				THRUST_ALIASES,
+				false,
+				runPhase,
+				player,
+				character,
+				humanoid,
+				settings,
+				state
+			)
+
+			task.delay(settings.PhaseWindow, function()
+				if activeThrusts[character] == state then
+					state.Ended = true
+					activeThrusts[character] = nil
+				end
+			end)
+		end
+
+		function Thrust.Phase(player: Player, character: Model, settings, phaseName: string)
+			if not activeThrusts[character] then
+				local humanoid = character:FindFirstChildOfClass("Humanoid")
+				if not humanoid or humanoid.Health <= 0 then
+					return
+				end
+
+				activeThrusts[character] = {
+					StartTime = os.clock(),
+					DonePhases = {},
+					Ended = false,
+					BoundTrack = nil,
+				}
+			end
+
+			runPhase(player, character, settings, phaseName)
+		end
+	end
+	Server.Thrust = Thrust
+
+	--// Move 2: Spin (idk) \\--
+
+	local Spin = {}
+	do
+		local MOVE_NAME = "Spin"
+		local FALLBACK_DIGITS = "102759962289170"
+
+		local SPIN_ALIASES = {
+			["Startup"] = "Startup",
+			["startup"] = "Startup",
+			["StartUp"] = "Startup",
+			["Thrust"] = "Thrust",
+			["thrust"] = "Thrust",
+			["Spin"] = "Spin",
+			["spin"] = "Spin",
+			["End"] = "End",
+			["end"] = "End",
+			["END"] = "End",
+		}
+
+		local activeSpins = {}
+
+		local function normalizeEvent(rawName: any): string?
+			if type(rawName) ~= "string" or rawName == "" then
+				return nil
+			end
+
+			if SPIN_ALIASES[rawName] then
+				return SPIN_ALIASES[rawName]
+			end
+
+			local key = normalizeKey(rawName)
+
+			if key == "startup" then
+				return "Startup"
+			elseif key == "thrust" then
+				return "Thrust"
+			elseif key == "spin" then
+				return "Spin"
+			elseif key == "end" then
+				return "End"
+			end
+
+			return nil
+		end
+
+		local function cancelSpin(player: Player?, character: Model, root: BasePart?, state, settings)
+			state.Ended = true
+
+			if activeSpins[character] == state then
+				activeSpins[character] = nil
+			end
+
+			broadcastToOthers(player, settings.EntryName, {
+				char = character,
+				root = root,
+				phase = "End",
+			})
+		end
+
+		local function runPhase(player: Player?, character: Model, settings, rawPhaseName: any)
+			local phaseName = normalizeEvent(rawPhaseName)
+
+			if not phaseName then
+				return
+			end
+
+			local state = activeSpins[character]
+
+			if not state or state.Ended then
+				return
+			end
+
+			if os.clock() - state.StartTime > settings.PhaseWindow then
+				state.Ended = true
+				activeSpins[character] = nil
+				return
+			end
+
+			local humanoid, root = getAliveParts(character)
+
+			if not humanoid or character:FindFirstChild("Stun") then
+				if phaseName == "End" or character:FindFirstChild("Stun") then
+					cancelSpin(player, character, root, state, settings)
+				end
+				return
+			end
+
+			if phaseName == "End" then
+				cancelSpin(player, character, root, state, settings)
+				return
+			end
+
+			if state.DonePhases[phaseName] then
+				return
+			end
+
+			state.DonePhases[phaseName] = true
+
+			if phaseName == "Startup" then
+				broadcastToOthers(player, settings.EntryName, {
+					char = character,
+					root = root,
+					phase = "Startup",
+				})
+			elseif phaseName == "Thrust" then
+				if not applyHitPass(character, root, settings.ThrustDamage, settings.ThrustStun, false, settings) then
+					cancelSpin(player, character, root, state, settings)
+					return
+				end
+
+				broadcastToOthers(player, settings.EntryName, {
+					char = character,
+					root = root,
+					phase = "Thrust",
+				})
+			elseif phaseName == "Spin" then
+				if not applyHitPass(character, root, settings.SpinDamage, settings.SpinStun, true, settings) then
+					cancelSpin(player, character, root, state, settings)
+					return
+				end
+
+				broadcastToOthers(player, settings.EntryName, {
+					char = character,
+					root = root,
+					phase = "Spin",
+				})
+			end
+		end
+
+		function Spin.Activate(player: Player, character: Model, settings, aimOrPhase: any)
+			if type(aimOrPhase) == "string" then
+				runPhase(player, character, settings, aimOrPhase)
+				return
+			end
+
+			local previous = activeSpins[character]
+			if previous then
+				previous.Ended = true
+			end
+
+			local humanoid, root = getAliveParts(character)
+
+			if not humanoid then
+				return
+			end
+
+			local state = {
+				StartTime = os.clock(),
+				DonePhases = {},
+				Ended = false,
+				BoundTrack = nil,
+			}
+
+			activeSpins[character] = state
+
+			effectsRemote:FireAllClients(settings.EntryName, {
+				char = character,
+				root = root,
+			})
+
+			watchAxeAnimator(
+				activeSpins,
+				MOVE_NAME,
+				FALLBACK_DIGITS,
+				SPIN_ALIASES,
+				true,
+				runPhase,
+				player,
+				character,
+				humanoid,
+				settings,
+				state
+			)
+
+			task.delay(settings.PhaseWindow, function()
+				if activeSpins[character] == state and not state.Ended then
+					runPhase(player, character, settings, "End")
+				end
+			end)
+		end
+
+		function Spin.Phase(player: Player, character: Model, settings, phaseName: string)
+			if not activeSpins[character] then
+				local humanoid = character:FindFirstChildOfClass("Humanoid")
+				if not humanoid or humanoid.Health <= 0 then
+					return
+				end
+
+				activeSpins[character] = {
+					StartTime = os.clock(),
+					DonePhases = {},
+					Ended = false,
+					BoundTrack = nil,
+				}
+			end
+
+			runPhase(player, character, settings, phaseName)
+		end
+	end
+	Server.Spin = Spin
+end
 
 --// Dispatcher \\--
 
