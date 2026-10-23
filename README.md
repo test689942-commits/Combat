@@ -202,12 +202,16 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
 ---
 
 ### 2.9 Skill Parry & Cancel System
-- **Regular Blocking vs. Parrying on Skills (`Moves/MoveHit.luau` & `Moves/Server.luau`)**:
+- **Regular Blocking vs. Parrying on Skills (`Moves/init.luau`, `Moves/MoveHit.luau` & `Moves/Server.luau`)**:
   - Regular blocking (`Blocking` without `PB`) does not block skills — skills break/bypass regular block (`CombatServer.DestroyBlock`).
-  - **Parrying at the right time (`Blocking` with `PB` active within the `ParryWindow`)** parries and **cancels** any skill (`GroundSlam`, `FistBarrage`, `DropKick`, `Rage`, `Leap`, `Cut`, `DaggerThrow`, `DaggerDance`):
+  - **Per-Skill `Parryable` Flag (`Moves/init.luau`)**:
+    - Each skill in `Moves/init.luau` defines `Parryable = true` or `Parryable = false` (checked via `MoveHit.CanParryMove`).
+    - **`Rage` has `Parryable = false`** so it **cannot be parried** even if the defender is inside their `PB` parry window (it bypasses parry/block and stuns nearby targets).
+    - Any other skill can be made unparryable at any time by setting `Parryable = false` on its entry in `Moves/init.luau`.
+  - **Parrying a Parryable Skill at the Right Time (`Blocking` with `PB` active within the `ParryWindow`)** parries and **cancels** the skill (`GroundSlam`, `FistBarrage`, `DropKick`, `Leap`, `Cut`, `DaggerThrow`, `DaggerDance`):
     1. The defender takes **no damage, stun, or knockback**.
     2. The attacker's `DoingMove` state is cleared and replaced with `Stun` (`CombatInfo.Block.ParryStun`).
-    3. All ongoing server skill loops/ticks/phases (`FistBarrage`, `Cut`, `DaggerDance`, `DropKick`, `Rage`, `Leap`, `GroundSlam`, `DaggerThrow`) immediately abort.
+    3. All ongoing server skill loops/ticks/phases (`FistBarrage`, `Cut`, `DaggerDance`, `DropKick`, `Leap`, `GroundSlam`, `DaggerThrow`) immediately abort.
     4. The Parry VFX and `Parry` / `Parried` animations (`Enum.AnimationPriority.Action4`) play on the defender and attacker, stopping any active skill animation track.
     5. `Remotes.Effects` broadcasts `"CancelMove"` (`Effects.CancelMove`) and `MoveClient.WaitForMove` interrupts the caster's client-side movement/dash/VFX immediately.
 
@@ -233,16 +237,16 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
 
 ## 4. Moves Reference Table
 
-| Move Name | Category Folder | Client Module | VFX Handler | Server Handler | Description |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **`GroundSlam`** | `Fists` | `Moves/GroundSlam.luau` | `Effects.GroundSlam` | `Server.GroundSlam` | AoE ground impact with crater, rocks & knockup |
-| **`FistBarrage`** | `Fists` | `Moves/FistBarrage.luau` | `Effects.FistBarrage` | `Server.FistBarrage` | Rapid multi-hit flurry of punches |
-| **`DropKick`** | `Fists` | `Moves/DropKick.luau` | `Effects.DropKick` | `Server.DropKick` | Forward dash kick with heavy knockback |
-| **`Rage`** | `Greatsword` | `Moves/Rage.luau` | `Effects.Rage` | `Server.Rage` | Warcry AoE shockwave + temporary damage buff |
-| **`Leap`** | `Greatsword` | `Moves/Leap.luau` | `Effects.Leap` | `Server.Leap` | High-arcing jump slam with landing shockwave |
-| **`Cut`** | `Greatsword` | `Moves/Cut.luau` | `Effects.Cut` | `Server.Cut` | Heavy forward cleaving slash |
-| **`DaggerThrow`** | `Dagger` | `Moves/DaggerThrow.luau` | `Effects.DaggerThrow` | `Server.DaggerThrow` | Ranged dagger projectile triggered on `Throw` marker |
-| **`DaggerDance`** | `Dagger` | `Moves/DaggerDance.luau` | `Effects.DaggerDance` | `Server.DaggerDance` | Key-event combo (`Dagger Slash` single hit + `Slash Move` multi-hit ticks until `End`) |
+| Move Name | Category Folder | Parryable | Client Module | VFX Handler | Server Handler | Description |
+| :--- | :--- | :---: | :--- | :--- | :--- | :--- |
+| **`GroundSlam`** | `Fists` | Yes | `Moves/GroundSlam.luau` | `Effects.GroundSlam` | `Server.GroundSlam` | AoE ground impact with crater, rocks & knockup |
+| **`FistBarrage`** | `Fists` | Yes | `Moves/FistBarrage.luau` | `Effects.FistBarrage` | `Server.FistBarrage` | Rapid multi-hit flurry of punches |
+| **`DropKick`** | `Fists` | Yes | `Moves/DropKick.luau` | `Effects.DropKick` | `Server.DropKick` | Forward dash kick with heavy knockback |
+| **`Rage`** | `Greatsword` | **No** | `Moves/Rage.luau` | `Effects.Rage` | `Server.Rage` | Unparryable warcry AoE shockwave + temporary damage buff |
+| **`Leap`** | `Greatsword` | Yes | `Moves/Leap.luau` | `Effects.Leap` | `Server.Leap` | High-arcing jump slam with landing shockwave |
+| **`Cut`** | `Greatsword` | Yes | `Moves/Cut.luau` | `Effects.Cut` | `Server.Cut` | Heavy forward cleaving slash |
+| **`DaggerThrow`** | `Dagger` | Yes | `Moves/DaggerThrow.luau` | `Effects.DaggerThrow` | `Server.DaggerThrow` | Ranged dagger projectile triggered on `Throw` marker |
+| **`DaggerDance`** | `Dagger` | Yes | `Moves/DaggerDance.luau` | `Effects.DaggerDance` | `Server.DaggerDance` | Key-event combo (`Dagger Slash` single hit + `Slash Move` multi-hit ticks until `End`) |
 
 ---
 

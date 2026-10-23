@@ -72,6 +72,27 @@ local function resolveTargetModel(targetOrModel: any): Model?
 	return nil
 end
 
+function MoveHit.CanParryMove(moveOrSettings: any): boolean
+	if moveOrSettings == nil then
+		return true
+	end
+
+	local settings = if type(moveOrSettings) == "table"
+		then moveOrSettings
+		elseif type(moveOrSettings) == "string" then MovesInfo[moveOrSettings]
+		else nil
+
+	if not settings then
+		return true
+	end
+
+	if settings.Parryable == false or settings.Unparryable == true or settings.CanParry == false then
+		return false
+	end
+
+	return true
+end
+
 function MoveHit.IsParrying(targetOrModel: any): boolean
 	local targetModel = resolveTargetModel(targetOrModel)
 
@@ -120,6 +141,10 @@ function MoveHit.ParrySkill(attacker: Model, defender: Model, moveName: string?)
 end
 
 function MoveHit.TryParry(attacker: Model, targetOrModel: any, moveName: string?): boolean
+	if not MoveHit.CanParryMove(moveName) then
+		return false
+	end
+
 	local targetModel = resolveTargetModel(targetOrModel)
 
 	if not targetModel or not MoveHit.IsParrying(targetModel) then
@@ -131,6 +156,10 @@ function MoveHit.TryParry(attacker: Model, targetOrModel: any, moveName: string?
 end
 
 function MoveHit.TryParryGroup(attacker: Model, targets: {any}, moveName: string?): boolean
+	if not MoveHit.CanParryMove(moveName) then
+		return false
+	end
+
 	for _, target in ipairs(targets) do
 		if MoveHit.TryParry(attacker, target, moveName) then
 			return true

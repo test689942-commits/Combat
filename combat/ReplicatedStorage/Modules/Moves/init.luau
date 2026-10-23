@@ -29,6 +29,7 @@ return table.freeze({
 		DisplayName = "Ground Slam";
 		EntryName = "GroundSlam";
 		Skill = true;
+		Parryable = true;
 		Order = 1;
 		RequiresFist = true;
 		Key = Enum.KeyCode.Z;
@@ -52,6 +53,7 @@ return table.freeze({
 		DisplayName = "Fist Barrage";
 		EntryName = "FistBarrage";
 		Skill = true;
+		Parryable = true;
 		Order = 2;
 		RequiresFist = true;
 		Key = Enum.KeyCode.X;
@@ -74,6 +76,7 @@ return table.freeze({
 		DisplayName = "Drop Kick";
 		EntryName = "DropKick";
 		Skill = true;
+		Parryable = true;
 		Order = 3;
 		RequiresFist = true;
 		Key = Enum.KeyCode.C;
@@ -99,6 +102,7 @@ return table.freeze({
 		DisplayName = "Rage";
 		EntryName = "Rage";
 		Skill = true;
+		Parryable = false;
 		Order = 4;
 		RequiresFist = false;
 		Key = Enum.KeyCode.R;
@@ -121,6 +125,7 @@ return table.freeze({
 		DisplayName = "Leap";
 		EntryName = "Leap";
 		Skill = true;
+		Parryable = true;
 		Order = 5;
 		RequiresFist = false;
 		Key = Enum.KeyCode.E;
@@ -143,6 +148,7 @@ return table.freeze({
 		DisplayName = "Cut";
 		EntryName = "Cut";
 		Skill = true;
+		Parryable = true;
 		Order = 6;
 		RequiresFist = false;
 		Key = Enum.KeyCode.V;
@@ -171,6 +177,7 @@ return table.freeze({
 		DisplayName = "Throw";
 		EntryName = "DaggerThrow";
 		Skill = true;
+		Parryable = true;
 		Order = 7;
 		RequiresFist = false;
 		Key = Enum.KeyCode.G;
@@ -192,6 +199,7 @@ return table.freeze({
 		DisplayName = "Dagger Dance";
 		EntryName = "DaggerDance";
 		Skill = true;
+		Parryable = true;
 		Order = 8;
 		RequiresFist = false;
 		Key = Enum.KeyCode.B;
