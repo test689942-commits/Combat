@@ -13,7 +13,6 @@ local SprintVisuals = require(Modules.ClientSystem:WaitForChild("SprintVisuals")
 local WallRun = require(Modules.ClientSystem:WaitForChild("WallRun"))
 local CameraShiftlock = require(Modules.ClientSystem:WaitForChild("CameraShiftlock"))
 local FootSteps = require(Modules.ClientSystem:WaitForChild("FootSteps"))
-local MovementFX = require(Modules.ClientSystem:WaitForChild("MovementFX"))
 
 --// Character Setup \\--
 
@@ -43,7 +42,6 @@ Humanoid.StateChanged:Connect(function(_Old: Enum.HumanoidStateType, New: Enum.H
 	elseif New == Enum.HumanoidStateType.Jumping then
 		Client.InAir = true
 		FootSteps.PlayStep(Root, Enum.HumanoidStateType.Jumping, 0.4, 1)
-		MovementFX.PlayOnce(Character, {"JumpFX", "Jump"})
 	elseif New == Enum.HumanoidStateType.Landed or New == Enum.HumanoidStateType.Running then
 		if Client.InAir then
 			Client.InAir = false

@@ -191,7 +191,7 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 			end
 			
 			--// Shockwave
-			local dashFolder = game.ReplicatedStorage.Assets.Effects:FindFirstChild("Dash") or game.ReplicatedStorage.Assets.Effects:FindFirstChild("DashVFX")
+			local dashFolder = game.ReplicatedStorage.Assets.Effects:FindFirstChild("Movement") or game.ReplicatedStorage.Assets.Effects:FindFirstChild("Dash") or game.ReplicatedStorage.Assets.Effects:FindFirstChild("DashVFX")
 			local Ring = dashFolder:FindFirstChild("Ring"):Clone()
 			Ring.CFrame = Humrp.CFrame * CFrame.new(0,-2.3,0)
 			Ring.Parent = workspace.Effects

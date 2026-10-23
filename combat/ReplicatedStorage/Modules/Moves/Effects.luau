@@ -73,24 +73,18 @@ local FOLDER_LAYOUT = {
 		"Idk",
 	},
 	Movement = {
-		"Slide",
-		"Sliding",
-		"SlideFX",
-		"LongJump",
-		"Vault",
-		"Vault1",
-		"Vault2",
-		"WallClimb",
-		"WallRun",
-		"LeftRun",
-		"RightRun",
-		"LeftJump",
-		"RightJump",
-		"Sprint",
-		"FastSprint",
-		"JumpFX",
-		"LandFX",
+		"Ring",
+		"Arm Trail",
+		"Back",
+		"Forward",
+		"Left",
+		"Right",
+		"SideDust",
+		"SpeedSprinting",
+		"Trail",
+		"TransparentArmTrail",
 	},
+
 }
 
 local function normalizeKey(text: string): string
@@ -135,7 +129,7 @@ end
 
 function Effects.GetCategoryFolder(categoryName: string): Instance?
 	if categoryName == "Dash" then
-		return effectsFolder:FindFirstChild("Dash") or effectsFolder:FindFirstChild("DashVFX")
+		return effectsFolder:FindFirstChild("Movement") or effectsFolder:FindFirstChild("Dash") or effectsFolder:FindFirstChild("DashVFX")
 	end
 
 	return effectsFolder:FindFirstChild(categoryName)

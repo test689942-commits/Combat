@@ -4,7 +4,6 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local Client = require(script.Parent)
-local MovementFX = require(script.Parent:WaitForChild("MovementFX"))
 
 local WallRun = {}
 
@@ -169,7 +168,6 @@ function WallRun.Start(Character: Model)
 	local BG: BodyGyro? = nil
 	local LastNormal: Vector3? = nil
 	local ActiveRunTrack: AnimationTrack? = nil
-	local StopWallFX: (() -> ())? = nil
 	local Grace = 0.15
 	local SwitchCd = 0
 	local StabilityTmr = 0
@@ -184,10 +182,6 @@ function WallRun.Start(Character: Model)
 			ActiveRunTrack = nil
 		end
 
-		if StopWallFX then
-			StopWallFX()
-			StopWallFX = nil
-		end
 	end
 
 	local function ClearMovers()
@@ -242,10 +236,6 @@ function WallRun.Start(Character: Model)
 			ActiveRunTrack:Play(0.1)
 		end
 
-		local fxCandidates = if S == "LeftVector"
-			then {"Left Run", "LeftRun", "WallRun", "WallRunFX"}
-			else {"Right Run", "RightRun", "WallRun", "WallRunFX"}
-		StopWallFX = MovementFX.StartLoop(Character, fxCandidates)
 	end
 
 	local function Release()
@@ -271,10 +261,6 @@ function WallRun.Start(Character: Model)
 			jumpTrack:Play(0.08)
 		end
 
-		local jumpFxNames = if currentSide == "LeftVector"
-			then {"Left Jump", "LeftJump", "WallJump", "JumpFX"}
-			else {"Right Jump", "RightJump", "WallJump", "JumpFX"}
-		MovementFX.PlayOnce(Character, jumpFxNames)
 
 		if Root.Parent then
 			Root.AssemblyLinearVelocity = Root.CFrame.LookVector * 32 + jumpAway * 22 + Vector3.new(0, 42, 0)

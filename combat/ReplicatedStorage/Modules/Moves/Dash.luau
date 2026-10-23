@@ -28,7 +28,9 @@ end
 --// Effects \\--
 
 local function getDashEffectsFolder(): Instance?
-	return Client.Assets.Effects:FindFirstChild("Dash") or Client.Assets.Effects:FindFirstChild("DashVFX")
+	return Client.Assets.Effects:FindFirstChild("Movement")
+		or Client.Assets.Effects:FindFirstChild("Dash")
+		or Client.Assets.Effects:FindFirstChild("DashVFX")
 end
 
 local function spawnRing(ringCFrame: CFrame, size: Vector3)
@@ -91,10 +93,21 @@ local function playLimbTrails(character: Model)
 	end
 
 	local dashEffects = getDashEffectsFolder()
-	local trailFolder = dashEffects and dashEffects:FindFirstChild("Trail")
-	local limbAttTemplate = trailFolder and trailFolder:FindFirstChild("LimbAtt")
+	local limbTrailTemplate = dashEffects and (dashEffects:FindFirstChild("Arm Trail") or dashEffects:FindFirstChild("TransparentArmTrail"))
 
-	if not limbAttTemplate then
+	if not limbTrailTemplate then
+		local trailFolder = dashEffects and dashEffects:FindFirstChild("Trail")
+		limbTrailTemplate = trailFolder and (
+			trailFolder:FindFirstChild("LimbAtt", true)
+			or trailFolder:FindFirstChildWhichIsA("Attachment", true)
+			or (trailFolder:IsA("Attachment") and trailFolder)
+		)
+	elseif not limbTrailTemplate:IsA("Attachment") then
+		limbTrailTemplate = limbTrailTemplate:FindFirstChild("LimbAtt", true)
+			or limbTrailTemplate:FindFirstChildWhichIsA("Attachment", true)
+	end
+
+	if not limbTrailTemplate or not limbTrailTemplate:IsA("Attachment") then
 		return
 	end
 

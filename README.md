@@ -224,14 +224,14 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
   - Automatically resets to neutral pose when idle (`> 2s`), facing a wall within `2` studs, or in any combat/stun/action state (`Stun`, `DoingCombat`, `DoingMove`, `Blocking`).
 - **Double-Tap `W` Sprint, FastSprint & Sprint Visuals (`ClientSystem/Inputs/Sprint.luau`, `ClientSystem/SprintVisuals.luau`)**:
   - Double-tapping `W` within `0.2s` activates Sprint (`SprintSpeed = 24`, animation `Sprint` = `70903321662399`) while `W` is held, and transitions into `FastSprint` (`FastSprintSpeed = 28`, animation `FastSprint` = `92394376692356`) after `1.35s` of continuous sprinting.
-  - Attaches `SprintTrail` trails on `Left Arm` and `Right Arm`, tweens camera `FieldOfView` (`70 -> 76`), adds velocity-scaled camera sway, and plays any `Sprint` / `FastSprint` VFX from `ReplicatedStorage.Assets.Effects`.
-- **Slide & LongJump (`ClientSystem/Inputs/Slide.luau`, `ClientSystem/Movement.luau`)**:
-  - Pressing `LeftControl` performs a forward ground slide impulse, plays the `Sliding` animation (`134302481749326`), plays the slide audio (`rbxassetid://6429226498`), and plays any `Slide` / `Sliding` VFX from `Assets.Effects`.
-  - Pressing `Space` while sliding cancels the slide into a forward-upward **LongJump** boost, playing the `LongJump` animation (`71457670921368`) and emitting any `LongJump` VFX from `Assets.Effects`.
-- **WallClimb & Vault (`ClientSystem/Inputs/Jump.luau`, `ClientSystem/Movement.luau`)**:
-  - Pressing `Space` near a wall checks ground, overhead clearance, torso wall hit, and head ledge clearance to perform either a vertical **WallClimb** boost (`FastSprint` = `92394376692356`) or a ledge **Vault** (alternating `Vault1` = `111806598954502` and `Vault2` = `87942706676175`) with VFX from `Assets.Effects`.
-- **WallRun Controller (`ClientSystem/WallRun.luau`)**:
-  - Detects runnable left/right walls while airborne with forward input, propels the character along the wall tangent using `BodyVelocity` and `BodyGyro`, plays `Left Run` (`118914310248428`) / `Right Run` (`92324260993876`) with wallrun VFX from `Assets.Effects`, and plays `Left Jump` (`119937163876536`) / `Right Jump` (`109550456840533`) when jumping off the wall with `Space`.
+  - Attaches `SprintTrail`s on `Left Arm` and `Right Arm`, tweens camera `FieldOfView` (`70 -> 76`), adds velocity-scaled camera sway, and loops the `SpeedSprinting` effect from `ReplicatedStorage.Assets.Effects.Movement` when available.
+- **Movement VFX Location (`ReplicatedStorage.Assets.Effects.Movement`)**:
+  - Movement and dash VFX are stored in the `Movement` folder: `Ring`, `Arm Trail`, `Back`, `Forward`, `Left`, `Right`, `SideDust`, `SpeedSprinting`, `Trail`, and `TransparentArmTrail`.
+  - Dash now looks in `Effects.Movement` first for direction bursts, `Ring`, and arm-trail attachments (with legacy `Dash` / `DashVFX` fallback).
+- **Slide, LongJump, WallClimb, Vault & WallRun (`ClientSystem/Movement.luau`, `ClientSystem/WallRun.luau`)**:
+  - `LeftControl` performs the slide animation (`Sliding` = `134302481749326`) and plays slide audio (`rbxassetid://6429226498`). Pressing `Space` during slide triggers the forward-upward **LongJump** animation (`71457670921368`).
+  - Jump input near a wall performs either a vertical **WallClimb** boost or a ledge **Vault** (alternating `Vault1` = `111806598954502` and `Vault2` = `87942706676175`). WallRun plays the corresponding left/right run and jump animations.
+  - Ordinary jumping plays the jump animation and footstep jump sound only; no movement particle effect is emitted on jump. The movement controller does not treat combat effects (such as `Greatsword/Jump`) as movement VFX.
 - **Movement Animations (`Animations/Anims.luau`, `StarterCharacterScripts/Animate.local.luau`)**:
   - `Idle`: `139783125255456`, `walk`: `81874417224388`, `Sprint`/`run`: `70903321662399`, `FastSprint`: `92394376692356`, `jump`: `135702083168555`, `Fall`: `120908359783163`.
   - `WallRun`: `Left Jump` (`119937163876536`), `Left Run` (`118914310248428`), `Right Jump` (`109550456840533`), `Right Run` (`92324260993876`).

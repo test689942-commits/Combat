@@ -24,23 +24,18 @@ end
 
 function MovementFX.FindTemplate(candidateNames: {string}): Instance?
 	local effectsFolder = getEffectsRoot()
-	if not effectsFolder then
+	local movementFolder = effectsFolder and effectsFolder:FindFirstChild("Movement")
+	if not movementFolder then
 		return nil
 	end
 
-	local movementFolder = effectsFolder:FindFirstChild("Movement")
-
+	-- Restrict movement VFX lookup to Assets.Effects.Movement. Searching all
+	-- Effects descendants can accidentally select similarly named combat VFX
+	-- (for example, a Greatsword effect named "Jump").
 	for _, name in ipairs(candidateNames) do
-		if movementFolder then
-			local inMovement = movementFolder:FindFirstChild(name) or movementFolder:FindFirstChild(name, true)
-			if inMovement then
-				return inMovement
-			end
-		end
-
-		local direct = effectsFolder:FindFirstChild(name) or effectsFolder:FindFirstChild(name, true)
-		if direct then
-			return direct
+		local exact = movementFolder:FindFirstChild(name) or movementFolder:FindFirstChild(name, true)
+		if exact then
+			return exact
 		end
 	end
 
@@ -49,23 +44,9 @@ function MovementFX.FindTemplate(candidateNames: {string}): Instance?
 		targetKeys[normalizeKey(name)] = true
 	end
 
-	if movementFolder then
-		for _, desc in ipairs(movementFolder:GetDescendants()) do
-			if targetKeys[normalizeKey(desc.Name)] then
-				return desc
-			end
-		end
-	end
-
-	for _, child in ipairs(effectsFolder:GetChildren()) do
-		if targetKeys[normalizeKey(child.Name)] then
-			return child
-		end
-	end
-
-	for _, desc in ipairs(effectsFolder:GetDescendants()) do
-		if targetKeys[normalizeKey(desc.Name)] then
-			return desc
+	for _, descendant in ipairs(movementFolder:GetDescendants()) do
+		if targetKeys[normalizeKey(descendant.Name)] then
+			return descendant
 		end
 	end
 

@@ -667,7 +667,7 @@ end
 --// Hit Visuals \\--
 
 local function spawnShockwave(root: BasePart)
-	local dashFolder = effectsFolder:FindFirstChild("DashVFX")
+	local dashFolder = effectsFolder:FindFirstChild("Movement") or effectsFolder:FindFirstChild("Dash") or effectsFolder:FindFirstChild("DashVFX")
 	local template = dashFolder and dashFolder:FindFirstChild("Ring")
 
 	if not template then

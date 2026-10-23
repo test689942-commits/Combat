@@ -23,12 +23,10 @@ local vaultToggle = false
 local activeSlideVelocity: BodyVelocity? = nil
 local activeSlideTrack: AnimationTrack? = nil
 local activeSlideSound: Sound? = nil
-local stopSlideFX: (() -> ())? = nil
 local slideCancelThread: thread? = nil
 
 local fastSprintThread: thread? = nil
 local stopSprintFX: (() -> ())? = nil
-local stopFastSprintFX: (() -> ())? = nil
 
 local function hasBlockingState(character: Model?): boolean
 	if not character then
@@ -112,11 +110,6 @@ local function cancelActiveSlide()
 		activeSlideSound = nil
 	end
 
-	if stopSlideFX then
-		stopSlideFX()
-		stopSlideFX = nil
-	end
-
 	Client.Sliding = false
 	if Client.Character then
 		Client.Character:SetAttribute("Sliding", false)
@@ -145,10 +138,6 @@ Movement.Landed = function()
 	end
 
 	local Height = (Client.FallHeight - Root.Position.Y)
-	if Height and Height > 6 then
-		MovementFX.PlayOnce(Character, {"LandFX", "Land", "FallFX", "Fall"})
-	end
-
 	if not Height or Height <= 15 then
 		return
 	end
@@ -196,11 +185,6 @@ Movement.SetSprint = function(active: boolean)
 		stopSprintFX = nil
 	end
 
-	if stopFastSprintFX then
-		stopFastSprintFX()
-		stopFastSprintFX = nil
-	end
-
 	Client.Running = active
 	Humanoid:SetAttribute("Sprint", active)
 	Character:SetAttribute("Sprint", active)
@@ -212,8 +196,7 @@ Movement.SetSprint = function(active: boolean)
 	end
 
 	if active then
-		stopSprintFX = MovementFX.StartLoop(Character, {"Sprint", "SprintFX", "RunFX"})
-		MovementFX.PlayOnce(Character, {"SprintStart", "Sprint"})
+		stopSprintFX = MovementFX.StartLoop(Character, {"SpeedSprinting"})
 
 		fastSprintThread = task.delay(FAST_SPRINT_DELAY, function()
 			fastSprintThread = nil
@@ -224,8 +207,6 @@ Movement.SetSprint = function(active: boolean)
 			Humanoid:SetAttribute("FastSprint", true)
 			Character:SetAttribute("FastSprint", true)
 			Humanoid.WalkSpeed = Client.FastSprintSpeed
-			stopFastSprintFX = MovementFX.StartLoop(Character, {"FastSprint", "FastSprintFX", "Sprint", "SprintFX"})
-			MovementFX.PlayOnce(Character, {"FastSprint", "FastSprintFX"})
 		end)
 	end
 end
@@ -284,9 +265,6 @@ Movement.Slide = function()
 
 	local animName = if Client.Animations.DetectSpecificAnimation("Movement", "Sliding") then "Sliding" else "Roll"
 	activeSlideTrack = playMovementAnim(Humanoid, animName, Enum.AnimationPriority.Action3, 0.08, 1)
-
-	stopSlideFX = MovementFX.StartLoop(Character, {"Sliding", "Slide", "SlideFX"})
-	MovementFX.PlayOnce(Character, {"Sliding", "Slide", "SlideFX"})
 
 	slideCancelThread = task.delay(SLIDE_DURATION, function()
 		slideCancelThread = nil
@@ -360,7 +338,6 @@ Movement.TryWallClimbOrVault = function()
 		Debris:AddItem(longJumpVelocity, 0.24)
 
 		playMovementAnim(Humanoid, "LongJump", Enum.AnimationPriority.Action3, 0.08, 1)
-		MovementFX.PlayOnce(Character, {"LongJump", "Long Jump", "SlideJump", "JumpFX"})
 		return
 	end
 
@@ -380,7 +357,6 @@ Movement.TryWallClimbOrVault = function()
 		Debris:AddItem(climbVelocity, 0.28)
 
 		playMovementAnim(Humanoid, "FastSprint", Enum.AnimationPriority.Action3, 0.08, 1.15)
-		MovementFX.PlayOnce(Character, {"WallClimb", "Climb", "Vault", "WallRun"})
 	elseif shouldVault then
 		lastClimbTime = tick()
 		local vaultVelocity = Instance.new("BodyVelocity")
@@ -393,7 +369,6 @@ Movement.TryWallClimbOrVault = function()
 		vaultToggle = not vaultToggle
 		local vaultAnimKey = if vaultToggle then "Vault1" else "Vault2"
 		playMovementAnim(Humanoid, vaultAnimKey, Enum.AnimationPriority.Action3, 0.06, 1)
-		MovementFX.PlayOnce(Character, {vaultAnimKey, "Vault", "VaultFX"})
 	end
 end
 
