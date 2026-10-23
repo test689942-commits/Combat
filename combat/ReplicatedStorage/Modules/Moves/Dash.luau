@@ -366,6 +366,9 @@ function Dash.Activate(direction: string, straightForwardInput: boolean?)
 	local playFastSprint = direction == "Forward" and Client.Running and movingStraightForward
 	if playFastSprint then
 		playFastSprint = Movement.FastSprintBurst()
+		if not playFastSprint and character:GetAttribute("FastSprint") == true then
+			Movement.CancelFastSprintBurst()
+		end
 	elseif Client.Running and character:GetAttribute("FastSprint") == true then
 		Movement.CancelFastSprintBurst()
 	end

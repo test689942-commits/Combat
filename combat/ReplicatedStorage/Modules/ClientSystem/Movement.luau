@@ -14,8 +14,8 @@ local SLIDE_SPEED = 52
 local SLIDE_DURATION = 0.55
 local SLIDE_COOLDOWN = 1.2
 local WALL_CLIMB_COOLDOWN = 0.8
-local SPRINT_EFFECT_DELAY = 3
-local FAST_SPRINT_DURATION = 3
+local FAST_SPRINT_DURATION = 2
+local FAST_SPRINT_COOLDOWN = 5
 
 local lastSlideTime = 0
 local lastClimbTime = 0
@@ -26,9 +26,9 @@ local activeSlideTrack: AnimationTrack? = nil
 local activeSlideSound: Sound? = nil
 local slideCancelThread: thread? = nil
 
-local sprintEffectThread: thread? = nil
 local fastSprintThread: thread? = nil
 local fastSprintGeneration = 0
+local fastSprintReadyAt = 0
 local stopSprintFX: (() -> ())? = nil
 
 local function hasBlockingState(character: Model?): boolean
@@ -182,18 +182,26 @@ end
 Movement.FastSprintBurst = function(duration: number?): boolean
 	local Character: Model = Client.Character
 	local Humanoid: Humanoid = Client.Humanoid
+	local now = os.clock()
 	if not Character or not Humanoid or Humanoid.Health <= 0 or not Client.Running
 		or Humanoid.FloorMaterial == Enum.Material.Air
-		or Humanoid.MoveDirection.Magnitude < 0.05 or hasBlockingState(Character) then
+		or Humanoid.MoveDirection.Magnitude < 0.05 or hasBlockingState(Character)
+		or now < fastSprintReadyAt then
 		return false
 	end
 
 	cancelFastSprintTimer()
 	local generation = fastSprintGeneration
+	fastSprintReadyAt = now + FAST_SPRINT_COOLDOWN
 	setFastSprintAttributes(Character, Humanoid, true)
 	Humanoid:SetAttribute("Sprint", true)
 	Character:SetAttribute("Sprint", true)
 	Humanoid.WalkSpeed = Client.FastSprintSpeed
+
+	if stopSprintFX then
+		stopSprintFX()
+	end
+	stopSprintFX = MovementFX.StartLoop(Character, {"SpeedSprinting"})
 
 	fastSprintThread = task.delay(duration or FAST_SPRINT_DURATION, function()
 		if generation ~= fastSprintGeneration or not Character.Parent then
@@ -201,6 +209,10 @@ Movement.FastSprintBurst = function(duration: number?): boolean
 		end
 		fastSprintThread = nil
 		setFastSprintAttributes(Character, Humanoid, false)
+		if stopSprintFX then
+			stopSprintFX()
+			stopSprintFX = nil
+		end
 		if Client.Running and not hasBlockingState(Character) then
 			Humanoid.WalkSpeed = Client.SprintSpeed
 		else
@@ -215,6 +227,10 @@ Movement.CancelFastSprintBurst = function()
 	local Character: Model = Client.Character
 	local Humanoid: Humanoid = Client.Humanoid
 	cancelFastSprintTimer()
+	if stopSprintFX then
+		stopSprintFX()
+		stopSprintFX = nil
+	end
 	if not Character or not Humanoid then
 		return
 	end
@@ -238,10 +254,6 @@ Movement.SetSprint = function(active: boolean)
 	end
 
 	cancelFastSprintTimer()
-	if sprintEffectThread then
-		task.cancel(sprintEffectThread)
-		sprintEffectThread = nil
-	end
 
 	if stopSprintFX then
 		stopSprintFX()
@@ -257,17 +269,6 @@ Movement.SetSprint = function(active: boolean)
 		Humanoid.WalkSpeed = if active then Client.SprintSpeed else Client.BaseSpeed
 	end
 
-	if active then
-		sprintEffectThread = task.delay(SPRINT_EFFECT_DELAY, function()
-			sprintEffectThread = nil
-			if not Client.Running or not Character.Parent or Humanoid.Health <= 0 or hasBlockingState(Character) then
-				return
-			end
-
-			-- Keep the regular Sprint animation/speed; this is a delayed VFX only.
-			stopSprintFX = MovementFX.StartLoop(Character, {"SpeedSprinting"})
-		end)
-	end
 end
 
 --// Slide (Audio is registered as Sounds/SFX.Slide) \\--
