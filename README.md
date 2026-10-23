@@ -230,11 +230,11 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
   - Dash now looks in `Effects.Movement` first for direction bursts, `Ring`, `SideDust`, and arm-trail attachments (with legacy `Dash` / `DashVFX` fallback). `SideDust` emits on each dash.
 - **Slide, LongJump, WallClimb, Vault & WallRun (`ClientSystem/Movement.luau`, `ClientSystem/WallRun.luau`)**:
   - `LeftControl` performs the slide animation (`Sliding` = `134302481749326`) and plays `Sounds/SFX.Slide` (`rbxassetid://6429226498`). Pressing `Space` during slide triggers the forward-upward **LongJump** animation (`71457670921368`).
-  - Jump input near a wall performs either a vertical **WallClimb** boost or a ledge **Vault** (alternating `Vault1` = `111806598954502` and `Vault2` = `87942706676175`). WallRun plays the corresponding left/right run and jump animations at increased speed (`1.25x` / `1.6x`). After jumping off, touching a different wall restarts the jump-off animation without auto-starting another wall run; auto wall-run resumes after landing.
+  - Jump input near a wall performs either a vertical **WallClimb** boost or a ledge **Vault** (alternating `Vault1` = `111806598954502` and `Vault2` = `87942706676175`). WallRun plays left/right run animations at `1.25x`; the wall-jump animation is removed. Auto wall-run re-entry remains disabled until landing after a wall jump.
   - Ordinary jumping plays the jump animation and footstep jump sound only; no movement particle effect is emitted on jump. The movement controller does not treat combat effects (such as `Greatsword/Jump`) as movement VFX.
 - **Movement Animations (`Animations/Anims.luau`, `StarterCharacterScripts/Animate.local.luau`)**:
   - `Idle`: `139783125255456`, `walk`: `81874417224388`, `Sprint`: `70903321662399`, `FastSprint`: `92394376692356`, `jump`: `135702083168555`, `Fall`: `120908359783163`.
-  - `WallRun`: `Left Jump` (`119937163876536`), `Left Run` (`118914310248428`), `Right Jump` (`109550456840533`), `Right Run` (`92324260993876`).
+  - `WallRun`: `Left Run` (`118914310248428`), `Right Run` (`92324260993876`).
   - `Vault`: `Vault1` (`111806598954502`), `Vault2` (`87942706676175`).
   - `Slide`: `LongJump` (`71457670921368`), `Sliding` (`134302481749326`).
 - **Shiftlock Offset & Combat Jump Tuning (`ClientSystem/CameraShiftlock.luau`)**:

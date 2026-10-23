@@ -11,9 +11,7 @@ return table.freeze({
 		FastSprint = "rbxassetid://92394376692356";
 		jump = "rbxassetid://135702083168555";
 		Fall = "rbxassetid://120908359783163";
-		LeftJump = "rbxassetid://119937163876536";
 		LeftRun = "rbxassetid://118914310248428";
-		RightJump = "rbxassetid://109550456840533";
 		RightRun = "rbxassetid://92324260993876";
 		Vault1 = "rbxassetid://111806598954502";
 		Vault2 = "rbxassetid://87942706676175";
