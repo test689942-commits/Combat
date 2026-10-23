@@ -77,6 +77,20 @@ return table.freeze({
 			run = "rbxassetid://101575350826559";
 		});
 
+		DragonSlayer = table.freeze({
+			Combat1 = "rbxassetid://78369954719539";
+			Combat2 = "rbxassetid://73470458137355";
+			Combat3 = "rbxassetid://103611653018266";
+			Combat4 = "rbxassetid://132310679786099";
+			Combat5 = "rbxassetid://0";
+			Critical = "rbxassetid://0";
+			Equip = "rbxassetid://0";
+			Blocking = "rbxassetid://83625987534708";
+			Idle = "rbxassetid://0";
+			walk = "rbxassetid://0";
+			run = "rbxassetid://0";
+		});
+
 		--// Longswords \\--
 
 		LongSword = table.freeze({

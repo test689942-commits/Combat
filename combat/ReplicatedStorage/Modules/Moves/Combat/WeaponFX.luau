@@ -97,12 +97,6 @@ local function resolveWeaponAnimationRoot(weapon, animationName: string): string
 		return weaponRoot
 	end
 
-	local categoryRoot = "Weapons." .. weapon.Category
-
-	if AnimationsModule.DetectSpecificAnimation(categoryRoot, animationName) then
-		return categoryRoot
-	end
-
 	return nil
 end
 
@@ -157,9 +151,78 @@ end
 
 --// Slash Effects \\--
 
-local function getSlashTemplate(effectName: string, category: string?): BasePart?
-	local categoryFolder = category and slashFolder:FindFirstChild(category)
-	local template = categoryFolder and categoryFolder:FindFirstChild(effectName)
+local function emitSlashInstance(container: Instance): number
+	local maxLifetime = 1
+	local objects = container:GetDescendants()
+	table.insert(objects, 1, container)
+
+	for _, particle in ipairs(objects) do
+		if particle:IsA("ParticleEmitter") then
+			local emitDelay = particle:GetAttribute("EmitDelay")
+			local emitDuration = particle:GetAttribute("EmitDuration")
+			local emitCount = particle:GetAttribute("EmitCount") or particle:GetAttribute("Amount")
+
+			local delayTime = if type(emitDelay) == "number" and emitDelay > 0 then emitDelay else 0
+			local durationTime = if type(emitDuration) == "number" and emitDuration > 0 then emitDuration else 0
+
+			local totalTime = delayTime + durationTime + particle.Lifetime.Max
+			if totalTime > maxLifetime then
+				maxLifetime = totalTime
+			end
+
+			if emitCount and emitCount > 0 then
+				if delayTime > 0 then
+					task.delay(delayTime, function()
+						if particle.Parent then
+							particle:Emit(emitCount)
+						end
+					end)
+				else
+					particle:Emit(emitCount)
+				end
+			elseif durationTime <= 0 then
+				task.delay(delayTime, function()
+					if particle.Parent then
+						particle:Emit(1)
+					end
+				end)
+			end
+
+			if durationTime > 0 then
+				if delayTime > 0 then
+					task.delay(delayTime, function()
+						if particle.Parent then
+							particle.Enabled = true
+							task.delay(durationTime, function()
+								if particle.Parent then
+									particle.Enabled = false
+								end
+							end)
+						end
+					end)
+				else
+					particle.Enabled = true
+					task.delay(durationTime, function()
+						if particle.Parent then
+							particle.Enabled = false
+						end
+					end)
+				end
+			end
+		end
+	end
+
+	return maxLifetime
+end
+
+local function getSlashTemplate(effectName: string, category: string?, weaponName: string?): Instance?
+	local weaponSubfolder = weaponName and (slashFolder:FindFirstChild(weaponName) or effectsFolder:FindFirstChild(weaponName))
+	local template = weaponSubfolder and weaponSubfolder:FindFirstChild(effectName)
+
+	if not template then
+		local categoryFolder = category and (slashFolder:FindFirstChild(category) or effectsFolder:FindFirstChild(category))
+		template = categoryFolder and categoryFolder:FindFirstChild(effectName)
+	end
 
 	if not template then
 		template = slashFolder:FindFirstChild(effectName, true)
@@ -169,14 +232,10 @@ local function getSlashTemplate(effectName: string, category: string?): BasePart
 		template = effectsFolder:FindFirstChild(effectName, true)
 	end
 
-	if template and template:IsA("BasePart") then
-		return template
-	end
-
-	return nil
+	return template
 end
 
-local function resolveSlashEffect(weapon, markerName: string): string?
+local function resolveSlashEffect(weapon, markerName: string, count: number?): string?
 	local customMarkers = weapon.SlashMarkers
 	local customIndex = customMarkers and table.find(customMarkers, markerName)
 
@@ -184,6 +243,22 @@ local function resolveSlashEffect(weapon, markerName: string): string?
 		local customEffects = weapon.SlashEffects
 
 		return customEffects and customEffects[customIndex]
+	end
+
+	if count and weapon.SlashEffects then
+		local mappedName = nil
+
+		if markerName == "Slash" then
+			mappedName = "M" .. count .. "Swing"
+		elseif markerName == "Floor" then
+			mappedName = "M" .. count .. "Floor"
+		elseif markerName == "Slam" then
+			mappedName = "M" .. count .. "Slam"
+		end
+
+		if mappedName and table.find(weapon.SlashEffects, mappedName) then
+			return mappedName
+		end
 	end
 
 	local index = markerName:match(SLASH_MARKER_PATTERN)
@@ -195,7 +270,7 @@ local function resolveSlashEffect(weapon, markerName: string): string?
 		return effectName or ("M" .. index)
 	end
 
-	if markerName == SLASH_MARKER_CRIT then
+	if markerName == SLASH_MARKER_CRIT and not weapon.NoCritical then
 		if weapon.CritSlashEffect then
 			return weapon.CritSlashEffect
 		end
@@ -212,26 +287,77 @@ local function resolveSlashEffect(weapon, markerName: string): string?
 	return nil
 end
 
-local function playSlashEffect(character: Model, effectName: string, category: string?)
+local function playSlashEffect(character: Model, effectName: string, category: string?, weaponName: string?)
 	local humanoid, root = getCharacterParts(character)
-	local template = getSlashTemplate(effectName, category)
 
-	if not humanoid or not template or character:FindFirstChild("Stun") then
+	if not humanoid or not root or character:FindFirstChild("Stun") then
 		return
 	end
 
-	local EmitModule = require(Modules:WaitForChild("EffectsBase")).EmitModule
-	local templateRotation = template.CFrame - template.CFrame.Position
-
-	for _, attachment in template:GetChildren() do
-		if attachment:IsA("Attachment") then
-			local slashAttachment = attachment:Clone()
-			slashAttachment.CFrame = templateRotation * attachment.CFrame
-			slashAttachment.Parent = root
-
-			EmitModule.EmitAndRemove(slashAttachment, nil, {dontClone = true, noAutoSmoke = true})
-		end
+	local existingOnRoot = root:FindFirstChild(effectName)
+	if existingOnRoot then
+		emitSlashInstance(existingOnRoot)
+		return
 	end
+
+	local template = getSlashTemplate(effectName, category, weaponName)
+
+	if not template then
+		return
+	end
+
+	if template:IsA("Attachment") then
+		local slashAttachment = template:Clone()
+		slashAttachment.Parent = root
+
+		local lifetime = emitSlashInstance(slashAttachment)
+		DebrisService:AddItem(slashAttachment, lifetime + 0.5)
+		return
+	end
+
+	if template:IsA("BasePart") then
+		local templateRotation = template.CFrame - template.CFrame.Position
+		local spawnedAttachments = false
+
+		for _, child in ipairs(template:GetChildren()) do
+			if child:IsA("Attachment") then
+				spawnedAttachments = true
+				local slashAttachment = child:Clone()
+				slashAttachment.CFrame = templateRotation * child.CFrame
+				slashAttachment.Parent = root
+
+				local lifetime = emitSlashInstance(slashAttachment)
+				DebrisService:AddItem(slashAttachment, lifetime + 0.5)
+			end
+		end
+
+		if spawnedAttachments then
+			return
+		end
+
+		local clone = template:Clone()
+		clone.CFrame = root.CFrame * templateRotation
+		clone.Anchored = false
+		clone.CanCollide = false
+		clone.CanQuery = false
+		clone.CanTouch = false
+		clone.Massless = true
+		clone.Parent = workspace:FindFirstChild("Effects") or workspace
+
+		local weld = Instance.new("WeldConstraint")
+		weld.Part0 = root
+		weld.Part1 = clone
+		weld.Parent = clone
+
+		local lifetime = emitSlashInstance(clone)
+		DebrisService:AddItem(clone, lifetime + 0.5)
+		return
+	end
+
+	local clone = template:Clone()
+	clone.Parent = root
+	local lifetime = emitSlashInstance(clone)
+	DebrisService:AddItem(clone, lifetime + 0.5)
 end
 
 local function getSlashMarkerName(weapon, index: number): string
@@ -251,7 +377,9 @@ local function getSlashMarkerNames(weapon): {string}
 		end
 	end
 
-	table.insert(names, SLASH_MARKER_CRIT)
+	if not weapon.NoCritical then
+		table.insert(names, SLASH_MARKER_CRIT)
+	end
 
 	return names
 end
@@ -272,7 +400,7 @@ local function clearSlashMarkers(character: Model)
 	slashMarkers[character] = nil
 end
 
-local function bindSlashMarkers(character: Model, track: AnimationTrack?, weapon)
+local function bindSlashMarkers(character: Model, track: AnimationTrack?, weapon, count: number?)
 	clearSlashMarkers(character)
 
 	if not track or not weapon.SlashEffects then
@@ -284,19 +412,38 @@ local function bindSlashMarkers(character: Model, track: AnimationTrack?, weapon
 		stopped = nil,
 	}
 
+	local triggered = {}
+
+	local function triggerMarker(markerName: string)
+		local effectName = resolveSlashEffect(weapon, markerName, count)
+
+		if effectName == nil or triggered[effectName] then
+			return
+		end
+
+		triggered[effectName] = true
+		playSlashEffect(character, effectName, weapon.Category, weapon.Name)
+	end
+
 	for _, markerName in ipairs(getSlashMarkerNames(weapon)) do
 		local connection = track:GetMarkerReachedSignal(markerName):Connect(function()
-			local effectName = resolveSlashEffect(weapon, markerName)
-
-			if effectName == nil then
-				return
-			end
-
-			playSlashEffect(character, effectName, weapon.Category)
+			triggerMarker(markerName)
 		end)
 
 		table.insert(entry.connections, connection)
 	end
+
+	for _, shortMarker in ipairs({"Slash", "Floor", "Slam"}) do
+		local connection = track:GetMarkerReachedSignal(shortMarker):Connect(function()
+			triggerMarker(shortMarker)
+		end)
+
+		table.insert(entry.connections, connection)
+	end
+
+	table.insert(entry.connections, track.KeyframeReached:Connect(function(keyframeName: string)
+		triggerMarker(keyframeName)
+	end))
 
 	entry.stopped = track.Stopped:Connect(function()
 		if slashMarkers[character] == entry then
@@ -315,7 +462,7 @@ local function scheduleSlashEffect(character: Model, weapon, count: number, hit)
 	end
 
 	task.delay(math.max(0, hit.ImpactTime - SLASH_LEAD), function()
-		playSlashEffect(character, effectName, weapon.Category)
+		playSlashEffect(character, effectName, weapon.Category, weapon.Name)
 	end)
 end
 
@@ -366,7 +513,7 @@ function WeaponFX.Swing(character: Model, count: number)
 	end
 
 	if weapon.SlashEvents then
-		bindSlashMarkers(character, track, weapon)
+		bindSlashMarkers(character, track, weapon, count)
 	else
 		scheduleSlashEffect(character, weapon, count, hit)
 	end
@@ -569,7 +716,7 @@ function WeaponFX.HitEffects(victim: Model, attacker: Model?, count: number)
 		_G.EffectEmitter(attachment, {Parent = root, Debris = 1.5})
 	end
 
-	if hit.CritEffect then
+	if hit.CritEffect and not weapon.NoCritical then
 		playCritEffect(attacker, hit.CritEffect)
 	end
 

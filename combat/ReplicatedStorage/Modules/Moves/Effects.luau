@@ -29,6 +29,16 @@ local FOLDER_LAYOUT = {
 		"GoUp",
 		"Wave",
 	},
+	Slashes = {
+		"M1Swing",
+		"M1Floor",
+		"M2Swing",
+		"M2Floor",
+		"M3Swing",
+		"M3Slam",
+		"M3Floor",
+		"M4Swing",
+	},
 	Fists = {
 		"Stab2",
 		"Wind1",

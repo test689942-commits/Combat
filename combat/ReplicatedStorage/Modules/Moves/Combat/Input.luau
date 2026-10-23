@@ -352,20 +352,22 @@ local function setRunPlaying(Playing)
 end
 
 local function resolveLocomotionAnimation(weapon, animationName, fallbackName)
-	local roots = {
-		"Weapons." .. weapon.Name,
-		"Weapons." .. weapon.Category,
-		"Movement",
-	}
+	local weaponRoot = "Weapons." .. weapon.Name
 
-	for _, root in ipairs(roots) do
-		if AnimationsModule.DetectSpecificAnimation(root, animationName) then
-			return AnimationsModule.GetAnimation(root, animationName)
-		end
+	if AnimationsModule.DetectSpecificAnimation(weaponRoot, animationName) then
+		return AnimationsModule.GetAnimation(weaponRoot, animationName)
+	end
 
-		if fallbackName ~= nil and fallbackName ~= animationName and AnimationsModule.DetectSpecificAnimation(root, fallbackName) then
-			return AnimationsModule.GetAnimation(root, fallbackName)
-		end
+	if fallbackName ~= nil and fallbackName ~= animationName and AnimationsModule.DetectSpecificAnimation(weaponRoot, fallbackName) then
+		return AnimationsModule.GetAnimation(weaponRoot, fallbackName)
+	end
+
+	if AnimationsModule.DetectSpecificAnimation("Movement", animationName) then
+		return AnimationsModule.GetAnimation("Movement", animationName)
+	end
+
+	if fallbackName ~= nil and fallbackName ~= animationName and AnimationsModule.DetectSpecificAnimation("Movement", fallbackName) then
+		return AnimationsModule.GetAnimation("Movement", fallbackName)
 	end
 
 	return nil
