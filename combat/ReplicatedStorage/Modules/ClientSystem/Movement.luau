@@ -183,7 +183,11 @@ Movement.FastSprintBurst = function(duration: number?): boolean
 	local Character: Model = Client.Character
 	local Humanoid: Humanoid = Client.Humanoid
 	local now = os.clock()
-	if not Character or not Humanoid or Humanoid.Health <= 0 or not Client.Running
+	local isSprinting = Client.Running
+		or (Humanoid and Humanoid:GetAttribute("Sprint") == true)
+		or (Character and Character:GetAttribute("Sprint") == true)
+		or (Humanoid and Humanoid.WalkSpeed >= Client.SprintSpeed)
+	if not Character or not Humanoid or Humanoid.Health <= 0 or not isSprinting
 		or Humanoid.FloorMaterial == Enum.Material.Air
 		or Humanoid.MoveDirection.Magnitude < 0.05 or hasBlockingState(Character)
 		or now < fastSprintReadyAt then
@@ -213,7 +217,10 @@ Movement.FastSprintBurst = function(duration: number?): boolean
 			stopSprintFX()
 			stopSprintFX = nil
 		end
-		if Client.Running and not hasBlockingState(Character) then
+		local stillSprinting = Client.Running
+			or Humanoid:GetAttribute("Sprint") == true
+			or Character:GetAttribute("Sprint") == true
+		if stillSprinting and not hasBlockingState(Character) then
 			Humanoid.WalkSpeed = Client.SprintSpeed
 		else
 			Humanoid.WalkSpeed = Client.BaseSpeed
@@ -236,7 +243,10 @@ Movement.CancelFastSprintBurst = function()
 	end
 
 	setFastSprintAttributes(Character, Humanoid, false)
-	Humanoid.WalkSpeed = if Client.Running and not hasBlockingState(Character)
+	local stillSprinting = Client.Running
+		or Humanoid:GetAttribute("Sprint") == true
+		or Character:GetAttribute("Sprint") == true
+	Humanoid.WalkSpeed = if stillSprinting and not hasBlockingState(Character)
 		then Client.SprintSpeed
 		else Client.BaseSpeed
 end

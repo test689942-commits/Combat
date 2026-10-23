@@ -357,13 +357,12 @@ function Dash.Activate(direction: string, straightForwardInput: boolean?)
 		return
 	end
 
-	local flatMove = humanoid.MoveDirection * Vector3.new(1, 0, 1)
-	local flatLook = root.CFrame.LookVector * Vector3.new(1, 0, 1)
-	local movingStraightForward = straightForwardInput == true
-		and flatMove.Magnitude > 0.05
-		and flatLook.Magnitude > 0.05
-		and flatMove.Unit:Dot(flatLook.Unit) >= 0.985
-	local playFastSprint = direction == "Forward" and Client.Running and movingStraightForward
+	local movingForward = straightForwardInput == true and humanoid.MoveDirection.Magnitude > 0.05
+	local isSprinting = Client.Running
+		or humanoid:GetAttribute("Sprint") == true
+		or character:GetAttribute("Sprint") == true
+		or humanoid.WalkSpeed >= Client.SprintSpeed
+	local playFastSprint = direction == "Forward" and isSprinting and movingForward
 	if playFastSprint then
 		playFastSprint = Movement.FastSprintBurst()
 		if not playFastSprint and character:GetAttribute("FastSprint") == true then
