@@ -30,12 +30,77 @@ function SprintVisuals.Start(Character: Model)
 	local renderConnection: RBXScriptConnection? = nil
 	local sprintConnection: RBXScriptConnection? = nil
 	local charSprintConnection: RBXScriptConnection? = nil
+	local fastSprintConnection: RBXScriptConnection? = nil
+	local charFastSprintConnection: RBXScriptConnection? = nil
 	local fovTween: Tween? = nil
 	local cameraOffset = CFrame.new()
 	local swayClock = 0
+	local fastSprintToken = 0
+	local fastSprintTransparency = {}
+	local wasFastSprinting = false
 
 	local function isSprinting(): boolean
 		return Humanoid:GetAttribute("Sprint") == true or Character:GetAttribute("Sprint") == true
+	end
+
+	local function isFastSprinting(): boolean
+		return Humanoid:GetAttribute("FastSprint") == true or Character:GetAttribute("FastSprint") == true
+	end
+
+	local function restoreFastSprintTransparency(clearSnapshot: boolean?)
+		for instance, originalTransparency in pairs(fastSprintTransparency) do
+			if instance.Parent then
+				instance.Transparency = originalTransparency
+			end
+		end
+		if clearSnapshot then
+			table.clear(fastSprintTransparency)
+		end
+	end
+
+	local function applyFastSprintFlicker()
+		for _, descendant in Character:GetDescendants() do
+			if descendant:IsA("BasePart") or descendant:IsA("Decal") then
+				fastSprintTransparency[descendant] = descendant.Transparency
+			end
+		end
+
+		local token = fastSprintToken
+		task.spawn(function()
+			while token == fastSprintToken and isFastSprinting() and Character.Parent and Humanoid.Health > 0 do
+				for instance in pairs(fastSprintTransparency) do
+					if instance.Parent then
+						instance.Transparency = 1
+					end
+				end
+				task.wait(0.08)
+				if token ~= fastSprintToken then
+					break
+				end
+				restoreFastSprintTransparency()
+				task.wait(0.15)
+			end
+
+			if token == fastSprintToken then
+				restoreFastSprintTransparency(true)
+				wasFastSprinting = false
+			end
+		end)
+	end
+
+	local function onFastSprintChanged()
+		local active = isFastSprinting()
+		if active == wasFastSprinting then
+			return
+		end
+
+		wasFastSprinting = active
+		fastSprintToken += 1
+		if active then
+			applyFastSprintFlicker()
+		else
+			restoreFastSprintTransparency(true)
+		end
 	end
 
 	local function getLimb(...: string): BasePart?
@@ -202,9 +267,23 @@ function SprintVisuals.Start(Character: Model)
 
 	sprintConnection = Humanoid:GetAttributeChangedSignal("Sprint"):Connect(onSprintChanged)
 	charSprintConnection = Character:GetAttributeChangedSignal("Sprint"):Connect(onSprintChanged)
+	fastSprintConnection = Humanoid:GetAttributeChangedSignal("FastSprint"):Connect(onFastSprintChanged)
+	charFastSprintConnection = Character:GetAttributeChangedSignal("FastSprint"):Connect(onFastSprintChanged)
 	onSprintChanged()
+	onFastSprintChanged()
 
 	local function cleanup()
+		fastSprintToken += 1
+		wasFastSprinting = false
+		restoreFastSprintTransparency(true)
+		if fastSprintConnection then
+			fastSprintConnection:Disconnect()
+			fastSprintConnection = nil
+		end
+		if charFastSprintConnection then
+			charFastSprintConnection:Disconnect()
+			charFastSprintConnection = nil
+		end
 		if sprintConnection then
 			sprintConnection:Disconnect()
 			sprintConnection = nil
