@@ -7,6 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Client = require(ReplicatedStorage.Modules:WaitForChild("ClientSystem"))
 local EffectsBase = require(ReplicatedStorage.Modules:WaitForChild("EffectsBase"))
 local AfterImages = require(ReplicatedStorage.Modules:WaitForChild("AfterImages"))
+local Movement = require(ReplicatedStorage.Modules.ClientSystem:WaitForChild("Movement"))
 local Info = require(script.Parent).Dash
 
 --// Variables \\--
@@ -339,7 +340,7 @@ end
 
 --// Move \\--
 
-function Dash.Activate(direction: string)
+function Dash.Activate(direction: string, straightForwardInput: boolean?)
 	local humanoid = Client.Humanoid :: Humanoid
 	local root = Client.Root :: BasePart
 	local character = Client.Character :: Model
@@ -356,6 +357,19 @@ function Dash.Activate(direction: string)
 		return
 	end
 
+	local flatMove = humanoid.MoveDirection * Vector3.new(1, 0, 1)
+	local flatLook = root.CFrame.LookVector * Vector3.new(1, 0, 1)
+	local movingStraightForward = straightForwardInput == true
+		and flatMove.Magnitude > 0.05
+		and flatLook.Magnitude > 0.05
+		and flatMove.Unit:Dot(flatLook.Unit) >= 0.985
+	local playFastSprint = direction == "Forward" and Client.Running and movingStraightForward
+	if playFastSprint then
+		playFastSprint = Movement.FastSprintBurst()
+	elseif Client.Running and character:GetAttribute("FastSprint") == true then
+		Movement.CancelFastSprintBurst()
+	end
+
 	clearVelocities(character)
 	obstructionParams.FilterDescendantsInstances = {character}
 
@@ -364,7 +378,8 @@ function Dash.Activate(direction: string)
 
 	endAirCombat(character)
 
-	local animation = Client.Library.PlayAnimation(character, "Movement", direction, 0.1)
+	local animation = if playFastSprint then nil
+		else Client.Library.PlayAnimation(character, "Movement", direction, 0.1)
 	local speed, duration = getSpeedAndDuration(character, direction)
 	local velocity = createVelocity(root, duration)
 

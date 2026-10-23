@@ -15,6 +15,7 @@ local SLIDE_DURATION = 0.55
 local SLIDE_COOLDOWN = 1.2
 local WALL_CLIMB_COOLDOWN = 0.8
 local SPRINT_EFFECT_DELAY = 3
+local FAST_SPRINT_DURATION = 3
 
 local lastSlideTime = 0
 local lastClimbTime = 0
@@ -26,6 +27,8 @@ local activeSlideSound: Sound? = nil
 local slideCancelThread: thread? = nil
 
 local sprintEffectThread: thread? = nil
+local fastSprintThread: thread? = nil
+local fastSprintGeneration = 0
 local stopSprintFX: (() -> ())? = nil
 
 local function hasBlockingState(character: Model?): boolean
@@ -163,6 +166,65 @@ end
 
 --// Sprint & FastSprint \\--
 
+local function cancelFastSprintTimer()
+	fastSprintGeneration += 1
+	if fastSprintThread then
+		task.cancel(fastSprintThread)
+		fastSprintThread = nil
+	end
+end
+
+local function setFastSprintAttributes(Character: Model, Humanoid: Humanoid, active: boolean)
+	Humanoid:SetAttribute("FastSprint", active)
+	Character:SetAttribute("FastSprint", active)
+end
+
+Movement.FastSprintBurst = function(duration: number?): boolean
+	local Character: Model = Client.Character
+	local Humanoid: Humanoid = Client.Humanoid
+	if not Character or not Humanoid or Humanoid.Health <= 0 or not Client.Running
+		or Humanoid.FloorMaterial == Enum.Material.Air
+		or Humanoid.MoveDirection.Magnitude < 0.05 or hasBlockingState(Character) then
+		return false
+	end
+
+	cancelFastSprintTimer()
+	local generation = fastSprintGeneration
+	setFastSprintAttributes(Character, Humanoid, true)
+	Humanoid:SetAttribute("Sprint", true)
+	Character:SetAttribute("Sprint", true)
+	Humanoid.WalkSpeed = Client.FastSprintSpeed
+
+	fastSprintThread = task.delay(duration or FAST_SPRINT_DURATION, function()
+		if generation ~= fastSprintGeneration or not Character.Parent then
+			return
+		end
+		fastSprintThread = nil
+		setFastSprintAttributes(Character, Humanoid, false)
+		if Client.Running and not hasBlockingState(Character) then
+			Humanoid.WalkSpeed = Client.SprintSpeed
+		else
+			Humanoid.WalkSpeed = Client.BaseSpeed
+		end
+	end)
+
+	return true
+end
+
+Movement.CancelFastSprintBurst = function()
+	local Character: Model = Client.Character
+	local Humanoid: Humanoid = Client.Humanoid
+	cancelFastSprintTimer()
+	if not Character or not Humanoid then
+		return
+	end
+
+	setFastSprintAttributes(Character, Humanoid, false)
+	Humanoid.WalkSpeed = if Client.Running and not hasBlockingState(Character)
+		then Client.SprintSpeed
+		else Client.BaseSpeed
+end
+
 Movement.SetSprint = function(active: boolean)
 	local Character: Model = Client.Character
 	local Humanoid: Humanoid = Client.Humanoid
@@ -175,6 +237,7 @@ Movement.SetSprint = function(active: boolean)
 		active = false
 	end
 
+	cancelFastSprintTimer()
 	if sprintEffectThread then
 		task.cancel(sprintEffectThread)
 		sprintEffectThread = nil
@@ -186,8 +249,7 @@ Movement.SetSprint = function(active: boolean)
 	end
 
 	Client.Running = active
-	Humanoid:SetAttribute("FastSprint", active)
-	Character:SetAttribute("FastSprint", active)
+	setFastSprintAttributes(Character, Humanoid, false)
 	Humanoid:SetAttribute("Sprint", active)
 	Character:SetAttribute("Sprint", active)
 
@@ -202,10 +264,7 @@ Movement.SetSprint = function(active: boolean)
 				return
 			end
 
-			-- Start with FastSprint, then transition to Sprint after the opening phase.
-			Humanoid:SetAttribute("FastSprint", false)
-			Character:SetAttribute("FastSprint", false)
-			Humanoid.WalkSpeed = Client.FastSprintSpeed
+			-- Keep the regular Sprint animation/speed; this is a delayed VFX only.
 			stopSprintFX = MovementFX.StartLoop(Character, {"SpeedSprinting"})
 		end)
 	end

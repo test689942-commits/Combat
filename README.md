@@ -222,9 +222,9 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
 - **Directional Movement Body-Tilt (`ClientSystem/DirectionalMovement.luau`)**:
   - Smoothly tilts `RootJoint`, `Right Hip`, `Left Hip`, and `Neck` `Motor6D.C0` based on horizontal velocity vs. character facing direction.
   - Automatically resets to neutral pose when idle (`> 2s`), facing a wall within `2` studs, or in any combat/stun/action state (`Stun`, `DoingCombat`, `DoingMove`, `Blocking`).
-- **Double-Tap `W` Sprint, FastSprint & Sprint Visuals (`ClientSystem/Inputs/Sprint.luau`, `ClientSystem/SprintVisuals.luau`)**:
-  - Double-tapping `W` starts with the `FastSprint` animation (`92394376692356`) at `SprintSpeed = 24`; during this 3-second opening phase the character flickers briefly invisible/visible. It then switches to `Sprint` (`70903321662399`) at `FastSprintSpeed = 32`.
-  - Sprint immediately clones `Movement.Trail` onto both arms; camera visuals activate immediately too. The `SpeedSprinting` effect from `ReplicatedStorage.Assets.Effects.Movement` starts only after that 3-second delay.
+- **Double-Tap `W` Sprint, Forward Dash FastSprint & Sprint Visuals (`ClientSystem/Inputs/Sprint.luau`, `ClientSystem/SprintVisuals.luau`)**:
+  - Double-tapping `W` starts the regular `Sprint` animation (`70903321662399`) at `SprintSpeed = 24`. While sprinting straight forward, pressing `Q` performs the normal forward dash and temporarily switches to `FastSprint` (`92394376692356`) and `FastSprintSpeed = 32` for 3 seconds, then returns to regular Sprint. The character flickers briefly invisible/visible only during that FastSprint burst. Left, right, backward, or diagonal dashes do not activate FastSprint.
+  - Sprint immediately clones `Movement.Trail` onto both arms; camera visuals activate immediately too. The `SpeedSprinting` effect from `ReplicatedStorage.Assets.Effects.Movement` starts only after 3 seconds of continuous regular sprinting.
 - **Movement VFX Location (`ReplicatedStorage.Assets.Effects.Movement`)**:
   - Movement and dash VFX are stored in the `Movement` folder: `Ring`, `Back`, `Forward`, `Left`, `Right`, `SideDust`, `SpeedSprinting`, `Trail`, `FootStep`, `WallJump`, and `WallRunAttachments` (with `LeftWallGrab`/`RightWallGrab`).
   - Dash looks in `Effects.Movement` for direction bursts, `Ring`, `SideDust`, and the `Trail` attachment template. Sprint reuses the same `Trail` template on both arms; `SideDust` emits on each dash.
