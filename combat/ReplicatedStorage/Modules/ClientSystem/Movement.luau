@@ -307,6 +307,49 @@ Movement.ShouldWallClimb = function(Character: Model, Humanoid: Humanoid): (bool
 	return VerticalWall, false
 end
 
+local function tryDashWallJump(Character: Model, Humanoid: Humanoid, Root: BasePart): boolean
+	local contactTime = Character:GetAttribute("DashWallContactAt")
+	local wallNormal = Character:GetAttribute("DashWallNormal")
+	if typeof(contactTime) ~= "number" or os.clock() - contactTime > 0.8 or typeof(wallNormal) ~= "Vector3" then
+		return false
+	end
+
+	local horizontalNormal = Vector3.new(wallNormal.X, 0, wallNormal.Z)
+	if horizontalNormal.Magnitude < 0.5 then
+		return false
+	end
+	horizontalNormal = horizontalNormal.Unit
+
+	local mapParams = createMapParams(Character)
+	local wallHit = workspace:Raycast(Root.Position, -horizontalNormal * 3.5, mapParams)
+	if not wallHit or math.abs(wallHit.Normal.Y) >= 0.7 or wallHit.Normal:Dot(horizontalNormal) < 0.5 then
+		return false
+	end
+
+	local alongWall = Humanoid.MoveDirection * Vector3.new(1, 0, 1)
+	if alongWall.Magnitude < 0.1 then
+		alongWall = Root.CFrame.LookVector * Vector3.new(1, 0, 1)
+	end
+	alongWall -= horizontalNormal * alongWall:Dot(horizontalNormal)
+	if alongWall.Magnitude < 0.1 then
+		alongWall = Vector3.yAxis:Cross(horizontalNormal)
+	end
+	alongWall = alongWall.Unit
+
+	local wallJumpVelocity = Instance.new("BodyVelocity")
+	wallJumpVelocity.Name = "DashWallJumpVelocity"
+	wallJumpVelocity.MaxForce = Vector3.new(4e4, 4e4, 4e4)
+	wallJumpVelocity.Velocity = alongWall * 48 + horizontalNormal * 42 + Vector3.new(0, 46, 0)
+	wallJumpVelocity.Parent = Root
+	Debris:AddItem(wallJumpVelocity, 0.22)
+
+	Character:SetAttribute("DashWallContactAt", nil)
+	Character:SetAttribute("DashWallNormal", nil)
+	Character:SetAttribute("WallJumpLock", true)
+	Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+	return true
+end
+
 Movement.TryWallClimbOrVault = function()
 	local Character: Model = Client.Character
 	local Humanoid: Humanoid = Client.Humanoid
@@ -338,6 +381,10 @@ Movement.TryWallClimbOrVault = function()
 		Debris:AddItem(longJumpVelocity, 0.24)
 
 		playMovementAnim(Humanoid, "LongJump", Enum.AnimationPriority.Action3, 0.08, 1)
+		return
+	end
+
+	if tryDashWallJump(Character, Humanoid, Root) then
 		return
 	end
 

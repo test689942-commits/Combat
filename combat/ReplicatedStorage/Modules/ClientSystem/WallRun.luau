@@ -265,6 +265,7 @@ function WallRun.Start(Character: Model)
 
 		-- Do not auto-start another wall run while the jump-off remains airborne.
 		JumpOffActive = true
+		Character:SetAttribute("WallJumpLock", true)
 		Detach(0.25)
 
 		if Root.Parent then
@@ -294,9 +295,10 @@ function WallRun.Start(Character: Model)
 
 		local NewSide, Hit, DetectState = DetectWall(Humanoid, Root, RayParams)
 
-		if JumpOffActive then
+		if JumpOffActive or Character:GetAttribute("WallJumpLock") == true then
 			if Humanoid.FloorMaterial ~= Enum.Material.Air or DetectState == "Ground" then
 				JumpOffActive = false
+				Character:SetAttribute("WallJumpLock", nil)
 			else
 				return
 			end
@@ -343,6 +345,7 @@ function WallRun.Start(Character: Model)
 		SteppedConn:Disconnect()
 		StopRunVisuals()
 		JumpOffActive = false
+		Character:SetAttribute("WallJumpLock", nil)
 		ClearMovers()
 		Character:SetAttribute("WallRunning", nil)
 	end

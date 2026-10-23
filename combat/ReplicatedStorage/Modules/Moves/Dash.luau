@@ -258,14 +258,35 @@ local function createVelocity(root: BasePart, duration: number): BodyVelocity
 	return velocity
 end
 
-local function isObstructed(root: BasePart): boolean
+local function isObstructed(root: BasePart): RaycastResult?
 	local hit = workspace:Raycast(root.Position, root.AssemblyLinearVelocity * 0.0915, obstructionParams)
 
 	if not hit or not hit.Instance then
-		return false
+		return nil
 	end
 
-	return hit.Instance.CanCollide and hit.Instance.Transparency ~= 1 and hit.Instance.Anchored
+	if hit.Instance.CanCollide and hit.Instance.Transparency ~= 1 and hit.Instance.Anchored then
+		return hit
+	end
+
+	return nil
+end
+
+local function markDashWallContact(character: Model, hit: RaycastResult)
+	if math.abs(hit.Normal.Y) >= 0.7 then
+		return
+	end
+
+	local contactTime = os.clock()
+	character:SetAttribute("DashWallContactAt", contactTime)
+	character:SetAttribute("DashWallNormal", hit.Normal)
+
+	task.delay(0.8, function()
+		if character.Parent and character:GetAttribute("DashWallContactAt") == contactTime then
+			character:SetAttribute("DashWallContactAt", nil)
+			character:SetAttribute("DashWallNormal", nil)
+		end
+	end)
 end
 
 local function updateVelocity(velocity: BodyVelocity, root: BasePart, character: Model, direction: string, speed: number)
@@ -302,9 +323,11 @@ local function runDash(character: Model, root: BasePart, animation: AnimationTra
 			break
 		end
 
-		if isObstructed(root) then
+		local obstruction = isObstructed(root)
+		if obstruction then
 			stopAnimation(animation)
 			velocity:Destroy()
+			markDashWallContact(character, obstruction)
 			break
 		end
 
@@ -334,6 +357,7 @@ function Dash.Activate(direction: string)
 	end
 
 	clearVelocities(character)
+	obstructionParams.FilterDescendantsInstances = {character}
 
 	Client.Library.SetCooldown(character, MOVE_NAME, Info.Cooldown)
 	Client.Dashing = true
