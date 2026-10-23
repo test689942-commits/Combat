@@ -24,6 +24,10 @@ Client.Character = Character
 Client.Humanoid = Humanoid
 Client.Root = Root
 
+-- Requiring Inputs binds the Dash, Sprint, Slide, and Jump ContextActions.
+-- The subsystem modules do not bind themselves until this dispatcher is loaded.
+local Inputs = require(Modules.ClientSystem:WaitForChild("Inputs"))
+
 --// Sub-Controllers \\--
 
 CameraShiftlock.Init()
