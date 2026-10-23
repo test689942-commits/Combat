@@ -7,6 +7,9 @@ local Client = require(script.Parent)
 
 local WallRun = {}
 
+local WALL_RUN_ANIM_SPEED = 1.25
+local WALL_JUMP_ANIM_SPEED = 1.6
+
 local JumpKeys = {
 	[Enum.KeyCode.Space] = true,
 	[Enum.KeyCode.ButtonA] = true,
@@ -55,8 +58,8 @@ local function IsBlockingFront(Hit: RaycastResult?): boolean
 		and math.abs(Hit.Normal.Y) < 0.7
 end
 
-local function DetectWall(Humanoid: Humanoid, Root: BasePart, RayParams: RaycastParams)
-	if not HasForwardInput(Humanoid, Root) then
+local function DetectWall(Humanoid: Humanoid, Root: BasePart, RayParams: RaycastParams, requireForwardInput: boolean?)
+	if requireForwardInput ~= false and not HasForwardInput(Humanoid, Root) then
 		return nil, nil, nil
 	end
 
@@ -68,6 +71,9 @@ local function DetectWall(Humanoid: Humanoid, Root: BasePart, RayParams: Raycast
 
 	local Front = workspace:Raycast(Origin, Root.CFrame.LookVector * 2, RayParams)
 	if IsBlockingFront(Front) then
+		if requireForwardInput == false then
+			return "ForwardVector", Front, nil
+		end
 		return nil, nil, "Front"
 	end
 
@@ -167,7 +173,13 @@ function WallRun.Start(Character: Model)
 	local BV: BodyVelocity? = nil
 	local BG: BodyGyro? = nil
 	local LastNormal: Vector3? = nil
+	local LastWallInstance: Instance? = nil
 	local ActiveRunTrack: AnimationTrack? = nil
+	local JumpOffActive = false
+	local JumpOffTouchingWallInstance: Instance? = nil
+	local JumpOffWallInstance: Instance? = nil
+	local JumpOffTrack: AnimationTrack? = nil
+	local JumpOffAnimKey: string? = nil
 	local Grace = 0.15
 	local SwitchCd = 0
 	local StabilityTmr = 0
@@ -182,6 +194,38 @@ function WallRun.Start(Character: Model)
 			ActiveRunTrack = nil
 		end
 
+	end
+
+	local function clearJumpOffTrack()
+		if JumpOffTrack then
+			if JumpOffTrack.IsPlaying then
+				JumpOffTrack:Stop(0.08)
+			end
+			JumpOffTrack:Destroy()
+			JumpOffTrack = nil
+		end
+		JumpOffAnimKey = nil
+	end
+
+	local function playJumpOffAnimation(side: string?, restart: boolean)
+		local animKey = if side == "RightVector" then "RightJump" else "LeftJump"
+
+		if JumpOffTrack and JumpOffAnimKey ~= animKey then
+			clearJumpOffTrack()
+		end
+
+		if not JumpOffTrack then
+			JumpOffTrack = loadMovementTrack(Humanoid, animKey, Enum.AnimationPriority.Action3, false)
+			JumpOffAnimKey = animKey
+		end
+
+		if JumpOffTrack then
+			if restart then
+				JumpOffTrack:Stop(0)
+				JumpOffTrack.TimePosition = 0
+			end
+			JumpOffTrack:Play(0.06, 1, WALL_JUMP_ANIM_SPEED)
+		end
 	end
 
 	local function ClearMovers()
@@ -233,7 +277,7 @@ function WallRun.Start(Character: Model)
 		local runAnimKey = if S == "LeftVector" then "LeftRun" else "RightRun"
 		ActiveRunTrack = loadMovementTrack(Humanoid, runAnimKey, Enum.AnimationPriority.Action2, true)
 		if ActiveRunTrack then
-			ActiveRunTrack:Play(0.1)
+			ActiveRunTrack:Play(0.1, 1, WALL_RUN_ANIM_SPEED)
 		end
 
 	end
@@ -259,14 +303,14 @@ function WallRun.Start(Character: Model)
 		else
 			horizontalAway = if currentSide == "LeftVector" then Root.CFrame.RightVector else -Root.CFrame.RightVector
 		end
+
+		-- Keep the character in jump-off mode until landing: wall contact will
+		-- replay the jump-off animation, not auto-start another wall run.
+		JumpOffActive = true
+		JumpOffTouchingWallInstance = nil
+		JumpOffWallInstance = LastWallInstance
 		Detach(0.25)
-
-		local jumpAnimKey = if currentSide == "LeftVector" then "LeftJump" else "RightJump"
-		local jumpTrack = loadMovementTrack(Humanoid, jumpAnimKey, Enum.AnimationPriority.Action3, false)
-		if jumpTrack then
-			jumpTrack:Play(0.08)
-		end
-
+		playJumpOffAnimation(currentSide, false)
 
 		if Root.Parent then
 			-- Stronger launch along the run direction and away from the wall.
@@ -290,7 +334,30 @@ function WallRun.Start(Character: Model)
 		StabilityTmr = math.max(0, StabilityTmr - DT)
 		RetryCd = math.max(0, RetryCd - DT)
 
-		local NewSide, Hit, DetectState = DetectWall(Humanoid, Root, RayParams)
+		local NewSide, Hit, DetectState = DetectWall(Humanoid, Root, RayParams, not JumpOffActive)
+
+		if JumpOffActive then
+			if Humanoid.FloorMaterial ~= Enum.Material.Air or DetectState == "Ground" then
+				JumpOffActive = false
+				JumpOffTouchingWallInstance = nil
+				JumpOffWallInstance = nil
+				clearJumpOffTrack()
+			else
+				local touchingNewWall = NewSide ~= nil and Hit ~= nil and Hit.Instance ~= JumpOffWallInstance
+				if touchingNewWall then
+					if Hit.Instance ~= JumpOffTouchingWallInstance then
+						local replaySide = if NewSide == "ForwardVector"
+							then (if JumpOffAnimKey == "RightJump" then "RightVector" else "LeftVector")
+							else NewSide
+						playJumpOffAnimation(replaySide, true)
+						JumpOffTouchingWallInstance = Hit.Instance
+					end
+				else
+					JumpOffTouchingWallInstance = nil
+				end
+				return
+			end
+		end
 
 		if not Active then
 			if NewSide and StabilityTmr == 0 and RetryCd == 0 then
@@ -324,6 +391,7 @@ function WallRun.Start(Character: Model)
 
 		if Hit and BV and BG and Side then
 			LastNormal = Hit.Normal
+			LastWallInstance = Hit.Instance
 			ApplyPhysics(Root, Humanoid, Hit, BV, BG, Side)
 		end
 	end)
@@ -332,6 +400,10 @@ function WallRun.Start(Character: Model)
 		InputConn:Disconnect()
 		SteppedConn:Disconnect()
 		StopRunVisuals()
+		clearJumpOffTrack()
+		JumpOffActive = false
+		JumpOffTouchingWallInstance = nil
+		JumpOffWallInstance = nil
 		ClearMovers()
 		Character:SetAttribute("WallRunning", nil)
 	end
