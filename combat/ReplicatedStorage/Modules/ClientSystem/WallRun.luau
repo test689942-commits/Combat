@@ -231,6 +231,9 @@ function WallRun.Start(Character: Model)
 		end
 
 		local attachment = template:Clone()
+		-- These templates were authored under a different parent; reset their local
+		-- position so they sit on the arm instead of inheriting a shoulder offset.
+		attachment.Position = Vector3.zero
 		attachment.Parent = arm
 		ActiveGrabAttachment = attachment
 
@@ -248,7 +251,7 @@ function WallRun.Start(Character: Model)
 
 		local arm, _, kickName = getWallRunArm(side)
 		if arm then
-			MovementFX.PlayOnce(Character, {kickName}, arm.Name, 2.5)
+			MovementFX.PlayOnce(Character, {kickName}, arm.Name, 2.5, Vector3.zero)
 		end
 	end
 

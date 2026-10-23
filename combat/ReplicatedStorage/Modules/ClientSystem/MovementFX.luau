@@ -195,7 +195,7 @@ function MovementFX.PlayAt(candidateNames: {string}, effectCFrame: CFrame, clean
 	Debris:AddItem(cleanupRoot, cleanupAfter or 2)
 end
 
-function MovementFX.PlayOnce(character: Model?, candidateNames: {string}, targetPartName: string?, cleanupAfter: number?)
+function MovementFX.PlayOnce(character: Model?, candidateNames: {string}, targetPartName: string?, cleanupAfter: number?, attachmentPosition: Vector3?)
 	if not character then
 		return
 	end
@@ -212,6 +212,9 @@ function MovementFX.PlayOnce(character: Model?, candidateNames: {string}, target
 	end
 
 	local clone = template:Clone()
+	if clone:IsA("Attachment") and attachmentPosition then
+		clone.Position = attachmentPosition
+	end
 	local mounted = mountEffectClone(clone, targetPart)
 
 	emitWithAttributes(clone)
