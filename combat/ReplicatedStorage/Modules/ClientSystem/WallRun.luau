@@ -253,6 +253,12 @@ function WallRun.Start(Character: Model)
 
 		local currentSide = Side
 		local jumpAway = LastNormal or Vector3.zero
+		local horizontalAway = Vector3.new(jumpAway.X, 0, jumpAway.Z)
+		if horizontalAway.Magnitude > 0.01 then
+			horizontalAway = horizontalAway.Unit
+		else
+			horizontalAway = if currentSide == "LeftVector" then Root.CFrame.RightVector else -Root.CFrame.RightVector
+		end
 		Detach(0.25)
 
 		local jumpAnimKey = if currentSide == "LeftVector" then "LeftJump" else "RightJump"
@@ -263,7 +269,8 @@ function WallRun.Start(Character: Model)
 
 
 		if Root.Parent then
-			Root.AssemblyLinearVelocity = Root.CFrame.LookVector * 32 + jumpAway * 22 + Vector3.new(0, 42, 0)
+			-- Stronger launch along the run direction and away from the wall.
+			Root.AssemblyLinearVelocity = Root.CFrame.LookVector * 52 + horizontalAway * 48 + Vector3.new(0, 48, 0)
 		end
 	end)
 
