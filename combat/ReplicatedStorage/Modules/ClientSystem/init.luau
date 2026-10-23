@@ -50,8 +50,8 @@ System.Root 	 = nil;
 
 System.BaseSpeed = 12;
 System.SprintSpeed = 24;
+System.FastSprintSpeed = 32;
 System.BaseJump  = 40;
-System.SlideSoundId = "rbxassetid://6429226498";
 System.Sliding = false;
 
 System.CurrentInput = {};

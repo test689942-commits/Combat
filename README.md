@@ -223,13 +223,13 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
   - Smoothly tilts `RootJoint`, `Right Hip`, `Left Hip`, and `Neck` `Motor6D.C0` based on horizontal velocity vs. character facing direction.
   - Automatically resets to neutral pose when idle (`> 2s`), facing a wall within `2` studs, or in any combat/stun/action state (`Stun`, `DoingCombat`, `DoingMove`, `Blocking`).
 - **Double-Tap `W` Sprint, FastSprint & Sprint Visuals (`ClientSystem/Inputs/Sprint.luau`, `ClientSystem/SprintVisuals.luau`)**:
-  - Double-tapping `W` starts with the `FastSprint` animation (`92394376692356`), then switches to `Sprint` (`70903321662399`) after 3 seconds of continuous sprinting.
+  - Double-tapping `W` starts with the `FastSprint` animation (`92394376692356`) at `SprintSpeed = 24`, then switches to `Sprint` (`70903321662399`) at `FastSprintSpeed = 32` after 3 seconds of continuous sprinting.
   - Arm trails and camera visuals activate immediately. The `SpeedSprinting` effect from `ReplicatedStorage.Assets.Effects.Movement` starts only after that 3-second delay.
 - **Movement VFX Location (`ReplicatedStorage.Assets.Effects.Movement`)**:
   - Movement and dash VFX are stored in the `Movement` folder: `Ring`, `Arm Trail`, `Back`, `Forward`, `Left`, `Right`, `SideDust`, `SpeedSprinting`, `Trail`, and `TransparentArmTrail`.
-  - Dash now looks in `Effects.Movement` first for direction bursts, `Ring`, and arm-trail attachments (with legacy `Dash` / `DashVFX` fallback).
+  - Dash now looks in `Effects.Movement` first for direction bursts, `Ring`, `SideDust`, and arm-trail attachments (with legacy `Dash` / `DashVFX` fallback). `SideDust` emits on each dash.
 - **Slide, LongJump, WallClimb, Vault & WallRun (`ClientSystem/Movement.luau`, `ClientSystem/WallRun.luau`)**:
-  - `LeftControl` performs the slide animation (`Sliding` = `134302481749326`) and plays slide audio (`rbxassetid://6429226498`). Pressing `Space` during slide triggers the forward-upward **LongJump** animation (`71457670921368`).
+  - `LeftControl` performs the slide animation (`Sliding` = `134302481749326`) and plays `Sounds/SFX.Slide` (`rbxassetid://6429226498`). Pressing `Space` during slide triggers the forward-upward **LongJump** animation (`71457670921368`).
   - Jump input near a wall performs either a vertical **WallClimb** boost or a ledge **Vault** (alternating `Vault1` = `111806598954502` and `Vault2` = `87942706676175`). WallRun plays the corresponding left/right run and jump animations.
   - Ordinary jumping plays the jump animation and footstep jump sound only; no movement particle effect is emitted on jump. The movement controller does not treat combat effects (such as `Greatsword/Jump`) as movement VFX.
 - **Movement Animations (`Animations/Anims.luau`, `StarterCharacterScripts/Animate.local.luau`)**:
@@ -239,8 +239,8 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
   - `Slide`: `LongJump` (`71457670921368`), `Sliding` (`134302481749326`).
 - **Shiftlock Offset & Combat Jump Tuning (`ClientSystem/CameraShiftlock.luau`)**:
   - Applies custom Shiftlock camera offset (`Vector3.new(1.3, 0.35, 0)`), custom Shiftlock mouse icon (`http://www.roblox.com/asset/?id=109916623354797`), camera zoom bounds (`0..20`), and consecutive-jump height/power decay while in combat.
-- **Material-Mapped Footsteps (`ClientSystem/FootSteps.luau`, `StarterCharacterScripts/MovementController.local.luau`)**:
-  - Plays material-mapped footstep and jump sounds across `Concrete`, `Tile`, `Wood`, `Glass`, `Metal_Solid`, `Metal_Grate`, `Dirt`, `Grass`, `Carpet`, `Gravel`, `Snow`, `Sand`, `Rubber`, and `Mud`.
+- **Centralized Movement Audio (`Sounds/SFX.luau`, `ClientSystem/FootSteps.luau`)**:
+  - Slide audio is `SFX.Slide`; all material-mapped footstep and jump pools live in `SFX.Footsteps` and are consumed by `FootSteps.luau` for `Concrete`, `Tile`, `Wood`, `Glass`, `Metal_Solid`, `Metal_Grate`, `Dirt`, `Grass`, `Carpet`, `Gravel`, `Snow`, `Sand`, `Rubber`, and `Mud`.
 
 ---
 

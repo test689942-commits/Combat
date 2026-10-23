@@ -28,18 +28,20 @@ local function CollectForPreload(Node)
 	end
 end
 
-task.spawn(function()
-	for _, Module in next, script:GetChildren() do
-		if Module:IsA("ModuleScript") then
-			self.Cache[Module.Name] = require(Module);
-			CollectForPreload(self.Cache[Module.Name]);
-		end
+-- Populate the sound registry before returning so callers can request SFX
+-- immediately; only the content preload needs to run asynchronously.
+for _, Module in next, script:GetChildren() do
+	if Module:IsA("ModuleScript") then
+		self.Cache[Module.Name] = require(Module);
+		CollectForPreload(self.Cache[Module.Name]);
 	end
+end
 
+task.spawn(function()
 	local Start = os.clock();
 	ContentPA:PreloadAsync(self.Temp);
 	warn(("Sound Preloader Complete; %.2f seconds"):format(os.clock() - Start))
-	for _, v in next, self.Temp	do
+	for _, v in next, self.Temp do
 		v:Destroy();
 	end
 

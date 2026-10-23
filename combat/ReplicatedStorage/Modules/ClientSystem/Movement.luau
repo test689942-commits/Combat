@@ -205,12 +205,13 @@ Movement.SetSprint = function(active: boolean)
 			-- Start with FastSprint, then transition to Sprint after the opening phase.
 			Humanoid:SetAttribute("FastSprint", false)
 			Character:SetAttribute("FastSprint", false)
+			Humanoid.WalkSpeed = Client.FastSprintSpeed
 			stopSprintFX = MovementFX.StartLoop(Character, {"SpeedSprinting"})
 		end)
 	end
 end
 
---// Slide (Sliding: rbxassetid://134302481749326, Audio: rbxassetid://6429226498) \\--
+--// Slide (Audio is registered as Sounds/SFX.Slide) \\--
 
 Movement.Slide = function()
 	local Character: Model = Client.Character
@@ -253,14 +254,14 @@ Movement.Slide = function()
 	slideVelocity.Parent = Root
 	activeSlideVelocity = slideVelocity
 
-	local slideSound = Instance.new("Sound")
-	slideSound.Name = "SlideSound"
-	slideSound.SoundId = Client.SlideSoundId
-	slideSound.Volume = 0.65
-	slideSound.Parent = Root
-	slideSound:Play()
-	Debris:AddItem(slideSound, 2)
-	activeSlideSound = slideSound
+	local slideSound = Client.Sounds.GetSound("SFX", "Slide")
+	if slideSound then
+		slideSound.Volume = 0.65
+		slideSound.Parent = Root
+		slideSound:Play()
+		Debris:AddItem(slideSound, 2)
+		activeSlideSound = slideSound
+	end
 
 	local animName = if Client.Animations.DetectSpecificAnimation("Movement", "Sliding") then "Sliding" else "Roll"
 	activeSlideTrack = playMovementAnim(Humanoid, animName, Enum.AnimationPriority.Action3, 0.08, 1)

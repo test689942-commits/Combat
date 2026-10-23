@@ -87,6 +87,39 @@ local function playBurst(character: Model, direction: string)
 	spawnRing(ringCFrame, Vector3.new(7.222, 0.469, 7.605))
 end
 
+local function playSideDust(character: Model, direction: string)
+	local root = character:FindFirstChild("HumanoidRootPart")
+	local movementEffects = getDashEffectsFolder()
+	local template = movementEffects and movementEffects:FindFirstChild("SideDust", true)
+	if not root or not root:IsA("BasePart") or not template then
+		return
+	end
+
+	local dust = template:Clone()
+	local lateralOffset = if direction == "Left" then -1.25 elseif direction == "Right" then 1.25 else 0
+	local effectCFrame = root.CFrame * CFrame.new(lateralOffset, -2, 0)
+
+	if dust:IsA("Attachment") then
+		dust.Position = Vector3.new(lateralOffset, -2, 0)
+		dust.Parent = root
+	elseif dust:IsA("BasePart") then
+		dust.Anchored = true
+		dust.CanCollide = false
+		dust.CanQuery = false
+		dust.CanTouch = false
+		dust.CFrame = effectCFrame
+		dust.Parent = workspace:FindFirstChild("Effects") or workspace
+	elseif dust:IsA("Model") then
+		dust:PivotTo(effectCFrame)
+		dust.Parent = workspace:FindFirstChild("Effects") or workspace
+	else
+		dust.Parent = root
+	end
+
+	EffectsBase.Emit(dust, true)
+	Client.Utilities.Debris:AddItem(dust, 2)
+end
+
 local function playLimbTrails(character: Model)
 	if not character or not character.PrimaryPart then
 		return
@@ -169,6 +202,7 @@ end
 local function playEffects(character: Model, root: BasePart, direction: string)
 	task.spawn(playLimbTrails, character)
 	task.spawn(playBurst, character, direction)
+	task.spawn(playSideDust, character, direction)
 
 	startAfterImages(character)
 	playSound(root)
