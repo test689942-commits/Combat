@@ -7,7 +7,7 @@ return table.freeze({
 		Roll = "rbxassetid://114963664648176";
 		Idle = "rbxassetid://139783125255456";
 		walk = "rbxassetid://81874417224388";
-		run = "rbxassetid://70903321662399";
+		Sprint = "rbxassetid://70903321662399";
 		FastSprint = "rbxassetid://92394376692356";
 		jump = "rbxassetid://135702083168555";
 		Fall = "rbxassetid://120908359783163";

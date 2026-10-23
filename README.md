@@ -13,7 +13,7 @@ This repository contains the modular Roblox Luau combat, weapon, animation, and 
    - [2.3 Weapon Registry & Per-Weapon Animation Tables](#23-weapon-registry--per-weapon-animation-tables)
    - [2.4 `DragonSlayer` Greatsword (4-Swing Key-Event Weapon)](#24-dragonslayer-greatsword-4-swing-key-event-weapon)
    - [2.5 `DaggerDance` Skill Move](#25-daggerdance-skill-move)
-   - [2.6 Locomotion (`Idle`, `walk`, `run`) & Fallback to `Movement`](#26-locomotion-idle-walk-run--fallback-to-movement)
+   - [2.6 Locomotion (`Idle`, `walk`, `Sprint`) & Fallback to `Movement`](#26-locomotion-idle-walk-sprint--fallback-to-movement)
    - [2.7 Animation Key-Event Slash VFX & Lunge Removal](#27-animation-key-event-slash-vfx--lunge-removal)
    - [2.8 `Animations/Anims.luau` Naming Cleanup](#28-animationsanimsluau-naming-cleanup)
    - [2.9 Skill Parry & Cancel System](#29-skill-parry--cancel-system)
@@ -179,9 +179,9 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
 
 ---
 
-### 2.6 Locomotion (`Idle`, `walk`, `run`) & Fallback to `Movement`
-- Updated `Moves/Combat/Input.luau` and `Animations/init.luau` so that when a weapon is equipped, the client checks `Weapons.<WeaponName>.Idle`, `Weapons.<WeaponName>.walk`, and `Weapons.<WeaponName>.run`.
-- If a weapon slot is `"rbxassetid://0"` (no weapon-specific animation for that locomotion state), it automatically falls back to `Anims.Movement` (`Movement.Idle`, `Movement.walk`, `Movement.run`) instead of inheriting another weapon's animations.
+### 2.6 Locomotion (`Idle`, `walk`, `Sprint`) & Fallback to `Movement`
+- Weapon animation tables retain their required `Idle`, `walk`, and `run` slots. When a weapon's locomotion slot is `"rbxassetid://0"`, the client uses the shared movement fallback rather than another weapon's animation.
+- Shared locomotion has one `Sprint` animation (`rbxassetid://70903321662399`)—there is no separate shared `run` animation. Weapon `run` requests fall back to `Movement.Sprint`; `FastSprint` remains a distinct faster animation.
 
 ---
 
@@ -233,7 +233,7 @@ Added the **`DaggerDance`** skill (`X` move on `Steel Dagger`, animation `"rbxas
   - Jump input near a wall performs either a vertical **WallClimb** boost or a ledge **Vault** (alternating `Vault1` = `111806598954502` and `Vault2` = `87942706676175`). WallRun plays the corresponding left/right run and jump animations.
   - Ordinary jumping plays the jump animation and footstep jump sound only; no movement particle effect is emitted on jump. The movement controller does not treat combat effects (such as `Greatsword/Jump`) as movement VFX.
 - **Movement Animations (`Animations/Anims.luau`, `StarterCharacterScripts/Animate.local.luau`)**:
-  - `Idle`: `139783125255456`, `walk`: `81874417224388`, `Sprint`/`run`: `70903321662399`, `FastSprint`: `92394376692356`, `jump`: `135702083168555`, `Fall`: `120908359783163`.
+  - `Idle`: `139783125255456`, `walk`: `81874417224388`, `Sprint`: `70903321662399`, `FastSprint`: `92394376692356`, `jump`: `135702083168555`, `Fall`: `120908359783163`.
   - `WallRun`: `Left Jump` (`119937163876536`), `Left Run` (`118914310248428`), `Right Jump` (`109550456840533`), `Right Run` (`92324260993876`).
   - `Vault`: `Vault1` (`111806598954502`), `Vault2` (`87942706676175`).
   - `Slide`: `LongJump` (`71457670921368`), `Sliding` (`134302481749326`).

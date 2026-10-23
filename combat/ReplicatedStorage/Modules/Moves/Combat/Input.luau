@@ -362,12 +362,18 @@ local function resolveLocomotionAnimation(weapon, animationName, fallbackName)
 		return AnimationsModule.GetAnimation(weaponRoot, fallbackName)
 	end
 
-	if AnimationsModule.DetectSpecificAnimation("Movement", animationName) then
-		return AnimationsModule.GetAnimation("Movement", animationName)
+	-- Weapon tables retain their required `run` slot, but shared locomotion
+	-- uses the user's single `Sprint` animation instead of a separate `run`.
+	local movementAnimationName = if string.lower(animationName) == "run" then "Sprint" else animationName
+	local movementFallbackName = if fallbackName ~= nil and string.lower(fallbackName) == "run" then "Sprint" else fallbackName
+
+	if AnimationsModule.DetectSpecificAnimation("Movement", movementAnimationName) then
+		return AnimationsModule.GetAnimation("Movement", movementAnimationName)
 	end
 
-	if fallbackName ~= nil and fallbackName ~= animationName and AnimationsModule.DetectSpecificAnimation("Movement", fallbackName) then
-		return AnimationsModule.GetAnimation("Movement", fallbackName)
+	if movementFallbackName ~= nil and movementFallbackName ~= movementAnimationName
+		and AnimationsModule.DetectSpecificAnimation("Movement", movementFallbackName) then
+		return AnimationsModule.GetAnimation("Movement", movementFallbackName)
 	end
 
 	return nil

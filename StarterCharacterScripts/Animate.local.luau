@@ -31,15 +31,14 @@ local currentAnimSpeed = 1.0
 local animTable = {}
 local animNames = { 
 	idle = 	{	
-				{ id = "rbxassetid://139783125255456", weight = 9 },
-				{ id = "rbxassetid://139783125255456", weight = 1 }
+				{ id = "rbxassetid://139783125255456", weight = 10 }
 			},
 	walk = 	{ 	
 				{ id = "rbxassetid://81874417224388", weight = 10 } 
 			}, 
-	run = 	{
+	sprint = {
 				{ id = "rbxassetid://70903321662399", weight = 10 } 
-			}, 
+		},
 	fastsprint = {
 				{ id = "rbxassetid://92394376692356", weight = 10 }
 			},
@@ -97,7 +96,7 @@ local dances = {"dance1", "dance2", "dance3"}
 
 -- Existance in this list signifies that it is an emote, the value indicates if it is a looping emote
 local emoteNames = { wave = false, point = false, dance1 = true, dance2 = true, dance3 = true, laugh = false, cheer = false}
-local coreMovementOverrides = { idle = true, walk = true, run = true, fastsprint = true, jump = true, fall = true }
+local coreMovementOverrides = { idle = true, walk = true, sprint = true, fastsprint = true, jump = true, fall = true }
 
 function configureAnimationSet(name, fileList)
 	if (animTable[name] ~= nil) then
@@ -364,7 +363,7 @@ function onRunning(speed)
 			playAnimation("fastsprint", 0.1, Humanoid)
 			setAnimationSpeed((speed / 20) * 0.85)
 		elseif sprinting or speed >= 18 then
-			playAnimation("run", 0.1, Humanoid)
+			playAnimation("sprint", 0.1, Humanoid)
 			setAnimationSpeed((speed / 16) * 0.72)
 		else
 			playAnimation("walk", 0.1, Humanoid)
