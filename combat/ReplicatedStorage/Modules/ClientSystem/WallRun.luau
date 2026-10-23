@@ -235,15 +235,8 @@ function WallRun.Start(Character: Model)
 		ActiveGrabAttachment = attachment
 
 		for _, descendant in attachment:GetDescendants() do
-			if descendant:IsA("Trail") or descendant:IsA("Beam") then
+			if descendant:IsA("ParticleEmitter") or descendant:IsA("Trail") or descendant:IsA("Beam") then
 				descendant.Enabled = true
-			elseif descendant:IsA("ParticleEmitter") then
-				local emitCount = tonumber(descendant:GetAttribute("EmitCount"))
-				if emitCount and emitCount > 0 then
-					descendant:Emit(emitCount)
-				else
-					descendant.Enabled = true
-				end
 			end
 		end
 	end
