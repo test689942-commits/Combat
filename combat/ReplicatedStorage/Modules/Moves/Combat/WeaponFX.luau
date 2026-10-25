@@ -568,25 +568,22 @@ local function playCriticalTell(character: Model)
 		end
 	end
 
-	if not criticalTemplate then
-		local highlight = Instance.new("Highlight")
-		highlight.Name = "CriticalTell"
-		highlight.Adornee = character
-		highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-		highlight.FillColor = Color3.fromRGB(255, 35, 35)
-		highlight.OutlineColor = Color3.fromRGB(255, 145, 145)
-		highlight.FillTransparency = 0.55
-		highlight.OutlineTransparency = 0.05
-		highlight.Parent = character
-		TweenService:Create(highlight, TweenInfo.new(0.65, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-			FillTransparency = 1,
-			OutlineTransparency = 1,
-		}):Play()
-		DebrisService:AddItem(highlight, 0.75)
-		return
-	end
+	local highlight = Instance.new("Highlight")
+	highlight.Name = "CriticalTell"
+	highlight.Adornee = character
+	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	highlight.FillColor = Color3.fromRGB(255, 35, 35)
+	highlight.OutlineColor = Color3.fromRGB(255, 145, 145)
+	highlight.FillTransparency = 0.55
+	highlight.OutlineTransparency = 0.05
+	highlight.Parent = character
+	TweenService:Create(highlight, TweenInfo.new(0.65, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		FillTransparency = 1,
+		OutlineTransparency = 1,
+	}):Play()
+	DebrisService:AddItem(highlight, 0.75)
 
-	if not head or not head:IsA("BasePart") then
+	if not criticalTemplate or not head or not head:IsA("BasePart") then
 		return
 	end
 

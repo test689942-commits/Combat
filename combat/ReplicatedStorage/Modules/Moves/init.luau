@@ -263,7 +263,7 @@ return table.freeze({
 		FinisherCooldown = 2;
 		ComboWindow = 1;
 		JumpLockTime = 1;
-		CriticalWindup = 1;
+		CriticalWindup = 0.4;
 		CriticalCooldown = 3;
 		HitboxDelay = 0.25;
 		HitboxOffset = 3;
