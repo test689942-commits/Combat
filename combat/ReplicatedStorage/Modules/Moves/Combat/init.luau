@@ -298,6 +298,13 @@ function Main.Swing(Character,Count,Type)
 	end
 end
 
+function Main.HeavySwing(Character)
+	if Character ~= nil and Character:FindFirstChild("Humanoid") ~= nil and Character.Humanoid.Health > 0 and Character:FindFirstChild("HumanoidRootPart") ~= nil then
+		local hit = WeaponFX.HeavySwing(Character)
+		MainHandler.CreateTing("BoolValue", {Parent = Character, Name = "DoingCombat"}, hit.ActionTime)
+	end
+end
+
 function Main.BlockAnimation(Character)
 	WeaponFX.PlayBlockAnimation(Character)
 end

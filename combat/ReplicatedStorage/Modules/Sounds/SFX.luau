@@ -1,226 +1,76 @@
-return table.freeze({
-	["Dash1"] = "rbxassetid://1201103356";
-	["Dash2"] = "rbxassetid://8475493570";
-	["Slide"] = "rbxassetid://6429226498";
+-- Centralized sound configuration. Each sound entry has an Id; consumers can
+-- reference a sound pool directly and apply per-use playback settings.
 
-	Gui = table.freeze({
-		["New Area"] = "rbxassetid://96480143599028";
-	});
+local function makeEntry(Id: string, Properties)
+	local Entry = {Id = Id}
 
-	Dragon = table.freeze({
-		Roar = "rbxassetid://76821048166110";
-		Whoosh = "rbxasset://sounds/swordlunge.wav";
-		Slash = "rbxasset://sounds/swordslash.wav";
-		Stomp = "rbxassetid://88866275260992";
-		Rumble = "rbxasset://sounds/bass.wav";
-		Impact = "rbxasset://sounds/collide.wav";
-		Explosion = "rbxasset://sounds/impact_explosion_03.mp3";
-		Gust = "rbxasset://sounds/action_swim.mp3";
-		Flame = "rbxasset://sounds/Rocket whoosh 01.wav";
-		Launch = "rbxasset://sounds/Launching rocket.wav";
-		Projectile = "rbxasset://sounds/Rocket shot.wav";
-		Snap = "rbxasset://sounds/snap.mp3";
-		Grunt = "rbxasset://sounds/uuhhh.mp3";
-	});
+	if Properties then
+		for Name, Value in Properties do
+			Entry[Name] = Value
+		end
+	end
 
-	Pools = table.freeze({
-		Swings = table.freeze({
-			Light = table.freeze({
-				"rbxassetid://15423983331";
-				"rbxassetid://15423984720";
-				"rbxassetid://15423985833";
-				"rbxassetid://15166713232";
-			});
-			Medium = table.freeze({
-				"rbxassetid://15389432406";
-				"rbxassetid://15389434582";
-				"rbxassetid://15389436610";
-			});
-			Heavy = table.freeze({
-				"rbxassetid://115568900071576";
-				--[[
-				"rbxassetid://15423932355";
-				"rbxassetid://15423933426";
-				"rbxassetid://15423935983";
-				"rbxassetid://15423937308";
-				]]
-			});
-			Fists = table.freeze({
-				"rbxassetid://15166713232";
-				"rbxassetid://15166709578";
-				"rbxassetid://15166714319";
-			});
-			Spear = table.freeze({
-				"rbxassetid://16928456202";
-				"rbxassetid://16928441764";
-				"rbxassetid://16928441984";
-			});
-		});
+	return table.freeze(Entry)
+end
 
-		Hits = table.freeze({
-			Blade = table.freeze({
-				table.freeze({Id = "rbxassetid://16302465188"; Volume = 0.35});
-			});
-			Blunt = table.freeze({
-				table.freeze({Id = "rbxassetid://15895795139"; Volume = 0.35});
-			});
-			Scythe = table.freeze({
-				"rbxassetid://16302453361";
-			});
-			Fists = table.freeze({
-				"rbxassetid://16845879752";
-				"rbxassetid://16845881932";
-				"rbxassetid://16845885644";
-				"rbxassetid://16845891045";
-			});
-		});
+local function makePool(Ids: {any})
+	local Pool = {}
 
-		Equips = table.freeze({
-			Sword = table.freeze({
-				"rbxassetid://9119747270";
-				"rbxassetid://211134014";
-			});
-			Sheath = table.freeze({
-				"rbxassetid://15390190958";
-				"rbxassetid://8786849224";
-			});
-			Blunt = table.freeze({
-				"rbxassetid://3834495137";
-			});
-		});
+	for _, Value in ipairs(Ids) do
+		table.insert(Pool, if type(Value) == "string" then makeEntry(Value) else Value)
+	end
 
-		Blocks = table.freeze({
-			"rbxassetid://6330969397";
-			"rbxassetid://6331329239";
-		});
-	});
+	return table.freeze(Pool)
+end
 
-	Combat = table.freeze({
-		Punch = table.freeze({
-			["Perfect Block"] = table.freeze({Pool = "Pools.Blocks"});
-			Punch1 = table.freeze({Pool = "Pools.Hits.Fists"});
-			Punch2 = table.freeze({Pool = "Pools.Hits.Fists"});
-			Punch3 = table.freeze({Pool = "Pools.Hits.Fists"});
-			Punch4 = table.freeze({Pool = "Pools.Hits.Fists"});
-			Punch5 = table.freeze({Pool = "Pools.Hits.Fists"});
-			Swing = table.freeze({Pool = "Pools.Swings.Fists"});
-			["Block hit"] = table.freeze({Pool = "Pools.Blocks"});
-			["Block Break"] = "rbxassetid://8400292687";
-		});
-		Slam = "rbxassetid://5522448086";
-		Slam2 = "rbxassetid://6435892716";
-		Jump = "rbxassetid://9114890978";
-		Jump2 = "rbxassetid://6776044661";
-		Jump3 = "rbxassetid://9117406165";
-	});
+local SwingSFX = table.freeze({
+	Light = makePool({
+		"rbxassetid://15423983331",
+		"rbxassetid://15423984720",
+		"rbxassetid://15423985833",
+		"rbxassetid://15166713232",
+	}),
+	Medium = makePool({
+		"rbxassetid://15389432406",
+		"rbxassetid://15389434582",
+		"rbxassetid://15389436610",
+	}),
+	Heavy = makePool({"rbxassetid://115568900071576"}),
+	Fist = makePool({"rbxassetid://4571259077"}),
+	Spear = makePool({
+		"rbxassetid://16928456202",
+		"rbxassetid://16928441764",
+		"rbxassetid://16928441984",
+	}),
+})
 
-	Weapons = table.freeze({
-		Fists = table.freeze({
-			Swing = table.freeze({Pool = "Pools.Swings.Fists"});
-			Hit = table.freeze({Pool = "Pools.Hits.Fists"});
-		});
+local HitReactions = table.freeze({
+	Sword = table.freeze({
+		Blade = makePool({makeEntry("rbxassetid://16302465188", {Volume = 0.35})}),
+		Blunt = makePool({makeEntry("rbxassetid://15895795139", {Volume = 0.35})}),
+	}),
+	Fist = makePool({"rbxassetid://131237241"}),
+})
 
-		Greatsword = table.freeze({
-			Swing = table.freeze({Pool = "Pools.Swings.Heavy"; PlaybackSpeed = 1});
-			Hit = table.freeze({Pool = "Pools.Hits.Blade"; PlaybackSpeed = 1});
-			Equip = table.freeze({Pool = "Pools.Equips.Sword"; PlaybackSpeed = 1});
-		});
+local BlockSFX = table.freeze({
+	Fist = makePool({"rbxassetid://0"}),
+	Weapons = makePool({"rbxassetid://0"}),
+})
 
-		Longsword = table.freeze({
-			Swing = table.freeze({Pool = "Pools.Swings.Medium"; PlaybackSpeed = 1.2});
-			Hit = table.freeze({Pool = "Pools.Hits.Blade"; PlaybackSpeed = 1.1});
-			Equip = table.freeze({Pool = "Pools.Equips.Sword"; PlaybackSpeed = 1.1});
-		});
+local ParrySFX = table.freeze({
+	Fist = makePool({"rbxassetid://0"}),
+	Weapons = makePool({"rbxassetid://0"}),
+})
 
-		Staff = table.freeze({
-			Swing = table.freeze({Pool = "Pools.Swings.Light"; PlaybackSpeed = 1.1});
-			Hit = table.freeze({Pool = "Pools.Hits.Blunt"; PlaybackSpeed = 1.2});
-			Equip = table.freeze({Pool = "Pools.Equips.Blunt"; PlaybackSpeed = 1.2});
-		});
+local EquipSFX = table.freeze({
+	Fist = makePool({"rbxassetid://0"}),
+	Weapons = makePool({
+		"rbxassetid://9119747270",
+		"rbxassetid://211134014",
+	}),
+})
 
-		Axe = table.freeze({
-			Swing = table.freeze({Pool = "Pools.Swings.Heavy"; PlaybackSpeed = 1.1});
-			Hit = table.freeze({Pool = "Pools.Hits.Blade"; PlaybackSpeed = 0.85});
-			Equip = table.freeze({Pool = "Pools.Equips.Sword"; PlaybackSpeed = 0.95});
-		});
-
-		Katana = table.freeze({
-			Swing = table.freeze({Pool = "Pools.Swings.Light"; PlaybackSpeed = 1.35});
-			Hit = table.freeze({Pool = "Pools.Hits.Blade"; PlaybackSpeed = 1.2});
-			Equip = table.freeze({Pool = "Pools.Equips.Sheath"; PlaybackSpeed = 1.2});
-		});
-
-		DualKatana = table.freeze({
-			Swing = table.freeze({Pool = "Pools.Swings.Light"; PlaybackSpeed = 1.4});
-			Hit = table.freeze({Pool = "Pools.Hits.Blade"; PlaybackSpeed = 1.25});
-			Equip = table.freeze({Pool = "Pools.Equips.Sheath"; PlaybackSpeed = 1.25});
-		});
-
-		Dagger = table.freeze({
-			Swing = table.freeze({Pool = "Pools.Swings.Fists"; PlaybackSpeed = 1.55});
-			Hit = table.freeze({Pool = "Pools.Hits.Blade"; PlaybackSpeed = 1.35});
-			Equip = table.freeze({Pool = "Pools.Equips.Sheath"; PlaybackSpeed = 1.4});
-		});
-
-		MinuteDagger = table.freeze({
-			Swing = table.freeze({Pool = "Pools.Swings.Fists"; PlaybackSpeed = 1.55});
-			Hit = table.freeze({Pool = "Pools.Hits.Blade"; PlaybackSpeed = 1.35});
-			Equip = table.freeze({Pool = "Pools.Equips.Sheath"; PlaybackSpeed = 1.4});
-		});
-
-		Spear = table.freeze({
-			Swing = table.freeze({Pool = "Pools.Swings.Spear"; PlaybackSpeed = 1});
-			Hit = table.freeze({Pool = "Pools.Hits.Blade"; PlaybackSpeed = 1});
-			Equip = table.freeze({Pool = "Pools.Equips.Sword"; PlaybackSpeed = 1});
-		});
-
-		Scythe = table.freeze({
-			Swing = table.freeze({Pool = "Pools.Swings.Heavy"; PlaybackSpeed = 1});
-			Hit = table.freeze({Pool = "Pools.Hits.Scythe"; PlaybackSpeed = 0.95});
-			Equip = table.freeze({Pool = "Pools.Equips.Sword"; PlaybackSpeed = 0.95});
-		});
-	});
-
-	Moves = table.freeze({
-		GroundSlam = "rbxassetid://8588542238";
-
-		Rage = table.freeze({
-			Windup = "rbxassetid://16825482090";
-			Scream = table.freeze({Id = "rbxassetid://6824039583"; Volume = 0.8});
-		});
-
-		DaggerThrow = table.freeze({
-			Throw = table.freeze({Pool = "Pools.Swings.Light"; PlaybackSpeed = 1.3});
-			Hit = table.freeze({Pool = "Pools.Hits.Blade"});
-		});
-
-		Cut = table.freeze({
-			Slash = table.freeze({Pool = "Pools.Swings.Light"});
-			Impact = table.freeze({Pool = "Pools.Hits.Blade"});
-		});
-
-		DaggerDance = table.freeze({
-			Slash = table.freeze({Pool = "Pools.Swings.Light"; PlaybackSpeed = 1.35});
-			Impact = table.freeze({Pool = "Pools.Hits.Blade"});
-		});
-
-		Thrust = table.freeze({
-			Slash = table.freeze({Pool = "Pools.Swings.Heavy"; PlaybackSpeed = 1.1});
-			Impact = table.freeze({Pool = "Pools.Hits.Blade"; PlaybackSpeed = 0.85});
-		});
-
-		Spin = table.freeze({
-			Slash = table.freeze({Pool = "Pools.Swings.Heavy"; PlaybackSpeed = 1.1});
-			Impact = table.freeze({Pool = "Pools.Hits.Blade"; PlaybackSpeed = 0.85});
-		});
-
-
-		Leap = table.freeze({
-			Takeoff = "rbxassetid://1598682218";
-			Land = "rbxassetid://5522448086";
-		});
-	});
-	Footsteps = table.freeze({
+local FootstepIds = {
 	["Bass"] = {
 		"rbxassetid://84169700044924";
 		"rbxassetid://121079295547006";
@@ -490,6 +340,252 @@ return table.freeze({
 	["Jump"] = {
 		"rbxasset://sounds/action_jump.mp3";
 	};
-});
+}
 
-});
+
+local FootstepKeyAliases = {
+	Metal_Auto = "MetalAuto",
+	Metal_Chainlink = "MetalChainlink",
+	Metal_Grate = "MetalGrate",
+	Metal_Solid = "MetalSolid",
+}
+
+local FootstepPools = {}
+for Name, Ids in FootstepIds do
+	if Name ~= "Jump" then
+		FootstepPools[FootstepKeyAliases[Name] or Name] = makePool(Ids)
+	end
+end
+local FrozenFootstepPools = table.freeze(FootstepPools)
+
+
+local function usePool(Pool, PlaybackSpeed: number?)
+	local Settings = {Pool = Pool}
+
+	if PlaybackSpeed ~= nil then
+		Settings.PlaybackSpeed = PlaybackSpeed
+	end
+
+	return table.freeze(Settings)
+end
+
+local MovementSFX = table.freeze({
+	Dash = makePool({"rbxassetid://1201103356", "rbxassetid://8475493570"}),
+	Slide = makeEntry("rbxassetid://6429226498"),
+	Jump = makePool({
+		"rbxasset://sounds/action_jump.mp3",
+		"rbxassetid://9114890978",
+		"rbxassetid://6776044661",
+		"rbxassetid://9117406165",
+	}),
+	Footsteps = FrozenFootstepPools,
+})
+
+local InterfaceSFX = table.freeze({
+	AreaDiscovered = makeEntry("rbxassetid://96480143599028"),
+})
+
+local CreatureSFX = table.freeze({
+	Roar = makeEntry("rbxassetid://76821048166110"),
+	Whoosh = makeEntry("rbxasset://sounds/swordlunge.wav"),
+	Slash = makeEntry("rbxasset://sounds/swordslash.wav"),
+	Stomp = makeEntry("rbxassetid://88866275260992"),
+	Rumble = makeEntry("rbxasset://sounds/bass.wav"),
+	Impact = makeEntry("rbxasset://sounds/collide.wav"),
+	Explosion = makeEntry("rbxasset://sounds/impact_explosion_03.mp3"),
+	Gust = makeEntry("rbxasset://sounds/action_swim.mp3"),
+	Flame = makeEntry("rbxasset://sounds/Rocket whoosh 01.wav"),
+	Launch = makeEntry("rbxasset://sounds/Launching rocket.wav"),
+	Projectile = makeEntry("rbxasset://sounds/Rocket shot.wav"),
+	Snap = makeEntry("rbxasset://sounds/snap.mp3"),
+	Grunt = makeEntry("rbxasset://sounds/uuhhh.mp3"),
+})
+
+local Weapons = table.freeze({
+	Fists = table.freeze({
+		Swing = usePool(SwingSFX.Fist),
+		Hit = usePool(HitReactions.Fist),
+		Block = usePool(BlockSFX.Fist),
+		Parry = usePool(ParrySFX.Fist),
+		Equip = usePool(EquipSFX.Fist),
+	}),
+	Greatsword = table.freeze({
+		Swing = usePool(SwingSFX.Heavy, 1),
+		Hit = usePool(HitReactions.Sword.Blade, 1),
+		Block = usePool(BlockSFX.Weapons),
+		Parry = usePool(ParrySFX.Weapons),
+		Equip = usePool(EquipSFX.Weapons, 1),
+	}),
+	Longsword = table.freeze({
+		Swing = usePool(SwingSFX.Medium, 1.2),
+		Hit = usePool(HitReactions.Sword.Blade, 1.1),
+		Block = usePool(BlockSFX.Weapons),
+		Parry = usePool(ParrySFX.Weapons),
+		Equip = usePool(EquipSFX.Weapons, 1.1),
+	}),
+	Staff = table.freeze({
+		Swing = usePool(SwingSFX.Light, 1.1),
+		Hit = usePool(HitReactions.Sword.Blunt, 1.2),
+		Block = usePool(BlockSFX.Weapons),
+		Parry = usePool(ParrySFX.Weapons),
+		Equip = usePool(EquipSFX.Weapons, 1.2),
+	}),
+	Axe = table.freeze({
+		Swing = usePool(SwingSFX.Heavy, 1.1),
+		Hit = usePool(HitReactions.Sword.Blade, 0.85),
+		Block = usePool(BlockSFX.Weapons),
+		Parry = usePool(ParrySFX.Weapons),
+		Equip = usePool(EquipSFX.Weapons, 0.95),
+	}),
+	Katana = table.freeze({
+		Swing = usePool(SwingSFX.Light, 1.35),
+		Hit = usePool(HitReactions.Sword.Blade, 1.2),
+		Block = usePool(BlockSFX.Weapons),
+		Parry = usePool(ParrySFX.Weapons),
+		Equip = usePool(EquipSFX.Weapons, 1.2),
+	}),
+	DualKatana = table.freeze({
+		Swing = usePool(SwingSFX.Light, 1.4),
+		Hit = usePool(HitReactions.Sword.Blade, 1.25),
+		Block = usePool(BlockSFX.Weapons),
+		Parry = usePool(ParrySFX.Weapons),
+		Equip = usePool(EquipSFX.Weapons, 1.25),
+	}),
+	Dagger = table.freeze({
+		Swing = usePool(SwingSFX.Fist, 1.55),
+		Hit = usePool(HitReactions.Sword.Blade, 1.35),
+		Block = usePool(BlockSFX.Weapons),
+		Parry = usePool(ParrySFX.Weapons),
+		Equip = usePool(EquipSFX.Weapons, 1.4),
+	}),
+	MinuteDagger = table.freeze({
+		Swing = usePool(SwingSFX.Fist, 1.55),
+		Hit = usePool(HitReactions.Sword.Blade, 1.35),
+		Block = usePool(BlockSFX.Weapons),
+		Parry = usePool(ParrySFX.Weapons),
+		Equip = usePool(EquipSFX.Weapons, 1.4),
+	}),
+	Spear = table.freeze({
+		Swing = usePool(SwingSFX.Spear, 1),
+		Hit = usePool(HitReactions.Sword.Blade, 1),
+		Block = usePool(BlockSFX.Weapons),
+		Parry = usePool(ParrySFX.Weapons),
+		Equip = usePool(EquipSFX.Weapons, 1),
+	}),
+	Scythe = table.freeze({
+		Swing = usePool(SwingSFX.Heavy, 1),
+		Hit = usePool(HitReactions.Sword.Blade, 0.95),
+		Block = usePool(BlockSFX.Weapons),
+		Parry = usePool(ParrySFX.Weapons),
+		Equip = usePool(EquipSFX.Weapons, 0.95),
+	}),
+})
+
+local Moves = table.freeze({
+	GroundSlam = table.freeze({Impact = makeEntry("rbxassetid://8588542238")}),
+	Rage = table.freeze({
+		Windup = makeEntry("rbxassetid://16825482090"),
+		Scream = makeEntry("rbxassetid://6824039583", {Volume = 0.8}),
+	}),
+	DaggerThrow = table.freeze({
+		Throw = usePool(SwingSFX.Light, 1.3),
+		Hit = usePool(HitReactions.Sword.Blade),
+	}),
+	Cut = table.freeze({
+		Slash = usePool(SwingSFX.Light),
+		Impact = usePool(HitReactions.Sword.Blade),
+	}),
+	DaggerDance = table.freeze({
+		Slash = usePool(SwingSFX.Light, 1.35),
+		Impact = usePool(HitReactions.Sword.Blade),
+	}),
+	Thrust = table.freeze({
+		Slash = usePool(SwingSFX.Heavy, 1.1),
+		Impact = usePool(HitReactions.Sword.Blade, 0.85),
+	}),
+	Spin = table.freeze({
+		Slash = usePool(SwingSFX.Heavy, 1.1),
+		Impact = usePool(HitReactions.Sword.Blade, 0.85),
+	}),
+	Slam = makePool({"rbxassetid://5522448086", "rbxassetid://6435892716"}),
+	Leap = table.freeze({
+		Takeoff = makeEntry("rbxassetid://1598682218"),
+		Landing = makeEntry("rbxassetid://5522448086"),
+		Land = makeEntry("rbxassetid://5522448086"),
+	}),
+})
+
+local CombatSFX = table.freeze({
+	Fist = table.freeze({
+		HitReaction = HitReactions.Fist,
+		Swing = SwingSFX.Fist,
+		Block = BlockSFX.Fist,
+		Parry = ParrySFX.Fist,
+		BlockBreak = makeEntry("rbxassetid://8400292687"),
+	}),
+	Weapons = table.freeze({
+		HitReaction = HitReactions.Sword,
+		Block = BlockSFX.Weapons,
+		Parry = ParrySFX.Weapons,
+		Equip = EquipSFX.Weapons,
+	}),
+})
+
+-- Legacy aliases keep existing callers working while all canonical sound data
+-- lives in the grouped tables above.
+local CombatPunch = {
+	["Perfect Block"] = usePool(BlockSFX.Fist),
+	["Block hit"] = usePool(BlockSFX.Fist),
+	["Block Break"] = CombatSFX.Fist.BlockBreak,
+	Swing = usePool(SwingSFX.Fist),
+}
+for Count = 1, 5 do
+	CombatPunch["Punch" .. Count] = usePool(HitReactions.Fist)
+end
+
+table.freeze(CombatPunch)
+
+local Combat = table.freeze({
+	Punch = CombatPunch,
+	Slam = Moves.Slam[1],
+	Slam2 = Moves.Slam[2],
+	Jump = MovementSFX.Jump[2],
+	Jump2 = MovementSFX.Jump[3],
+	Jump3 = MovementSFX.Jump[4],
+})
+
+local LegacyFootsteps = {}
+for Name, Pool in FootstepPools do
+	local Ids = {}
+	for Index, Entry in ipairs(Pool) do
+		Ids[Index] = Entry.Id
+	end
+	LegacyFootsteps[Name] = table.freeze(Ids)
+end
+LegacyFootsteps.Jump = table.freeze(table.clone(FootstepIds.Jump))
+table.freeze(LegacyFootsteps)
+
+local Result = {
+	MovementSFX = MovementSFX,
+	Footsteps = LegacyFootsteps,
+	HitReactions = HitReactions,
+	BlockSFX = BlockSFX,
+	ParrySFX = ParrySFX,
+	EquipSFX = EquipSFX,
+	Moves = Moves,
+	SwingSFX = SwingSFX,
+	Weapons = Weapons,
+	CombatSFX = CombatSFX,
+	InterfaceSFX = InterfaceSFX,
+	CreatureSFX = CreatureSFX,
+
+	-- Existing flat/legacy sound lookups.
+	Dash1 = MovementSFX.Dash[1],
+	Dash2 = MovementSFX.Dash[2],
+	Slide = MovementSFX.Slide,
+	Gui = table.freeze({["New Area"] = InterfaceSFX.AreaDiscovered}),
+	Dragon = CreatureSFX,
+	Combat = Combat,
+}
+
+return table.freeze(Result)

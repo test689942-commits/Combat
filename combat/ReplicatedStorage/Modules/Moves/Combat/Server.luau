@@ -157,6 +157,73 @@ function Combat.Punch(Character,Count,Type,MaxCount)
 	end
 end
 
+local HeavyCooldowns = setmetatable({}, {__mode = "k"})
+
+function Combat.Heavy(Character)
+	if Character == nil
+		or Character:FindFirstChildOfClass("Humanoid") == nil
+		or Character:FindFirstChild("HumanoidRootPart") == nil
+		or Character.Humanoid.Health <= 0
+		or Character:FindFirstChild("Stun") ~= nil
+		or Character:FindFirstChild("Blocking") ~= nil
+		or Character:FindFirstChild("DoingMove") ~= nil then
+		return
+	end
+
+	local now = os.clock()
+	if HeavyCooldowns[Character] ~= nil and HeavyCooldowns[Character] > now then
+		return
+	end
+
+	local Humrp = Character.HumanoidRootPart
+	local weapon = Weapons.GetForCharacter(Character)
+	local Count = weapon.MaxCombo
+	local hit = Weapons.GetHit(weapon, Count, Character)
+	HeavyCooldowns[Character] = now + hit.Cooldown
+
+	ClientRemote:FireAllClients(Character, "Client_Framework", "HeavySwing", Character)
+	task.wait(hit.HitboxDelay)
+
+	if Character.Parent == nil or Humrp.Parent ~= Character or Character.Humanoid.Health <= 0 then
+		return
+	end
+
+	if weapon.Interruptible and Character:FindFirstChild("Stun") ~= nil then
+		return
+	end
+
+	local Targets = HitDetection.GetCharactersInBox(HitDetection.GetAttackCFrame(Character, weapon.Hitbox.Offset), weapon.Hitbox.Size, buildHitIgnoreList(Character), "Punch")
+	for _, Enemy in ipairs(Targets) do
+		local EnemyHum = Enemy:FindFirstChildOfClass("Humanoid")
+		local EnemyHumrp = Enemy:FindFirstChild("HumanoidRootPart")
+
+		if EnemyHum ~= nil and EnemyHumrp ~= nil and EnemyHum.Health > 0 then
+			markInCombat(Character)
+			markInCombat(Enemy)
+
+			local cos = EnemyHumrp.CFrame.LookVector:Dot(CFrame.new(Humrp.Position, EnemyHumrp.Position).LookVector)
+			local Blocking = Enemy:FindFirstChild("Blocking")
+
+			if cos > 0.7 or Blocking == nil then
+				MainHandler.CreateTing("BoolValue", {Parent = Enemy, Name = "Stun"}, hit.Stun)
+				EnemyHum:TakeDamage(hit.Damage)
+				ClientRemote:FireAllClients(Character, "MainHandler", "DamageInd", Enemy, hit.Damage)
+				ClientRemote:FireAllClients(Character, "Client_Framework", "Effect", Enemy, Count, "Punch", weapon.MaxCombo, Character)
+
+				if hit.Knockback then
+					applyHitKnockback(Humrp, EnemyHumrp, hit.Knockback)
+				end
+			elseif Blocking:FindFirstChild("PB") ~= nil then
+				parryAttacker(Character, Enemy, Count, weapon.MaxCombo)
+			else
+				ClientRemote:FireAllClients(Character, "Client_Framework", "Effect", Enemy, Count, "Block Break", weapon.MaxCombo)
+				MainHandler.CreateTing("BoolValue", {Parent = Enemy, Name = "Stun"}, CombatInfo.Block.BreakStun)
+				Combat.DestroyBlock(Enemy)
+			end
+		end
+	end
+end
+
 function Combat.Up(Character,Count,MaxCount)
 	if Character == nil or not Weapons.GetForCharacter(Character).AllowUpperCut then
 		return

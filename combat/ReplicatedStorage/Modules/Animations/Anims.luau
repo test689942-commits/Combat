@@ -230,12 +230,12 @@ return table.freeze({
 		--// Fists / Gauntlets \\--
 
 		Fists = table.freeze({
-			Combat1 = "rbxassetid://131985175663129";
-			Combat2 = "rbxassetid://121603729341695";
-			Combat3 = "rbxassetid://98116898772008";
-			Combat4 = "rbxassetid://140218265622686";
-			Combat5 = "rbxassetid://90828170591239";
-			Critical = "rbxassetid://0";
+			Combat1 = "rbxassetid://87983887337399";
+			Combat2 = "rbxassetid://120965137778491";
+			Combat3 = "rbxassetid://94998986572005";
+			Combat4 = "rbxassetid://137380137439925";
+			Combat5 = "rbxassetid://0";
+			Critical = "rbxassetid://119486622865180";
 			Equip = "rbxassetid://0";
 			Blocking = "rbxassetid://129637547540775";
 			Idle = "rbxassetid://11361002294";

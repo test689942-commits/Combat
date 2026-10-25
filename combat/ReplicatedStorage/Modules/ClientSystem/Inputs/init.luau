@@ -4,7 +4,7 @@ local self = setmetatable({}, Inputs)
 
 export type InputProps = {
 	Name: string,
-	KeyCode: Enum.KeyCode?,
+	KeyCode: (Enum.KeyCode | Enum.UserInputType)?,
 	SubCategory: string?,
 	Callbacks: {
 		InputBegan: (InputObject: InputObject, Client: any) -> (...any),

@@ -5,7 +5,7 @@ local Moves = require(script.Parent.Parent.Parent:WaitForChild("Moves"))
 --// Variables \\--
 
 local CombatInfo = Moves.Combat
-local MaxCombo = CombatInfo.MaxCombo
+local MaxCombo = 4
 
 local combo = {}
 
@@ -48,6 +48,10 @@ return table.freeze({
 	MaxCombo = MaxCombo;
 	ComboWindow = CombatInfo.ComboWindow;
 	EffectFolder = "Fists";
+	SlashEvents = true;
+	SlashMarkers = table.freeze({"FistM1", "FistM2", "FistM3", "FistM4"});
+	SlashEffects = table.freeze({"1", "2", "3", "4"});
+	HeavySlashEvents = false;
 
 	Hitbox = table.freeze({
 		Offset = CombatInfo.HitboxOffset;

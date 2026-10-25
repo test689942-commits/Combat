@@ -216,6 +216,15 @@ local function emitSlashInstance(container: Instance): number
 end
 
 local function getSlashTemplate(effectName: string, category: string?, weaponName: string?): Instance?
+	if weaponName == "Fists" or category == "Fists" then
+		local combatSlashFolder = slashFolder:FindFirstChild("Combat")
+		local fistEffect = combatSlashFolder and combatSlashFolder:FindFirstChild(effectName)
+
+		if fistEffect then
+			return fistEffect
+		end
+	end
+
 	local weaponSubfolder = weaponName and (slashFolder:FindFirstChild(weaponName) or effectsFolder:FindFirstChild(weaponName))
 	local template = weaponSubfolder and weaponSubfolder:FindFirstChild(effectName)
 
@@ -515,6 +524,83 @@ function WeaponFX.Swing(character: Model, count: number)
 	if weapon.SlashEvents then
 		bindSlashMarkers(character, track, weapon, count)
 	else
+		scheduleSlashEffect(character, weapon, count, hit)
+	end
+
+	return hit
+end
+
+local function playCriticalTell(character: Model)
+	local head = character:FindFirstChild("Head")
+	local combatSlashFolder = slashFolder:FindFirstChild("Combat")
+	local criticalTemplate = (combatSlashFolder and combatSlashFolder:FindFirstChild("Critical"))
+		or effectsFolder:FindFirstChild("Critical", true)
+
+	if not head or not head:IsA("BasePart") or not criticalTemplate or not criticalTemplate:IsA("Attachment") then
+		return
+	end
+
+	local criticalEffect = criticalTemplate:Clone()
+	criticalEffect.Position = Vector3.new(0, head.Size.Y * 0.5 + 0.4, 0)
+	criticalEffect.Parent = head
+
+	local lifetime = emitSlashInstance(criticalEffect)
+	DebrisService:AddItem(criticalEffect, lifetime + 0.5)
+end
+
+function WeaponFX.HeavySwing(character: Model)
+	local weapon = Weapons.GetForCharacter(character)
+	local count = weapon.MaxCombo
+	local category = weapon.Category
+	local hit = Weapons.GetHit(weapon, count, character)
+	local humanoid, root = getCharacterParts(character)
+
+	if not humanoid then
+		return hit
+	end
+
+	clearSlashMarkers(character)
+	playCriticalTell(character)
+
+	-- The dedicated Critical slot is the Heavy animation. Existing zero-ID
+	-- slots fall back to that weapon's final combo animation until populated.
+	local track = loadTrack(humanoid, weapon, "Critical") or loadTrack(humanoid, weapon, "Combat" .. count)
+
+	if track then
+		track.Looped = false
+
+		if weapon.SwingPriority then
+			track.Priority = weapon.SwingPriority
+		end
+
+		local previousTrack = swingTracks[character]
+
+		if previousTrack and previousTrack ~= track and previousTrack.IsPlaying then
+			previousTrack:Stop(SWING_FADE_TIME)
+		end
+
+		track:Play(SWING_FADE_TIME, 1, hit.Speed)
+		swingTracks[character] = track
+		baseSpeeds[track] = hit.Speed
+	end
+
+	if hit.SwingSoundTime <= 0 then
+		playSounds(hit.SwingSounds, category, root)
+	else
+		task.delay(hit.SwingSoundTime, function()
+			if root.Parent then
+				playSounds(hit.SwingSounds, category, root)
+			end
+		end)
+	end
+
+	if hit.TrailStart then
+		runSwingWindow(character, hit.TrailStart, hit.TrailEnd)
+	end
+
+	if weapon.SlashEvents and weapon.HeavySlashEvents ~= false then
+		bindSlashMarkers(character, track, weapon, count)
+	elseif not weapon.SlashEvents then
 		scheduleSlashEffect(character, weapon, count, hit)
 	end
 

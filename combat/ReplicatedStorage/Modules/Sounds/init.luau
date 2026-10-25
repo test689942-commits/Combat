@@ -8,22 +8,29 @@ local ContentPA  = game:GetService("ContentProvider")
 Sounds.Cache = {};
 Sounds.Temp  = {};
 
+local PreloadedIds = {}
+
+local function QueueForPreload(Name, SoundId)
+	if type(SoundId) ~= "string" or SoundId == "" or SoundId == "rbxassetid://0" or PreloadedIds[SoundId] then
+		return
+	end
+
+	PreloadedIds[SoundId] = true
+
+	local Sound = Instance.new("Sound")
+	Sound.Name = tostring(Name)
+	Sound.SoundId = SoundId
+	self.Temp[#self.Temp + 1] = Sound
+end
+
 local function CollectForPreload(Node)
 	for Name, Value in next, Node do
 		if type(Value) == "table" and Value.Id then
-			local EntrySound   = Instance.new("Sound");
-			EntrySound.Name    = tostring(Name);
-			EntrySound.SoundId = Value.Id;
-
-			self.Temp[#self.Temp + 1] = EntrySound;
+			QueueForPreload(Name, Value.Id)
 		elseif type(Value) == "table" and Value.Pool == nil then
-			CollectForPreload(Value);
+			CollectForPreload(Value)
 		elseif type(Value) == "string" then
-			local Sound   = Instance.new("Sound");
-			Sound.Name 	  = tostring(Name);
-			Sound.SoundId = Value;
-
-			self.Temp[#self.Temp + 1] = Sound;
+			QueueForPreload(Name, Value)
 		end
 	end
 end
@@ -60,11 +67,11 @@ local function ResolveNode(Root: string, Category: string?)
 	return Node;
 end
 
-local function PickFromPool(Root: string, PoolPath: string)
-	local Pool = ResolveNode(Root, PoolPath);
+local function PickFromPool(Root: string, PoolSource)
+	local Pool = if type(PoolSource) == "table" then PoolSource else ResolveNode(Root, PoolSource)
 
 	if type(Pool) ~= "table" or #Pool == 0 then
-		warn(("Sound pool is missing or empty : %s | %s"):format(Root, PoolPath));
+		warn(("Sound pool is missing or empty : %s | %s"):format(Root, tostring(PoolSource)));
 		return nil;
 	end
 
@@ -76,11 +83,18 @@ local function ReadEntry(Entry, Root: string?)
 		return Entry, {};
 	end
 
+	-- Keep legacy `Moves.GroundSlam` lookups working with the new
+	-- `Moves.GroundSlam.Impact` configuration.
+	if Entry.Id == nil and type(Entry.Impact) == "table" then
+		Entry = Entry.Impact
+	end
+
 	local Properties = {};
 	local SoundId = Entry.Id;
+	local PoolSource = Entry.Pool or (if Entry.Id == nil and #Entry > 0 then Entry else nil)
 
-	if Entry.Pool and Root then
-		local Picked = PickFromPool(Root, Entry.Pool);
+	if PoolSource and Root then
+		local Picked = PickFromPool(Root, PoolSource);
 
 		if type(Picked) == "table" then
 			SoundId = Picked.Id;

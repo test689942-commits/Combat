@@ -11,6 +11,8 @@ Handler.Variables = {
 	prevTime = 0;
 	count = 0;
 	comboToken = 0;
+	heavyDebounce = false;
+	heavyToken = 0;
 }
 --// Modules \--
 
@@ -192,9 +194,43 @@ function Handler.Punch(Character)
 	end
 end
 
+function Handler.TryHeavy(Char)
+	if Char == nil
+		or Handler.Variables.heavyDebounce == true
+		or Handler.Variables.debounce == true
+			or Handler.CanDoCombat(Char) == false
+			or Char:FindFirstChild("DoingCombat") ~= nil then
+		return
+	end
+
+	local Humanoid = Char:FindFirstChildOfClass("Humanoid")
+	if Humanoid == nil or Humanoid.Health <= 0 or Char:FindFirstChild("HumanoidRootPart") == nil then
+		return
+	end
+
+	local weapon = Weapons.GetForCharacter(Char)
+	local heavyCount = weapon.MaxCombo
+	local hit = Weapons.GetHit(weapon, heavyCount, Char)
+
+	Handler.Variables.heavyDebounce = true
+	Handler.Variables.heavyToken += 1
+	local heavyToken = Handler.Variables.heavyToken
+
+	lockJump(Char)
+	UIFX("Heavy")
+	WeaponFX.ClientSwing(Char, hit)
+	ServerRemote:FireServer("Combat_Server", "Heavy", Char)
+
+	task.delay(hit.Cooldown, function()
+		if heavyToken == Handler.Variables.heavyToken then
+			Handler.Variables.heavyDebounce = false
+		end
+	end)
+end
+
 --// Run Checks For Comnbat //--
 function Handler.TryCombat(Char)
-	if Char ~= nil and Handler.Variables.debounce == false and Char:FindFirstChild("Stun") == nil then
+	if Char ~= nil and Handler.Variables.debounce == false and Handler.Variables.heavyDebounce == false and Char:FindFirstChild("Stun") == nil then
 		local weapon = Weapons.GetForCharacter(Char)
 		local MaxCount = weapon.MaxCombo
 
@@ -396,12 +432,10 @@ local function loadLocomotionTrack(Animator, weapon, animationName, priority, fa
 	return track
 end
 
-local function loadRunTrackForState(Animator, weapon, Character)
-	if Character:GetAttribute("Sprint") == true then
-		return loadLocomotionTrack(Animator, weapon, "Sprint", Enum.AnimationPriority.Movement)
-	end
-
-	return loadLocomotionTrack(Animator, weapon, "run", Enum.AnimationPriority.Movement, "Run")
+local function loadRunTrackForState(Animator, weapon)
+	-- Prefer each weapon's run animation for both normal running and sprinting.
+	-- Weapons without a valid run slot fall back to the shared Sprint animation.
+	return loadLocomotionTrack(Animator, weapon, "run", Enum.AnimationPriority.Movement, "Sprint")
 end
 
 local function updateIdle()
@@ -461,7 +495,7 @@ function Handler.StartIdle(Character)
 
 	IdleTrack = loadLocomotionTrack(Animator, weapon, IdleName, Enum.AnimationPriority.Idle, "Idle")
 	WalkTrack = loadLocomotionTrack(Animator, weapon, "walk", Enum.AnimationPriority.Movement, "Walk")
-	RunTrack = loadRunTrackForState(Animator, weapon, Character)
+	RunTrack = loadRunTrackForState(Animator, weapon)
 
 	IdleCharacter = Character
 	IdleHumanoid = Humanoid

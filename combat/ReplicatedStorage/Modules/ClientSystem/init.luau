@@ -80,6 +80,7 @@ System.Settings = {
 		Sprint  = Enum.KeyCode.W;
 		Slide   = Enum.KeyCode.LeftControl;
 		Jump    = Enum.KeyCode.Space;
+		Heavy   = Enum.UserInputType.MouseButton2;
 	};
 };
 
