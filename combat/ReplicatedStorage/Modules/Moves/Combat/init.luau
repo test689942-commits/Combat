@@ -27,6 +27,14 @@ local function PlayCombatSound(Category, Name, Parent, DebrisTime)
 	SoundObject:Destroy()
 end
 
+local function getBlockParrySoundCategory(Character)
+	if Character == nil or Weapons.GetEquippedTool(Character) == nil or Weapons.IsFists(Character) then
+		return "CombatSFX.Fist"
+	end
+
+	return "CombatSFX.Weapons"
+end
+
 function Beams(MainCFrame,Properties,width)
 	if MainCFrame ~= nil and Properties ~= nil then
 		for i=1,Properties.Count do
@@ -84,7 +92,7 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 			
 			MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Block","BlockHit"),Hum)
 			_G.EffectEmitter(EffFold.Block:WaitForChild("Blocking"),{Parent = Humrp,Debris = 1.5})
-			PlayCombatSound("Combat.Punch", "Block", Humrp, 1.5)
+			PlayCombatSound(getBlockParrySoundCategory(Character), "Block", Humrp, 1.5)
 			
 		elseif Type == "PB" then
 			
@@ -93,7 +101,7 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 				MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Block","BlockBreak"),Character.Humanoid)
 			end
 			_G.EffectEmitter(EffFold.Parry:WaitForChild("ATM"),{Parent = Humrp,Debris = 1.5})
-			PlayCombatSound("Combat.Punch", "Parry", Humrp, 1.5)
+			PlayCombatSound(getBlockParrySoundCategory(Character), "Parry", Humrp, 1.5)
 			
 		elseif Type == "Parry" then
 
@@ -118,7 +126,7 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 				_G.EffectEmitter(EffFold.Parry:WaitForChild("ATM"),{Parent = Char2.HumanoidRootPart,Debris = 1.5})
 			end
 
-			PlayCombatSound("Combat.Punch", "Parry", Humrp, 1.5)
+			PlayCombatSound(getBlockParrySoundCategory(Char2 or Character), "Parry", (Char2 and Char2:FindFirstChild("HumanoidRootPart")) or Humrp, 1.5)
 
 		elseif Type == "Up" then
 			
