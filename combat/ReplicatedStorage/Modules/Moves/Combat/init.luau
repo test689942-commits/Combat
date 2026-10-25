@@ -3,6 +3,7 @@ local Main = {}
 local Tween = game:GetService("TweenService")
 
 local MainHandler = require(game.ReplicatedStorage.Modules.Shared:WaitForChild("MainHandler"))
+local CombatInfo = require(game.ReplicatedStorage.Modules:WaitForChild("Moves")).Combat
 local RockModule = require(script:WaitForChild("RockModule"))
 
 local AnimationsModule = require(game.ReplicatedStorage.Modules:WaitForChild("Animations"))
@@ -299,9 +300,9 @@ function Main.Swing(Character,Count,Type)
 end
 
 function Main.HeavySwing(Character)
-	if Character ~= nil and Character:FindFirstChild("Humanoid") ~= nil and Character.Humanoid.Health > 0 and Character:FindFirstChild("HumanoidRootPart") ~= nil then
+	if Character ~= nil and Character:FindFirstChild("Humanoid") ~= nil and Character.Humanoid.Health > 0 and Character:FindFirstChild("HumanoidRootPart") ~= nil and Weapons.GetEquippedTool(Character) ~= nil then
 		local hit = WeaponFX.HeavySwing(Character)
-		MainHandler.CreateTing("BoolValue", {Parent = Character, Name = "DoingCombat"}, hit.ActionTime)
+		MainHandler.CreateTing("BoolValue", {Parent = Character, Name = "DoingCombat"}, hit.ActionTime + CombatInfo.CriticalWindup)
 	end
 end
 

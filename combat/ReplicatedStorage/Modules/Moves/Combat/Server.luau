@@ -166,10 +166,12 @@ function Combat.Heavy(Character)
 		or Character.Humanoid.Health <= 0
 		or Character:FindFirstChild("Stun") ~= nil
 		or Character:FindFirstChild("Blocking") ~= nil
-		or Character:FindFirstChild("DoingMove") ~= nil then
+		or Character:FindFirstChild("DoingMove") ~= nil
+		or Weapons.GetEquippedTool(Character) == nil then
 		return
 	end
 
+	local equippedTool = Weapons.GetEquippedTool(Character)
 	local now = os.clock()
 	if HeavyCooldowns[Character] ~= nil and HeavyCooldowns[Character] > now then
 		return
@@ -179,12 +181,17 @@ function Combat.Heavy(Character)
 	local weapon = Weapons.GetForCharacter(Character)
 	local Count = weapon.MaxCombo
 	local hit = Weapons.GetHit(weapon, Count, Character)
-	HeavyCooldowns[Character] = now + hit.Cooldown
+	local cooldown = math.max(hit.Cooldown, CombatInfo.CriticalCooldown)
+	HeavyCooldowns[Character] = now + cooldown
 
 	ClientRemote:FireAllClients(Character, "Client_Framework", "HeavySwing", Character)
-	task.wait(hit.HitboxDelay)
+	task.wait(CombatInfo.CriticalWindup + hit.HitboxDelay)
 
-	if Character.Parent == nil or Humrp.Parent ~= Character or Character.Humanoid.Health <= 0 then
+	if Character.Parent == nil
+		or Humrp.Parent ~= Character
+		or Character.Humanoid.Health <= 0
+		or equippedTool.Parent ~= Character
+		or Weapons.GetEquippedTool(Character) ~= equippedTool then
 		return
 	end
 

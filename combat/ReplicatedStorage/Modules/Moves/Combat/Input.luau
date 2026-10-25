@@ -142,7 +142,7 @@ local function releaseJumpLock()
 	end)
 end
 
-local function lockJump(Character)
+local function lockJump(Character, duration)
 	local Humanoid = Character:FindFirstChildOfClass("Humanoid")
 	if Humanoid == nil then
 		return
@@ -159,7 +159,7 @@ local function lockJump(Character)
 	JumpLockHumanoid = Humanoid
 	Humanoid:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
 
-	task.delay(JumpLockTime, function()
+	task.delay(duration or JumpLockTime, function()
 		if lockToken == JumpLockToken then
 			releaseJumpLock()
 		end
@@ -198,8 +198,9 @@ function Handler.TryHeavy(Char)
 	if Char == nil
 		or Handler.Variables.heavyDebounce == true
 		or Handler.Variables.debounce == true
-			or Handler.CanDoCombat(Char) == false
-			or Char:FindFirstChild("DoingCombat") ~= nil then
+		or Handler.CanDoCombat(Char) == false
+		or Char:FindFirstChild("DoingCombat") ~= nil
+		or Weapons.GetEquippedTool(Char) == nil then
 		return
 	end
 
@@ -216,12 +217,18 @@ function Handler.TryHeavy(Char)
 	Handler.Variables.heavyToken += 1
 	local heavyToken = Handler.Variables.heavyToken
 
-	lockJump(Char)
+	local cooldown = math.max(hit.Cooldown, CombatInfo.CriticalCooldown)
+	lockJump(Char, CombatInfo.CriticalWindup + hit.ActionTime)
 	UIFX("Heavy")
-	WeaponFX.ClientSwing(Char, hit)
 	ServerRemote:FireServer("Combat_Server", "Heavy", Char)
 
-	task.delay(hit.Cooldown, function()
+	task.delay(CombatInfo.CriticalWindup, function()
+		if Char.Parent ~= nil and Humanoid.Parent == Char and Humanoid.Health > 0 and Weapons.GetEquippedTool(Char) ~= nil then
+			WeaponFX.ClientSwing(Char, hit)
+		end
+	end)
+
+	task.delay(cooldown, function()
 		if heavyToken == Handler.Variables.heavyToken then
 			Handler.Variables.heavyDebounce = false
 		end

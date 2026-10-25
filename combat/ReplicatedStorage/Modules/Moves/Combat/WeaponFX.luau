@@ -10,6 +10,7 @@ local DebrisService = game:GetService("Debris")
 
 local Modules = ReplicatedStorage:WaitForChild("Modules")
 local Weapons = require(Modules:WaitForChild("Weapons"))
+local CombatInfo = require(Modules:WaitForChild("Moves")).Combat
 local Sounds = require(Modules:WaitForChild("Sounds"))
 local AnimationsModule = require(Modules:WaitForChild("Animations"))
 
@@ -572,8 +573,8 @@ local function playCriticalTell(character: Model)
 		highlight.Name = "CriticalTell"
 		highlight.Adornee = character
 		highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-		highlight.FillColor = Color3.fromRGB(255, 196, 72)
-		highlight.OutlineColor = Color3.fromRGB(255, 242, 196)
+		highlight.FillColor = Color3.fromRGB(255, 35, 35)
+		highlight.OutlineColor = Color3.fromRGB(255, 145, 145)
 		highlight.FillTransparency = 0.55
 		highlight.OutlineTransparency = 0.05
 		highlight.Parent = character
@@ -599,7 +600,7 @@ local function playCriticalTell(character: Model)
 		emitter.Parent = criticalEffect
 	end
 
-	criticalEffect.Position = Vector3.new(0, head.Size.Y * 0.5 + 0.4, 0)
+	criticalEffect.Position = Vector3.new(0, head.Size.Y * 0.5 + 0.9, 0)
 	criticalEffect.Parent = head
 
 	local lifetime = emitSlashInstance(criticalEffect)
@@ -612,55 +613,66 @@ function WeaponFX.HeavySwing(character: Model)
 	local category = weapon.Category
 	local hit = Weapons.GetHit(weapon, count, character)
 	local humanoid, root = getCharacterParts(character)
+	local equippedTool = Weapons.GetEquippedTool(character)
 
-	if not humanoid then
+	if not humanoid or not equippedTool then
 		return hit
 	end
 
 	clearSlashMarkers(character)
 	playCriticalTell(character)
 
-	-- The dedicated Critical slot is the Heavy animation. Existing zero-ID
-	-- slots fall back to that weapon's final combo animation until populated.
-	local track = loadTrack(humanoid, weapon, "Critical") or loadTrack(humanoid, weapon, "Combat" .. count)
-
-	if track then
-		track.Looped = false
-
-		if weapon.SwingPriority then
-			track.Priority = weapon.SwingPriority
+	task.delay(CombatInfo.CriticalWindup, function()
+		if character.Parent == nil
+			or humanoid.Parent ~= character
+			or humanoid.Health <= 0
+			or equippedTool.Parent ~= character
+			or Weapons.GetEquippedTool(character) ~= equippedTool then
+			return
 		end
 
-		local previousTrack = swingTracks[character]
+		-- The dedicated Critical slot is the Heavy animation. Existing zero-ID
+		-- slots fall back to that weapon's final combo animation until populated.
+		local track = loadTrack(humanoid, weapon, "Critical") or loadTrack(humanoid, weapon, "Combat" .. count)
 
-		if previousTrack and previousTrack ~= track and previousTrack.IsPlaying then
-			previousTrack:Stop(SWING_FADE_TIME)
-		end
+		if track then
+			track.Looped = false
 
-		track:Play(SWING_FADE_TIME, 1, hit.Speed)
-		swingTracks[character] = track
-		baseSpeeds[track] = hit.Speed
-	end
-
-	if hit.SwingSoundTime <= 0 then
-		playSounds(hit.SwingSounds, category, root)
-	else
-		task.delay(hit.SwingSoundTime, function()
-			if root.Parent then
-				playSounds(hit.SwingSounds, category, root)
+			if weapon.SwingPriority then
+				track.Priority = weapon.SwingPriority
 			end
-		end)
-	end
 
-	if hit.TrailStart then
-		runSwingWindow(character, hit.TrailStart, hit.TrailEnd)
-	end
+			local previousTrack = swingTracks[character]
 
-	if weapon.SlashEvents and weapon.HeavySlashEvents ~= false then
-		bindSlashMarkers(character, track, weapon, count)
-	elseif not weapon.SlashEvents then
-		scheduleSlashEffect(character, weapon, count, hit)
-	end
+			if previousTrack and previousTrack ~= track and previousTrack.IsPlaying then
+				previousTrack:Stop(SWING_FADE_TIME)
+			end
+
+			track:Play(SWING_FADE_TIME, 1, hit.Speed)
+			swingTracks[character] = track
+			baseSpeeds[track] = hit.Speed
+		end
+
+		if hit.SwingSoundTime <= 0 then
+			playSounds(hit.SwingSounds, category, root)
+		else
+			task.delay(hit.SwingSoundTime, function()
+				if root.Parent then
+					playSounds(hit.SwingSounds, category, root)
+				end
+			end)
+		end
+
+		if hit.TrailStart then
+			runSwingWindow(character, hit.TrailStart, hit.TrailEnd)
+		end
+
+		if weapon.SlashEvents and weapon.HeavySlashEvents ~= false then
+			bindSlashMarkers(character, track, weapon, count)
+		elseif not weapon.SlashEvents then
+			scheduleSlashEffect(character, weapon, count, hit)
+		end
+	end)
 
 	return hit
 end
