@@ -181,7 +181,7 @@ Movement.SetSprint = function(active: boolean)
 	end
 end
 
---// Slide (Audio is registered as Sounds/SFX.Slide) \\--
+--// Slide (Audio is registered as Sounds/SFX.MovementSFX.Slide) \\--
 
 Movement.Slide = function()
 	local Character: Model = Client.Character
@@ -224,7 +224,7 @@ Movement.Slide = function()
 	slideVelocity.Parent = Root
 	activeSlideVelocity = slideVelocity
 
-	local slideSound = Client.Sounds.GetSound("SFX", "Slide")
+	local slideSound = Client.Sounds.GetSound("SFX", "Slide", "MovementSFX")
 	if slideSound then
 		slideSound.Volume = 0.65
 		slideSound.Parent = Root
