@@ -83,7 +83,7 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 			
 			MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Block","BlockHit"),Hum)
 			_G.EffectEmitter(EffFold.Block:WaitForChild("Blocking"),{Parent = Humrp,Debris = 1.5})
-			PlayCombatSound("Combat.Punch", "Block hit", Humrp, 1.5)
+			PlayCombatSound("Combat.Punch", "Block", Humrp, 1.5)
 			
 		elseif Type == "PB" then
 			
@@ -91,8 +91,8 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 				MainHandler.StopAnimation("Combat"..Count,Character.Humanoid)
 				MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Block","BlockBreak"),Character.Humanoid)
 			end
-			_G.EffectEmitter(EffFold["Perfect Block"]:WaitForChild("Attachment"),{Parent = Humrp,Debris = 1.5})
-			PlayCombatSound("Combat.Punch", "Perfect Block", Humrp, 1.5)
+			_G.EffectEmitter(EffFold.Parry:WaitForChild("ATM"),{Parent = Humrp,Debris = 1.5})
+			PlayCombatSound("Combat.Punch", "Parry", Humrp, 1.5)
 			
 		elseif Type == "Parry" then
 
@@ -117,7 +117,7 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 				_G.EffectEmitter(EffFold.Parry:WaitForChild("ATM"),{Parent = Char2.HumanoidRootPart,Debris = 1.5})
 			end
 
-			PlayCombatSound("Combat.Punch", "Perfect Block", Humrp, 1.5)
+			PlayCombatSound("Combat.Punch", "Parry", Humrp, 1.5)
 
 		elseif Type == "Up" then
 			

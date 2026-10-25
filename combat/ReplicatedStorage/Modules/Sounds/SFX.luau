@@ -534,8 +534,8 @@ local CombatSFX = table.freeze({
 -- Legacy aliases keep existing callers working while all canonical sound data
 -- lives in the grouped tables above.
 local CombatPunch = {
-	["Perfect Block"] = usePool(BlockSFX.Fist),
-	["Block hit"] = usePool(BlockSFX.Fist),
+	Block = usePool(BlockSFX.Fist),
+	Parry = usePool(ParrySFX.Fist),
 	["Block Break"] = CombatSFX.Fist.BlockBreak,
 	Swing = usePool(SwingSFX.Fist),
 }

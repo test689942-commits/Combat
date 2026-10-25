@@ -419,19 +419,24 @@ local function bindSlashMarkers(character: Model, track: AnimationTrack?, weapon
 	local entry = {
 		connections = {},
 		stopped = nil,
+		triggered = {},
 	}
 
-	local triggered = {}
+	function entry.triggerEffect(effectName: string)
+		if entry.triggered[effectName] then
+			return
+		end
+
+		entry.triggered[effectName] = true
+		playSlashEffect(character, effectName, weapon.Category, weapon.Name)
+	end
 
 	local function triggerMarker(markerName: string)
 		local effectName = resolveSlashEffect(weapon, markerName, count)
 
-		if effectName == nil or triggered[effectName] then
-			return
+		if effectName ~= nil then
+			entry.triggerEffect(effectName)
 		end
-
-		triggered[effectName] = true
-		playSlashEffect(character, effectName, weapon.Category, weapon.Name)
 	end
 
 	for _, markerName in ipairs(getSlashMarkerNames(weapon)) do
@@ -461,9 +466,11 @@ local function bindSlashMarkers(character: Model, track: AnimationTrack?, weapon
 	end)
 
 	slashMarkers[character] = entry
+
+	return entry
 end
 
-local function scheduleSlashEffect(character: Model, weapon, count: number, hit)
+local function scheduleSlashEffect(character: Model, weapon, count: number, hit, triggerEffect)
 	local effectName = weapon.SlashEffects and weapon.SlashEffects[count]
 
 	if not effectName then
@@ -471,7 +478,11 @@ local function scheduleSlashEffect(character: Model, weapon, count: number, hit)
 	end
 
 	task.delay(math.max(0, hit.ImpactTime - SLASH_LEAD), function()
-		playSlashEffect(character, effectName, weapon.Category, weapon.Name)
+		if triggerEffect then
+			triggerEffect(effectName)
+		else
+			playSlashEffect(character, effectName, weapon.Category, weapon.Name)
+		end
 	end)
 end
 
@@ -488,6 +499,7 @@ function WeaponFX.Swing(character: Model, count: number)
 	end
 
 	local track = loadTrack(humanoid, weapon, "Combat" .. count)
+	local markerEntry = nil
 
 	if track then
 		track.Looped = false
@@ -502,9 +514,17 @@ function WeaponFX.Swing(character: Model, count: number)
 			previousTrack:Stop(SWING_FADE_TIME)
 		end
 
-		track:Play(SWING_FADE_TIME, 1, hit.Speed)
 		swingTracks[character] = track
 		baseSpeeds[track] = hit.Speed
+
+		-- Subscribe before playback so an early keyframe/marker cannot be missed.
+		if weapon.SlashEvents then
+			markerEntry = bindSlashMarkers(character, track, weapon, count)
+		end
+
+		track:Play(SWING_FADE_TIME, 1, hit.Speed)
+	elseif weapon.SlashEvents then
+		bindSlashMarkers(character, nil, weapon, count)
 	end
 
 	if hit.SwingSoundTime <= 0 then
@@ -521,9 +541,11 @@ function WeaponFX.Swing(character: Model, count: number)
 		runSwingWindow(character, hit.TrailStart, hit.TrailEnd)
 	end
 
-	if weapon.SlashEvents then
-		bindSlashMarkers(character, track, weapon, count)
-	else
+	if weapon.Name == "Fists" then
+		-- Fist animation assets can lack named markers; use the combo impact time
+		-- as a deduplicated fallback while still honoring FistM1-FistM4 markers.
+		scheduleSlashEffect(character, weapon, count, hit, markerEntry and markerEntry.triggerEffect)
+	elseif not weapon.SlashEvents then
 		scheduleSlashEffect(character, weapon, count, hit)
 	end
 
@@ -533,14 +555,50 @@ end
 local function playCriticalTell(character: Model)
 	local head = character:FindFirstChild("Head")
 	local combatSlashFolder = slashFolder:FindFirstChild("Combat")
-	local criticalTemplate = (combatSlashFolder and combatSlashFolder:FindFirstChild("Critical"))
-		or effectsFolder:FindFirstChild("Critical", true)
+	local criticalTemplate = combatSlashFolder and combatSlashFolder:FindFirstChild("Critical")
 
-	if not head or not head:IsA("BasePart") or not criticalTemplate or not criticalTemplate:IsA("Attachment") then
+	if not criticalTemplate or not (criticalTemplate:IsA("Attachment") or criticalTemplate:IsA("ParticleEmitter")) then
+		criticalTemplate = nil
+		for _, candidate in ipairs(effectsFolder:GetDescendants()) do
+			if candidate.Name == "Critical" and (candidate:IsA("Attachment") or candidate:IsA("ParticleEmitter")) then
+				criticalTemplate = candidate
+				break
+			end
+		end
+	end
+
+	if not criticalTemplate then
+		local highlight = Instance.new("Highlight")
+		highlight.Name = "CriticalTell"
+		highlight.Adornee = character
+		highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+		highlight.FillColor = Color3.fromRGB(255, 196, 72)
+		highlight.OutlineColor = Color3.fromRGB(255, 242, 196)
+		highlight.FillTransparency = 0.55
+		highlight.OutlineTransparency = 0.05
+		highlight.Parent = character
+		TweenService:Create(highlight, TweenInfo.new(0.65, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			FillTransparency = 1,
+			OutlineTransparency = 1,
+		}):Play()
+		DebrisService:AddItem(highlight, 0.75)
 		return
 	end
 
-	local criticalEffect = criticalTemplate:Clone()
+	if not head or not head:IsA("BasePart") then
+		return
+	end
+
+	local criticalEffect: Attachment
+	if criticalTemplate:IsA("Attachment") then
+		criticalEffect = criticalTemplate:Clone()
+	else
+		criticalEffect = Instance.new("Attachment")
+		criticalEffect.Name = "CriticalTell"
+		local emitter = criticalTemplate:Clone()
+		emitter.Parent = criticalEffect
+	end
+
 	criticalEffect.Position = Vector3.new(0, head.Size.Y * 0.5 + 0.4, 0)
 	criticalEffect.Parent = head
 
