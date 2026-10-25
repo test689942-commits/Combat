@@ -100,7 +100,7 @@ local function ReadEntry(Entry, Root: string?)
 			SoundId = Picked.Id;
 
 			for Property, Value in next, Picked do
-				if Property ~= "Id" then
+				if type(Property) == "string" and Property ~= "Id" then
 					Properties[Property] = Value;
 				end
 			end
@@ -110,7 +110,7 @@ local function ReadEntry(Entry, Root: string?)
 	end
 
 	for Property, Value in next, Entry do
-		if Property ~= "Id" and Property ~= "Pool" then
+		if type(Property) == "string" and Property ~= "Id" and Property ~= "Pool" then
 			Properties[Property] = Value;
 		end
 	end
