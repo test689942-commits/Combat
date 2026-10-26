@@ -163,14 +163,64 @@ do
 
 	local function getAirborneTargets(character: Model, root: BasePart, settings)
 		local airborneTargets = {}
+		local liftHeight = CombatInfo.UpperCut and CombatInfo.UpperCut.LiftHeight or 0
+		local searchRadius = settings.Radius + settings.VerticalReach + liftHeight
+		local nearbyCharacters = HitDetection.GetCharactersInSphere(
+			root.Position,
+			searchRadius,
+			{workspace.Effects, workspace.Debris, character},
+			"GroundSlamAirTargets"
+		)
 
-		for _, target in ipairs(getTargets(character, root, settings)) do
-			if target.Root:FindFirstChild("AirPos") then
-				table.insert(airborneTargets, target)
+		for _, model in ipairs(nearbyCharacters) do
+			local humanoid = model:FindFirstChildOfClass("Humanoid")
+			local targetRoot = model:FindFirstChild("HumanoidRootPart")
+
+			if humanoid and targetRoot and humanoid.Health > 0 and targetRoot:FindFirstChild("AirPos") then
+				local offset = targetRoot.Position - root.Position
+				local horizontalDistance = (offset * Vector3.new(1, 0, 1)).Magnitude
+
+				if horizontalDistance <= settings.Radius then
+					table.insert(airborneTargets, {
+						Model = model,
+						Humanoid = humanoid,
+						Root = targetRoot,
+					})
+				end
 			end
 		end
 
 		return airborneTargets
+	end
+
+	local function releaseAirHold(targetRoot: BasePart, slamDown: boolean?, sourceRoot: BasePart?)
+		local airHold = targetRoot:FindFirstChild("AirPos")
+
+		if airHold then
+			local attachment = airHold.Attachment0
+			airHold:Destroy()
+
+			if attachment and attachment.Parent then
+				attachment:Destroy()
+			end
+		end
+
+		if slamDown then
+			local away = if sourceRoot then targetRoot.Position - sourceRoot.Position else targetRoot.CFrame.LookVector
+			away = Vector3.new(away.X, 0, away.Z)
+			local direction = if away.Magnitude > 0.1 then away.Unit else Vector3.zero
+			local slamVelocity = Instance.new("BodyVelocity")
+			slamVelocity.Name = "GroundSlamDrop"
+			slamVelocity.MaxForce = Vector3.new(4e4, 8e4, 4e4)
+			slamVelocity.Velocity = direction * 10 + Vector3.new(0, -85, 0)
+			slamVelocity.Parent = targetRoot
+			DebrisService:AddItem(slamVelocity, 0.3)
+
+			local humanoid = targetRoot.Parent and targetRoot.Parent:FindFirstChildOfClass("Humanoid")
+			if humanoid and humanoid.Health > 0 then
+				humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+			end
+		end
 	end
 
 	local function canLand(character: Model, humanoid: Humanoid, root: BasePart): boolean
@@ -216,6 +266,9 @@ do
 
 		if #airborneTargets > 0 then
 			if MoveHit.TryParryGroup(character, airborneTargets, settings.EntryName) then
+				for _, target in ipairs(airborneTargets) do
+					releaseAirHold(target.Root)
+				end
 				dropFromAirCombat(character, root)
 				return
 			end
@@ -223,7 +276,19 @@ do
 			CombatServer.UpDown(character, CombatInfo.MaxCombo, CombatInfo.MaxCombo, true)
 
 			for _, target in ipairs(airborneTargets) do
-				if not target.Root:FindFirstChild("AirPos") then
+				if target.Model.Parent and target.Humanoid.Health > 0 then
+					if target.Root:FindFirstChild("AirPos") then
+						if not MoveHit.ApplyDamage(character, target, settings.Damage, settings.StunTime, settings.EntryName) then
+							for _, airborneTarget in ipairs(airborneTargets) do
+								releaseAirHold(airborneTarget.Root)
+							end
+							dropFromAirCombat(character, root)
+							return
+						end
+
+						releaseAirHold(target.Root, true, root)
+					end
+
 					effectsRemote:FireAllClients(settings.EntryName, {root = target.Root, char = character})
 				end
 			end

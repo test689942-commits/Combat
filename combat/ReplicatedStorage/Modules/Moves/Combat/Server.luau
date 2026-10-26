@@ -428,7 +428,12 @@ function Combat.UpDown(Character,Count,MaxCount,SkipSwing)
 					local airHold = EnemyHumrp:FindFirstChild("AirPos")
 
 					if airHold then
+						local airAttachment = airHold.Attachment0
 						airHold:Destroy()
+
+						if airAttachment and airAttachment.Parent then
+							airAttachment:Destroy()
+						end
 					end
 
 					MainHandler.CreateTing("BoolValue", {Parent = Enemy, Name = "Stun"}, CombatInfo.DownSlam.Stun)
