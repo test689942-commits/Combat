@@ -45,11 +45,8 @@ local SwingSFX = table.freeze({
 })
 
 local HitReactions = table.freeze({
-	Sword = table.freeze({
-		Blade = makePool({makeEntry("rbxassetid://16302465188", {Volume = 0.35})}),
-		Blunt = makePool({makeEntry("rbxassetid://15895795139", {Volume = 0.35})}),
-	}),
 	Fist = makePool({"rbxassetid://131237241"}),
+	Weapons = makePool({"rbxassetid://116023093845929"}),
 })
 
 local BlockSFX = table.freeze({
@@ -411,70 +408,70 @@ local Weapons = table.freeze({
 	}),
 	Greatsword = table.freeze({
 		Swing = usePool(SwingSFX.Heavy, 1),
-		Hit = usePool(HitReactions.Sword.Blade, 1),
+		Hit = usePool(HitReactions.Weapons, 1),
 		Block = usePool(BlockSFX.Weapons),
 		Parry = usePool(ParrySFX.Weapons),
 		Equip = usePool(EquipSFX.Weapons, 1),
 	}),
 	Longsword = table.freeze({
 		Swing = usePool(SwingSFX.Medium, 1.2),
-		Hit = usePool(HitReactions.Sword.Blade, 1.1),
+		Hit = usePool(HitReactions.Weapons, 1.1),
 		Block = usePool(BlockSFX.Weapons),
 		Parry = usePool(ParrySFX.Weapons),
 		Equip = usePool(EquipSFX.Weapons, 1.1),
 	}),
 	Staff = table.freeze({
 		Swing = usePool(SwingSFX.Light, 1.1),
-		Hit = usePool(HitReactions.Sword.Blunt, 1.2),
+		Hit = usePool(HitReactions.Weapons, 1.2),
 		Block = usePool(BlockSFX.Weapons),
 		Parry = usePool(ParrySFX.Weapons),
 		Equip = usePool(EquipSFX.Weapons, 1.2),
 	}),
 	Axe = table.freeze({
 		Swing = usePool(SwingSFX.Heavy, 1.1),
-		Hit = usePool(HitReactions.Sword.Blade, 0.85),
+		Hit = usePool(HitReactions.Weapons, 0.85),
 		Block = usePool(BlockSFX.Weapons),
 		Parry = usePool(ParrySFX.Weapons),
 		Equip = usePool(EquipSFX.Weapons, 0.95),
 	}),
 	Katana = table.freeze({
 		Swing = usePool(SwingSFX.Light, 1.35),
-		Hit = usePool(HitReactions.Sword.Blade, 1.2),
+		Hit = usePool(HitReactions.Weapons, 1.2),
 		Block = usePool(BlockSFX.Weapons),
 		Parry = usePool(ParrySFX.Weapons),
 		Equip = usePool(EquipSFX.Weapons, 1.2),
 	}),
 	DualKatana = table.freeze({
 		Swing = usePool(SwingSFX.Light, 1.4),
-		Hit = usePool(HitReactions.Sword.Blade, 1.25),
+		Hit = usePool(HitReactions.Weapons, 1.25),
 		Block = usePool(BlockSFX.Weapons),
 		Parry = usePool(ParrySFX.Weapons),
 		Equip = usePool(EquipSFX.Weapons, 1.25),
 	}),
 	Dagger = table.freeze({
 		Swing = usePool(SwingSFX.Fist, 1.55),
-		Hit = usePool(HitReactions.Sword.Blade, 1.35),
+		Hit = usePool(HitReactions.Weapons, 1.35),
 		Block = usePool(BlockSFX.Weapons),
 		Parry = usePool(ParrySFX.Weapons),
 		Equip = usePool(EquipSFX.Weapons, 1.4),
 	}),
 	MinuteDagger = table.freeze({
 		Swing = usePool(SwingSFX.Fist, 1.55),
-		Hit = usePool(HitReactions.Sword.Blade, 1.35),
+		Hit = usePool(HitReactions.Weapons, 1.35),
 		Block = usePool(BlockSFX.Weapons),
 		Parry = usePool(ParrySFX.Weapons),
 		Equip = usePool(EquipSFX.Weapons, 1.4),
 	}),
 	Spear = table.freeze({
 		Swing = usePool(SwingSFX.Spear, 1),
-		Hit = usePool(HitReactions.Sword.Blade, 1),
+		Hit = usePool(HitReactions.Weapons, 1),
 		Block = usePool(BlockSFX.Weapons),
 		Parry = usePool(ParrySFX.Weapons),
 		Equip = usePool(EquipSFX.Weapons, 1),
 	}),
 	Scythe = table.freeze({
 		Swing = usePool(SwingSFX.Heavy, 1),
-		Hit = usePool(HitReactions.Sword.Blade, 0.95),
+		Hit = usePool(HitReactions.Weapons, 0.95),
 		Block = usePool(BlockSFX.Weapons),
 		Parry = usePool(ParrySFX.Weapons),
 		Equip = usePool(EquipSFX.Weapons, 0.95),
@@ -489,23 +486,23 @@ local Moves = table.freeze({
 	}),
 	DaggerThrow = table.freeze({
 		Throw = usePool(SwingSFX.Light, 1.3),
-		Hit = usePool(HitReactions.Sword.Blade),
+		Hit = usePool(HitReactions.Weapons),
 	}),
 	Cut = table.freeze({
 		Slash = usePool(SwingSFX.Light),
-		Impact = usePool(HitReactions.Sword.Blade),
+		Impact = usePool(HitReactions.Weapons),
 	}),
 	DaggerDance = table.freeze({
 		Slash = usePool(SwingSFX.Light, 1.35),
-		Impact = usePool(HitReactions.Sword.Blade),
+		Impact = usePool(HitReactions.Weapons),
 	}),
 	Thrust = table.freeze({
 		Slash = usePool(SwingSFX.Heavy, 1.1),
-		Impact = usePool(HitReactions.Sword.Blade, 0.85),
+		Impact = usePool(HitReactions.Weapons, 0.85),
 	}),
 	Spin = table.freeze({
 		Slash = usePool(SwingSFX.Heavy, 1.1),
-		Impact = usePool(HitReactions.Sword.Blade, 0.85),
+		Impact = usePool(HitReactions.Weapons, 0.85),
 	}),
 	Slam = makePool({"rbxassetid://5522448086", "rbxassetid://6435892716"}),
 	Leap = table.freeze({
@@ -524,7 +521,7 @@ local CombatSFX = table.freeze({
 		BlockBreak = makeEntry("rbxassetid://8400292687"),
 	}),
 	Weapons = table.freeze({
-		HitReaction = HitReactions.Sword,
+		HitReaction = HitReactions.Weapons,
 		Block = BlockSFX.Weapons,
 		Parry = ParrySFX.Weapons,
 		Equip = EquipSFX.Weapons,
