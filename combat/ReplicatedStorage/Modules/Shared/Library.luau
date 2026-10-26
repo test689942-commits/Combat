@@ -3,7 +3,7 @@ module.__index = module
 local self = setmetatable({}, module)
 
 local Utilities 	   = require(script.Parent.Utilities)
-local AnimationsModule = require(script.Parent.Animations);
+local AnimationsModule = require(script.Parent.Parent:WaitForChild("Animations"));
 
 --// Character Function Library \\--
 

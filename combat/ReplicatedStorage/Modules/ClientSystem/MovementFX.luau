@@ -6,7 +6,7 @@ local Debris = game:GetService("Debris")
 --// Modules \\--
 
 local Modules = ReplicatedStorage:WaitForChild("Modules")
-local EffectsBase = require(Modules:WaitForChild("EffectsBase"))
+local EffectsBase = require(Modules:WaitForChild("Shared"):WaitForChild("EffectsBase"))
 local EmitModule = EffectsBase.EmitModule
 
 --// MovementFX \\--

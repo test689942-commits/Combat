@@ -19,8 +19,8 @@ System.Service.ReplicatedStorage = game:GetService("ReplicatedStorage");
 System.Service.Lighting 		 = game:GetService("Lighting")
 System.Service.ContextActionService = game:GetService("ContextActionService")
 
-System.Utilities  = require(script.Parent:WaitForChild("Utilities"));
-System.Library 	  = require(script.Parent:WaitForChild("Library"));
+System.Utilities  = require(script.Parent:WaitForChild("Shared"):WaitForChild("Utilities"));
+System.Library 	  = require(script.Parent:WaitForChild("Shared"):WaitForChild("Library"));
 System.Animations = require(script.Parent:WaitForChild("Animations"));
 
 System.Sounds     = require(script.Parent:WaitForChild("Sounds"));

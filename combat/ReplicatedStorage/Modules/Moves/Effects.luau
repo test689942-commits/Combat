@@ -9,7 +9,7 @@ local TweenService = game:GetService("TweenService")
 
 local Modules = ReplicatedStorage:WaitForChild("Modules")
 local AnimationsModule = require(Modules:WaitForChild("Animations"))
-local EffectsBase = require(Modules:WaitForChild("EffectsBase"))
+local EffectsBase = require(Modules:WaitForChild("Shared"):WaitForChild("EffectsBase"))
 local Sounds = require(Modules:WaitForChild("Sounds"))
 local MovesInfo = require(script.Parent)
 

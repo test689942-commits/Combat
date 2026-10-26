@@ -5,8 +5,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 --// Modules \\--
 
 local Client = require(ReplicatedStorage.Modules:WaitForChild("ClientSystem"))
-local EffectsBase = require(ReplicatedStorage.Modules:WaitForChild("EffectsBase"))
-local AfterImages = require(ReplicatedStorage.Modules:WaitForChild("AfterImages"))
+local EffectsBase = require(ReplicatedStorage.Modules:WaitForChild("Shared"):WaitForChild("EffectsBase"))
+local AfterImages = require(ReplicatedStorage.Modules:WaitForChild("Shared"):WaitForChild("AfterImages"))
 local Info = require(script.Parent).Dash
 
 --// Variables \\--

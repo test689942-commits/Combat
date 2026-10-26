@@ -7,6 +7,7 @@ local DebrisService = game:GetService("Debris")
 
 local MainHandler = require(ReplicatedStorage.Modules.Shared:WaitForChild("MainHandler"))
 local HitDetection = require(ReplicatedStorage.Modules.Shared:WaitForChild("HitDetection"))
+local Ragdoll = require(ReplicatedStorage.Modules.Shared:WaitForChild("Ragdoll"))
 local MovesInfo = require(script.Parent)
 local CombatServer = require(script.Parent:WaitForChild("Combat"):WaitForChild("Server"))
 
@@ -180,11 +181,11 @@ function MoveHit.ApplyDamage(character: Model, target, damage: number, stunTime:
 		CombatServer.DestroyBlock(target.Model)
 	end
 
-	target.Humanoid:TakeDamage(damage)
-
-	handlerClient:FireAllClients(character, "MainHandler", "DamageInd", target.Model, damage)
-
 	MainHandler.CreateTing("BoolValue", {Parent = target.Model, Name = "Stun"}, stunTime)
+	Ragdoll.RagdollDummy(target.Model, stunTime)
+
+	target.Humanoid:TakeDamage(damage)
+	handlerClient:FireAllClients(character, "MainHandler", "DamageInd", target.Model, damage)
 
 	return true
 end

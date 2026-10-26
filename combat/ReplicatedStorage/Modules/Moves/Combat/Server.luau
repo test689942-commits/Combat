@@ -8,6 +8,7 @@ local MainHandler = require(game.ReplicatedStorage.Modules.Shared:WaitForChild("
 local AnimationsModule = require(game.ReplicatedStorage.Modules:WaitForChild("Animations"))
 local Weapons = require(game.ReplicatedStorage.Modules:WaitForChild("Weapons"))
 local HitDetection = require(game.ReplicatedStorage.Modules.Shared:WaitForChild("HitDetection"))
+local Ragdoll = require(game.ReplicatedStorage.Modules.Shared:WaitForChild("Ragdoll"))
 
 
 --// Remotes //--
@@ -123,6 +124,7 @@ function Combat.Punch(Character,Count,Type,MaxCount)
 						(cos <= 0.7 and Enemy:FindFirstChild("Blocking") == nil) then
 
 						MainHandler.CreateTing("BoolValue", {Parent = Enemy, Name = "Stun"}, hit.Stun)
+						Ragdoll.RagdollDummy(Enemy, hit.Stun)
 
 						EnemyHum:TakeDamage(hit.Damage)
 						ClientRemote:FireAllClients(Character,"MainHandler","DamageInd",Enemy,hit.Damage)
@@ -213,6 +215,7 @@ function Combat.Heavy(Character)
 
 			if cos > 0.7 or Blocking == nil then
 				MainHandler.CreateTing("BoolValue", {Parent = Enemy, Name = "Stun"}, hit.Stun)
+				Ragdoll.RagdollDummy(Enemy, hit.Stun)
 				EnemyHum:TakeDamage(hit.Damage)
 				ClientRemote:FireAllClients(Character, "MainHandler", "DamageInd", Enemy, hit.Damage)
 				ClientRemote:FireAllClients(Character, "Client_Framework", "Effect", Enemy, Count, "Punch", weapon.MaxCombo, Character)
@@ -274,6 +277,7 @@ function Combat.Up(Character,Count,MaxCount)
 					local Length = CombatInfo.UpperCut.AirTime
 					
 					MainHandler.CreateTing("BoolValue", {Parent = Enemy, Name = "Stun"}, Length)
+					Ragdoll.RagdollDummy(Enemy, Length)
 					
 					MainHandler.CreateTing("BoolValue", {Parent = Character, Name = "Stun"}, CombatInfo.UpperCut.AttackerStun)
 					
@@ -448,6 +452,7 @@ function Combat.UpDown(Character,Count,MaxCount,SkipSwing,TargetOverride)
 					end
 
 					MainHandler.CreateTing("BoolValue", {Parent = Enemy, Name = "Stun"}, CombatInfo.DownSlam.Stun)
+					Ragdoll.RagdollDummy(Enemy, CombatInfo.DownSlam.Stun)
 					
 					ClientRemote:FireAllClients(Character,"MainHandler","DamageInd",Enemy,CombatInfo.DownSlam.Damage)
 					EnemyHum:TakeDamage(CombatInfo.DownSlam.Damage)
