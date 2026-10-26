@@ -54,19 +54,11 @@ local function SpawnGhost(Rig, Template, GhostColor, FillTransparency, FadeTime,
 		if Live and Live:IsA("BasePart") then
 			Part.CFrame = Live.CFrame
 		end
-		Part.Color = Color3.new(1, 1, 1)
+		local tintAmount = math.clamp(1 - FillTransparency, 0, 1)
+		Part.Color = Color3.new(1, 1, 1):Lerp(GhostColor, tintAmount)
 		Part.Transparency = StartTransparency
 		TweenService:Create(Part, FadeInfo, {Transparency = 1}):Play()
 	end
-
-	local Highlight = Instance.new("Highlight")
-	Highlight.FillColor = GhostColor
-	Highlight.FillTransparency = FillTransparency
-	Highlight.OutlineTransparency = 1
-	Highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-	Highlight.Parent = Ghost
-
-	TweenService:Create(Highlight, FadeInfo, {FillTransparency = 1}):Play()
 
 	Ghost.Parent = workspace.Effects or workspace --I know you don't have a workspace.Effects folder you lazy bums
 	Debris:AddItem(Ghost, FadeTime + 0.1)
