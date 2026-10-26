@@ -77,7 +77,7 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 		local Humrp = Character:FindFirstChild("HumanoidRootPart")
 		local Hum = Character:FindFirstChild("Humanoid")
 		if Type == "Punch" then
-			CharEff(Character,nil)
+			CharEff(Character, Color3.fromRGB(255, 42, 42))
 			local hit = WeaponFX.HitEffects(Character, Char2, Count)
 			MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Stun","Hit"..Count),Hum)
 			WeaponFX.OnImpact(Char2, Character, hit)
@@ -136,7 +136,7 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 		elseif Type == "Up" then
 			
 			--// Effect //--
-			CharEff(Character,nil)
+			CharEff(Character, Color3.fromRGB(255, 42, 42))
 			_G.EffectEmitter(EffFold.Fists:WaitForChild("Hit"),{Parent = Humrp,Debris = 1.5})
 			--// Sound //--
 			PlayCombatSound("Combat.Punch", "Punch" .. Count, Humrp, 1.5)
@@ -226,7 +226,7 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 		elseif Type == "Down" then
 
 			--// Effect //--
-			CharEff(Character,nil)
+			CharEff(Character, Color3.fromRGB(255, 42, 42))
 			Beams(Humrp.CFrame,{Count = math.random(6,8),Size = {8,10},Color = Color3.fromRGB(255, 255, 255),GoalPos = 20,Debris = .4},1.5)
 			_G.EffectEmitter(EffFold.Fists:WaitForChild("Hit"),{Parent = Humrp,Debris = 1.5})
 			--// Sound //--
