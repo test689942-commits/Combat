@@ -183,8 +183,93 @@ function Main.Slide(Char)
 end
 
 local DamageIndMod = require(script:WaitForChild("DamageIndicator"))
+local activeHitFlashes = setmetatable({}, {__mode = "k"})
+local hitFlashTweens = setmetatable({}, {__mode = "k"})
+local CombatInput = nil
+
+local function getHitFlashTemplate(): Highlight?
+	local assets = game.ReplicatedStorage:FindFirstChild("Assets")
+	local effects = assets and assets:FindFirstChild("Effects")
+	local combatEffects = effects and effects:FindFirstChild("Combat")
+	local hitFlash = combatEffects and combatEffects:FindFirstChild("HitFlash")
+
+	if hitFlash and hitFlash:IsA("Highlight") then
+		return hitFlash
+	end
+
+	return hitFlash and hitFlash:FindFirstChildWhichIsA("Highlight", true)
+end
+
+local function flashHitCharacter(Character: Model)
+	local template = getHitFlashTemplate()
+
+	if not template then
+		return
+	end
+
+	local highlight = activeHitFlashes[Character]
+	local previousTween = hitFlashTweens[Character]
+
+	if previousTween then
+		previousTween:Cancel()
+		hitFlashTweens[Character] = nil
+	end
+
+	if not highlight or highlight.Parent == nil then
+		highlight = template:Clone()
+		highlight.Name = "HitFlashActive"
+		highlight.Parent = Character
+		activeHitFlashes[Character] = highlight
+	end
+
+	highlight.Adornee = Character
+	highlight.Enabled = true
+	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	highlight.FillColor = Color3.fromRGB(255, 0, 0)
+	highlight.OutlineColor = Color3.fromRGB(255, 70, 70)
+	highlight.FillTransparency = 0.3
+	highlight.OutlineTransparency = 0
+
+	local tween = Tween:Create(highlight, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		FillTransparency = 1,
+		OutlineTransparency = 1,
+	})
+	hitFlashTweens[Character] = tween
+	tween.Completed:Once(function()
+		if hitFlashTweens[Character] == tween then
+			hitFlashTweens[Character] = nil
+			activeHitFlashes[Character] = nil
+			highlight:Destroy()
+		end
+	end)
+	tween:Play()
+end
+
+local function stopLocalRunOnHit(Character: Model)
+	if game:GetService("RunService"):IsServer() or game:GetService("Players").LocalPlayer.Character ~= Character then
+		return
+	end
+
+	if not CombatInput then
+		local success, module = pcall(function()
+			return require(game.ReplicatedStorage.Modules.Moves.Combat:WaitForChild("Input"))
+		end)
+		if success then
+			CombatInput = module
+		end
+	end
+
+	if CombatInput and CombatInput.StopRunning then
+		CombatInput.StopRunning(Character)
+	end
+end
 
 function Main.DamageInd(Character,Damage)
+	if Character ~= nil and Character:IsA("Model") then
+		flashHitCharacter(Character)
+		stopLocalRunOnHit(Character)
+	end
+
 	DamageIndMod(Character,Damage,Color3.fromRGB(255, 255, 255),UDim2.new(1.2, 0, 1.2, 0),Enum.Font.ArialBold)
 end
 

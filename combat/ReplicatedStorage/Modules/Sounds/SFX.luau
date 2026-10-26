@@ -50,13 +50,13 @@ local HitReactions = table.freeze({
 })
 
 local BlockSFX = table.freeze({
-	Fist = makePool({"rbxassetid://0"}),
-	Weapons = makePool({"rbxassetid://0"}),
+	Fist = makePool({"rbxassetid://82554402927906"}),
+	Weapons = makePool({"rbxassetid://73447344290956"}),
 })
 
 local ParrySFX = table.freeze({
-	Fist = makePool({"rbxassetid://0"}),
-	Weapons = makePool({"rbxassetid://0"}),
+	Fist = makePool({"rbxassetid://126642087525012"}),
+	Weapons = makePool({"rbxassetid://6331329239"}),
 })
 
 local EquipSFX = table.freeze({

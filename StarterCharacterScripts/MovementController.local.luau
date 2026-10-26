@@ -71,7 +71,6 @@ local heartbeatConn = RunService.Heartbeat:Connect(function(dt: number)
 		if Character:FindFirstChild("Stun")
 			or Character:FindFirstChild("Blocking")
 			or Character:FindFirstChild("DoingMove")
-			or Character:FindFirstChild("DoingCombat")
 			or Humanoid.MoveDirection.Magnitude < 0.05 then
 			Movement.SetSprint(false)
 		end

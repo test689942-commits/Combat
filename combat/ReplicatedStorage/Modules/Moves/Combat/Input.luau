@@ -19,6 +19,7 @@ Handler.Variables = {
 local AnimationsModule = require(game.ReplicatedStorage.Modules:WaitForChild("Animations"))
 local Weapons = require(game.ReplicatedStorage.Modules:WaitForChild("Weapons"))
 local ClientSystem = require(game.ReplicatedStorage.Modules:WaitForChild("ClientSystem"))
+local Movement = require(game.ReplicatedStorage.Modules.ClientSystem:WaitForChild("Movement"))
 local WeaponFX = require(script.Parent:WaitForChild("WeaponFX"))
 
 --// Idle / Locomotion Variables \\--
@@ -49,6 +50,7 @@ local RunPlaying = false
 local EquipTrack = nil
 local RageConnection = nil
 local SprintStateConnections = {}
+local runStopToken = 0
 
 --// Remotes //--
 local ServerRemote = game.ReplicatedStorage.Events:FindFirstChild("HandlerFireServer")
@@ -328,8 +330,18 @@ local function isStandingStill(Humanoid, Root)
 end
 
 local function isRunning(Character, Humanoid)
-	if Character == plr.Character and ClientSystem.Running == true then
-		return true
+	if Character ~= nil and Character == plr.Character then
+		if ClientSystem.Running == true
+			or Character:GetAttribute("Running") == true
+			or Character:GetAttribute("Sprinting") == true
+			or Character:GetAttribute("Sprint") == true
+			or Character:FindFirstChild("Running") ~= nil
+			or Character:FindFirstChild("Sprinting") ~= nil
+			or Character:FindFirstChild("Sprint") ~= nil then
+			return true
+		end
+
+		return false
 	end
 
 	if Character ~= nil then
@@ -395,6 +407,60 @@ local function setRunPlaying(Playing)
 	end
 end
 
+function Handler.StopRunning(Character)
+	if Character ~= plr.Character then
+		return
+	end
+
+	local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+	Movement.SetSprint(false)
+	ClientSystem.Running = false
+	Character:SetAttribute("Sprint", false)
+	Character:SetAttribute("Running", false)
+	Character:SetAttribute("Sprinting", false)
+
+	if Humanoid then
+		Humanoid:SetAttribute("Sprint", false)
+		Humanoid:SetAttribute("Running", false)
+		Humanoid:SetAttribute("Sprinting", false)
+
+		for _, track in ipairs(Humanoid:GetPlayingAnimationTracks()) do
+			local trackName = string.lower(track.Name)
+			if trackName == "run" or trackName == "running" or trackName == "sprint" then
+				track:Stop(MoveFadeTime)
+			end
+		end
+	end
+
+	if RunTrack and RunTrack.IsPlaying then
+		RunTrack:Stop(MoveFadeTime)
+	end
+	RunPlaying = false
+
+	runStopToken += 1
+	local token = runStopToken
+	task.spawn(function()
+		while Character.Parent and Character == plr.Character and token == runStopToken and not ClientSystem.Running do
+			local movementLocked = Character:FindFirstChild("Stun")
+				or Character:FindFirstChild("Blocking")
+				or Character:FindFirstChild("DoingMove")
+				or Character:FindFirstChild("DoingCombat")
+				or Character:GetAttribute("Stunned") == true
+				or Character:GetAttribute("Ragdolled") == true
+				or #ClientSystem.Actions > 0
+				or #ClientSystem.Stuns > 0
+				or ClientSystem.Dashing
+
+			if not movementLocked then
+				Movement.SetSprint(false)
+				return
+			end
+
+			RunService.Heartbeat:Wait()
+		end
+	end)
+end
+
 local function resolveLocomotionAnimation(weapon, animationName, fallbackName)
 	local weaponRoot = "Weapons." .. weapon.Name
 
@@ -447,6 +513,13 @@ end
 
 local function updateIdle()
 	if IdleHumanoid == nil or IdleRoot == nil then
+		return
+	end
+
+	if IdleCharacter:FindFirstChild("Stun") or IdleCharacter:GetAttribute("Stunned") == true then
+		setIdlePlaying(false)
+		setWalkPlaying(false)
+		setRunPlaying(false)
 		return
 	end
 
