@@ -568,6 +568,13 @@ local function playCriticalTell(character: Model)
 		end
 	end
 
+	local hitFlashTemplate = combatEffects:FindFirstChild("HitFlash")
+	if hitFlashTemplate and hitFlashTemplate:IsA("Highlight") then
+		local criticalHighlight = hitFlashTemplate:Clone()
+		criticalHighlight.Parent = character
+		DebrisService:AddItem(criticalHighlight, 0.65)
+	end
+
 	if not criticalTemplate or not head or not head:IsA("BasePart") then
 		return
 	end

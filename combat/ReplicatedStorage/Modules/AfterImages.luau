@@ -1,5 +1,7 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local Debris = game:GetService("Debris")
+local HitFlashTemplate = ReplicatedStorage:WaitForChild("Assets"):WaitForChild("Effects"):WaitForChild("Combat"):WaitForChild("HitFlash")
 
 local AfterImages = {}
 
@@ -19,6 +21,7 @@ local StripClasses = {
 	Trail = true,
 	Beam = true,
 	ParticleEmitter = true,
+	Highlight = true,
 	SurfaceAppearance = true,
 }
 
@@ -54,11 +57,19 @@ local function SpawnGhost(Rig, Template, GhostColor, FillTransparency, FadeTime,
 		if Live and Live:IsA("BasePart") then
 			Part.CFrame = Live.CFrame
 		end
-		local tintAmount = math.clamp(1 - FillTransparency, 0, 1)
-		Part.Color = Color3.new(1, 1, 1):Lerp(GhostColor, tintAmount)
+		Part.Color = Color3.new(1, 1, 1)
 		Part.Transparency = StartTransparency
 		TweenService:Create(Part, FadeInfo, {Transparency = 1}):Play()
 	end
+
+	local hitFlash = HitFlashTemplate:Clone()
+	hitFlash.Adornee = Ghost
+	hitFlash.FillColor = GhostColor
+	hitFlash.FillTransparency = FillTransparency
+	hitFlash.OutlineTransparency = 1
+	hitFlash.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+	hitFlash.Parent = Ghost
+	TweenService:Create(hitFlash, FadeInfo, {FillTransparency = 1}):Play()
 
 	Ghost.Parent = workspace.Effects or workspace --I know you don't have a workspace.Effects folder you lazy bums
 	Debris:AddItem(Ghost, FadeTime + 0.1)
