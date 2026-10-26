@@ -193,7 +193,7 @@ do
 		return airborneTargets
 	end
 
-	local function releaseAirHold(targetRoot: BasePart, slamDown: boolean?, sourceRoot: BasePart?)
+	local function releaseAirHold(targetRoot: BasePart)
 		local airHold = targetRoot:FindFirstChild("AirPos")
 
 		if airHold then
@@ -202,23 +202,6 @@ do
 
 			if attachment and attachment.Parent then
 				attachment:Destroy()
-			end
-		end
-
-		if slamDown then
-			local away = if sourceRoot then targetRoot.Position - sourceRoot.Position else targetRoot.CFrame.LookVector
-			away = Vector3.new(away.X, 0, away.Z)
-			local direction = if away.Magnitude > 0.1 then away.Unit else Vector3.zero
-			local slamVelocity = Instance.new("BodyVelocity")
-			slamVelocity.Name = "GroundSlamDrop"
-			slamVelocity.MaxForce = Vector3.new(4e4, 8e4, 4e4)
-			slamVelocity.Velocity = direction * 10 + Vector3.new(0, -85, 0)
-			slamVelocity.Parent = targetRoot
-			DebrisService:AddItem(slamVelocity, 0.3)
-
-			local humanoid = targetRoot.Parent and targetRoot.Parent:FindFirstChildOfClass("Humanoid")
-			if humanoid and humanoid.Health > 0 then
-				humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
 			end
 		end
 	end
@@ -273,22 +256,13 @@ do
 				return
 			end
 
-			CombatServer.UpDown(character, CombatInfo.MaxCombo, CombatInfo.MaxCombo, true)
+			CombatServer.UpDown(character, CombatInfo.MaxCombo, CombatInfo.MaxCombo, true, airborneTargets)
 
 			for _, target in ipairs(airborneTargets) do
 				if target.Model.Parent and target.Humanoid.Health > 0 then
-					if target.Root:FindFirstChild("AirPos") then
-						if not MoveHit.ApplyDamage(character, target, settings.Damage, settings.StunTime, settings.EntryName) then
-							for _, airborneTarget in ipairs(airborneTargets) do
-								releaseAirHold(airborneTarget.Root)
-							end
-							dropFromAirCombat(character, root)
-							return
-						end
-
-						releaseAirHold(target.Root, true, root)
-					end
-
+					-- If the normal down-slam path skipped a target (for example, a
+					-- guarded dummy), release its hold so it cannot remain suspended.
+					releaseAirHold(target.Root)
 					effectsRemote:FireAllClients(settings.EntryName, {root = target.Root, char = character})
 				end
 			end

@@ -390,7 +390,7 @@ function Combat.EndAirCombat(Character)
 	end
 end
 
-function Combat.UpDown(Character,Count,MaxCount,SkipSwing)
+function Combat.UpDown(Character,Count,MaxCount,SkipSwing,TargetOverride)
 	if Character == nil or not Weapons.GetForCharacter(Character).AllowUpperCut then
 		return
 	end
@@ -411,8 +411,19 @@ function Combat.UpDown(Character,Count,MaxCount,SkipSwing)
 
 		--// HITBOX //--
 
-		local Targets = HitDetection.GetCharactersInBox(hitCFrame * CFrame.new(0,0,-CombatInfo.HitboxOffset), Vector3.new(CombatInfo.HitboxSize,CombatInfo.HitboxSize,CombatInfo.HitboxSize), {workspace.Effects, Character, workspace.Baseplate}, "DownSlam")
-		for _, Enemy in ipairs(Targets) do
+			local Targets = {}
+			if TargetOverride then
+				for _, target in ipairs(TargetOverride) do
+					local model = if type(target) == "table" then target.Model else target
+					if typeof(model) == "Instance" and model:IsA("Model") then
+						table.insert(Targets, model)
+					end
+				end
+			else
+				Targets = HitDetection.GetCharactersInBox(hitCFrame * CFrame.new(0,0,-CombatInfo.HitboxOffset), Vector3.new(CombatInfo.HitboxSize,CombatInfo.HitboxSize,CombatInfo.HitboxSize), {workspace.Effects, Character, workspace.Baseplate}, "DownSlam")
+			end
+
+			for _, Enemy in ipairs(Targets) do
 			if Enemy:FindFirstChild("Humanoid") ~= nil and Enemy:FindFirstChild("HumanoidRootPart") ~= nil and Enemy.Humanoid.Health > 0 then
 				local EnemyHum = Enemy:FindFirstChild("Humanoid")
 				local EnemyHumrp = Enemy:FindFirstChild("HumanoidRootPart")
