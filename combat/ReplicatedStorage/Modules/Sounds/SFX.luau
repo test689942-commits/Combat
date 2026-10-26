@@ -481,8 +481,8 @@ local Weapons = table.freeze({
 local Moves = table.freeze({
 	GroundSlam = table.freeze({Impact = makeEntry("rbxassetid://8588542238")}),
 	Rage = table.freeze({
-		Windup = makeEntry("rbxassetid://16825482090"),
-		Scream = makeEntry("rbxassetid://6824039583", {Volume = 0.8}),
+		Windup = makeEntry("rbxassetid://140334012603496"),
+		Scream = makeEntry("rbxassetid://99832174124919", {Volume = 0.8}),
 	}),
 	DaggerThrow = table.freeze({
 		Throw = usePool(SwingSFX.Light, 1.3),
