@@ -143,7 +143,7 @@ function Combat.Punch(Character,Count,Type,MaxCount)
 
 						if Blocking:IsA("NumberValue") and Blocking.Value <= CombatInfo.Block.Health and Blocking.Value ~= 1 then
 							Blocking.Value = Blocking.Value - 1
-							ClientRemote:FireAllClients(Character, "Client_Framework", "Effect", Enemy, Count, "BlockHit", MaxCount)
+							ClientRemote:FireAllClients(Character, "Client_Framework", "Effect", Enemy, Count, "BlockHit", MaxCount, Character)
 						elseif Blocking:IsA("NumberValue") and Blocking.Value == 1 then
 							ClientRemote:FireAllClients(Character, "Client_Framework", "Effect", Enemy, Count, "Block Break", MaxCount)
 							MainHandler.CreateTing("BoolValue", {Parent = Enemy, Name = "Stun"}, CombatInfo.Block.BreakStun)
@@ -343,7 +343,7 @@ function Combat.Up(Character,Count,MaxCount)
 
 					if Blocking:IsA("NumberValue") and Blocking.Value <= CombatInfo.Block.Health and Blocking.Value ~= 1 then
 						Blocking.Value = Blocking.Value - 1
-						ClientRemote:FireAllClients(Character, "Client_Framework", "Effect", Enemy, Count, "BlockHit", MaxCount)
+						ClientRemote:FireAllClients(Character, "Client_Framework", "Effect", Enemy, Count, "BlockHit", MaxCount, Character)
 					elseif Blocking:IsA("NumberValue") and Blocking.Value == 1 then
 						ClientRemote:FireAllClients(Character, "Client_Framework", "Effect", Enemy, Count, "Block Break", MaxCount)
 						MainHandler.CreateTing("BoolValue", {Parent = Enemy, Name = "Stun"}, CombatInfo.Block.BreakStun)

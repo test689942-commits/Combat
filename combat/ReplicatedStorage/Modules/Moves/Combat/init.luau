@@ -75,7 +75,7 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 			
 			MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Block","BlockHit"),Hum)
 			_G.EffectEmitter(EffFold.Block:WaitForChild("Blocking"),{Parent = Humrp,Debris = 1.5})
-			PlayCombatSound(getBlockParrySoundCategory(Character), "Block", Humrp, 1.5)
+			PlayCombatSound(getBlockParrySoundCategory(Char2 or Character), "Block", Humrp, 1.5)
 			
 		elseif Type == "PB" then
 			
