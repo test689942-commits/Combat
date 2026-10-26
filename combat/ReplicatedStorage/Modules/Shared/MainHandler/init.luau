@@ -183,8 +183,6 @@ function Main.Slide(Char)
 end
 
 local DamageIndMod = require(script:WaitForChild("DamageIndicator"))
-local activeHitFlashes = setmetatable({}, {__mode = "k"})
-local hitFlashTweens = setmetatable({}, {__mode = "k"})
 local CombatInput = nil
 
 local function getHitFlashTemplate(): Highlight?
@@ -207,42 +205,9 @@ local function flashHitCharacter(Character: Model)
 		return
 	end
 
-	local highlight = activeHitFlashes[Character]
-	local previousTween = hitFlashTweens[Character]
-
-	if previousTween then
-		previousTween:Cancel()
-		hitFlashTweens[Character] = nil
-	end
-
-	if not highlight or highlight.Parent == nil then
-		highlight = template:Clone()
-		highlight.Name = "HitFlashActive"
-		highlight.Parent = Character
-		activeHitFlashes[Character] = highlight
-	end
-
-	highlight.Adornee = Character
-	highlight.Enabled = true
-	highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-	highlight.FillColor = Color3.fromRGB(255, 0, 0)
-	highlight.OutlineColor = Color3.fromRGB(255, 70, 70)
-	highlight.FillTransparency = 0.3
-	highlight.OutlineTransparency = 0
-
-	local tween = Tween:Create(highlight, TweenInfo.new(0.22, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		FillTransparency = 1,
-		OutlineTransparency = 1,
-	})
-	hitFlashTweens[Character] = tween
-	tween.Completed:Once(function()
-		if hitFlashTweens[Character] == tween then
-			hitFlashTweens[Character] = nil
-			activeHitFlashes[Character] = nil
-			highlight:Destroy()
-		end
-	end)
-	tween:Play()
+	local highlight = template:Clone()
+	highlight.Parent = Character
+	game.Debris:AddItem(highlight, 0.35)
 end
 
 local function stopLocalRunOnHit(Character: Model)
