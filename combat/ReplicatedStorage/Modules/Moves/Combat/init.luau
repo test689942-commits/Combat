@@ -28,11 +28,15 @@ local function PlayCombatSound(Category, Name, Parent, DebrisTime)
 end
 
 local function getBlockParrySoundCategory(Character)
-	if Character == nil or Weapons.GetEquippedTool(Character) == nil or Weapons.IsFists(Character) then
+	if Character == nil or Weapons.IsFists(Character) then
 		return "CombatSFX.Fist"
 	end
 
-	return "CombatSFX.Weapons"
+	if Weapons.GetEquippedTool(Character) ~= nil or Character:FindFirstChild("EquippedWeapon") ~= nil then
+		return "CombatSFX.Weapons"
+	end
+
+	return "CombatSFX.Fist"
 end
 
 function Beams(MainCFrame,Properties,width)
@@ -117,7 +121,7 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 			--// Effect //--
 			_G.EffectEmitter(EffFold.Fists:WaitForChild("Hit"),{Parent = Humrp,Debris = 1.5})
 			--// Sound //--
-			PlayCombatSound("Combat.Punch", "Punch" .. Count, Humrp, 1.5)
+			PlayCombatSound(getBlockParrySoundCategory(Char2 or Character), "HitReaction", Humrp, 1.5)
 			--// ANIMATION //--
 			MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Stun","Hit3"),Hum)
 			
