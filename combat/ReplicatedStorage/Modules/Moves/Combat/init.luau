@@ -51,33 +51,12 @@ function Beams(MainCFrame,Properties,width)
 	end
 end
 
-function CharEff(Char,Colorr)
-	if Char ~= nil then
-		local Highlight = Instance.new("Highlight")
-		Highlight.Parent = Char
-		Highlight.Enabled = true
-		Highlight.OutlineTransparency = 0
-		Highlight.FillTransparency = 0
-		if Colorr == nil then
-			Highlight.FillColor = Color3.fromRGB(255, 255, 255)
-			Highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-		else
-			Highlight.FillColor = Colorr
-			Highlight.OutlineColor = Colorr
-		end
-		Highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-		Tween:Create(Highlight, TweenInfo.new(.25,Enum.EasingStyle.Quad,Enum.EasingDirection.Out), {OutlineTransparency = 1, FillTransparency = 1}):Play()
-		game.Debris:AddItem(Highlight,1.5)
-	end
-end
-
 function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 	if Character ~= nil and Count ~= nil and Character:FindFirstChild("Humanoid") ~= nil and Character.Humanoid.Health > 0 and Character:FindFirstChild("HumanoidRootPart") ~= nil and Type ~= nil and MaxCount ~= nil then
 		--// Variables
 		local Humrp = Character:FindFirstChild("HumanoidRootPart")
 		local Hum = Character:FindFirstChild("Humanoid")
 		if Type == "Punch" then
-			CharEff(Character, Color3.fromRGB(255, 42, 42))
 			local hit = WeaponFX.HitEffects(Character, Char2, Count)
 			MainHandler.Animation(AnimationsModule.GetAnimation("Shared.Stun","Hit"..Count),Hum)
 			WeaponFX.OnImpact(Char2, Character, hit)
@@ -136,7 +115,6 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 		elseif Type == "Up" then
 			
 			--// Effect //--
-			CharEff(Character, Color3.fromRGB(255, 42, 42))
 			_G.EffectEmitter(EffFold.Fists:WaitForChild("Hit"),{Parent = Humrp,Debris = 1.5})
 			--// Sound //--
 			PlayCombatSound("Combat.Punch", "Punch" .. Count, Humrp, 1.5)
@@ -226,7 +204,6 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 		elseif Type == "Down" then
 
 			--// Effect //--
-			CharEff(Character, Color3.fromRGB(255, 42, 42))
 			Beams(Humrp.CFrame,{Count = math.random(6,8),Size = {8,10},Color = Color3.fromRGB(255, 255, 255),GoalPos = 20,Debris = .4},1.5)
 			_G.EffectEmitter(EffFold.Fists:WaitForChild("Hit"),{Parent = Humrp,Debris = 1.5})
 			--// Sound //--
