@@ -44,7 +44,7 @@ end
 return table.freeze({
 	AttackName = "Punch";
 	AllowUpperCut = true;
-	Interruptible = false;
+	Interruptible = true;
 	MaxCombo = MaxCombo;
 	ComboWindow = CombatInfo.ComboWindow;
 	EffectFolder = "Fists";
