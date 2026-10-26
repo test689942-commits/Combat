@@ -12,7 +12,6 @@ local EffFold = game.ReplicatedStorage.Assets.Effects:WaitForChild("Combat")
 
 local Sounds = require(game.ReplicatedStorage.Modules:WaitForChild("Sounds"))
 local WeaponFX = require(script:WaitForChild("WeaponFX"))
-local CombatInput = require(script:WaitForChild("Input"))
 local Weapons = require(game.ReplicatedStorage.Modules:WaitForChild("Weapons"))
 
 --// Sounds \\--
@@ -106,7 +105,10 @@ function Main.Effect(Character,Count,Type,MaxCount,Char2,SlamProps)
 			
 		elseif Type == "Parry" then
 
-			CombatInput.StopRunning(Character)
+			if game:GetService("RunService"):IsClient() then
+				local CombatInput = require(script:WaitForChild("Input"))
+				CombatInput.StopRunning(Character)
+			end
 
 			if Character.Humanoid.Health > 1 then
 				WeaponFX.ClearSwing(Hum)
