@@ -11,7 +11,6 @@ local AnimationsModule = require(Modules:WaitForChild("Animations"))
 local Weapons = require(Modules:WaitForChild("Weapons"))
 local MainHandler = require(Modules.Shared:WaitForChild("MainHandler"))
 local HitDetection = require(Modules.Shared:WaitForChild("HitDetection"))
-local Ragdoll = require(Modules.Shared:WaitForChild("Ragdoll"))
 local CombatServer = require(script.Parent:WaitForChild("Combat"):WaitForChild("Server"))
 local MovesInfo = require(script.Parent)
 local MoveHit = require(script.Parent:WaitForChild("MoveHit"))
@@ -157,7 +156,6 @@ do
 		end
 
 		MainHandler.CreateTing("BoolValue", {Parent = target.Model, Name = "Stun"}, settings.StunTime)
-		Ragdoll.RagdollDummy(target.Model, settings.StunTime)
 		target.Humanoid:TakeDamage(settings.Damage)
 		handlerClient:FireAllClients(character, "MainHandler", "DamageInd", target.Model, settings.Damage)
 		applyKnockback(root, target, settings)

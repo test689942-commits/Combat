@@ -37,7 +37,7 @@ local function hasBlockingState(character: Model?): boolean
 		return true
 	end
 
-	if character:GetAttribute("Ragdolled") or character:GetAttribute("Stunned") then
+	if character:GetAttribute("Stunned") then
 		return true
 	end
 

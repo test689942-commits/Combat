@@ -446,7 +446,6 @@ function Handler.StopRunning(Character)
 				or Character:FindFirstChild("DoingMove")
 				or Character:FindFirstChild("DoingCombat")
 				or Character:GetAttribute("Stunned") == true
-				or Character:GetAttribute("Ragdolled") == true
 				or #ClientSystem.Actions > 0
 				or #ClientSystem.Stuns > 0
 				or ClientSystem.Dashing

@@ -98,7 +98,6 @@ function DirectionalMovement.Start(character: Model)
 		end
 
 		if character:GetAttribute("Attacking")
-			or character:GetAttribute("Ragdolled")
 			or character:GetAttribute("Stunned") then
 			return true
 		end
