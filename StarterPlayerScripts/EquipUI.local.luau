@@ -25,9 +25,10 @@
 --]]
 
 local Players          = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService     = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local RunService       = game:GetService("RunService")
+local InventoryClient  = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Inventory"):WaitForChild("Client"))
 
 local player    = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -91,188 +92,55 @@ local function commafy(n)
 	return out
 end
 
-local function rng(seed)
-	local s = (seed * 9301 + 49297) % 233280
-	return function()
-		s = (s * 9301 + 49297) % 233280
-		return s / 233280
-	end
-end
-
 ----------------------------------------------------------------------
--- 3. ITEM DATA  (unchanged from the original — this is the "game" layer)
+-- 3. SERVER INVENTORY STATE
 ----------------------------------------------------------------------
-local SKILL_POOL = {
-	{ n = "Lightning Arrows", d = "Attack deals 72% Lightning damage that chains up to 5 targets for the duration." },
-	{ n = "Piercing Arrows",  d = "Fires a piercing arrow forward, dealing 405% Physical damage." },
-	{ n = "Arrow Volley",     d = "Unleash a volley into the air, dealing 10 hits of 440% Physical damage to the target area." },
-	{ n = "Ember Strike",     d = "Ignites the target, burning for 88% Fire damage over 6 seconds." },
-	{ n = "Frost Bind",       d = "Freezes the target in place for 1.4 seconds and slows nearby foes." },
-	{ n = "Void Rend",        d = "Tears a rift, dealing 260% Magic damage and reducing armor by 12%." },
-	{ n = "Blood Pact",       d = "Sacrifices 6% health to increase damage by 35% for 8 seconds." },
-}
-local FLAVOR = {
-	"Crafted from natural materials.", "Forged in the deep furnace.",
-	"It hums with old magic.", "Pried from the hands of the fallen.",
-	"Cold to the touch, even in fire.", "The runes refuse to fade.",
-	"Older than the dungeon itself.",
-}
-
-local RAW_BAG = {
-	{ n = "Crimson Shard",      r = "mythic",   slot = "trinket", tag = "Crafting", q = 1   },
-	{ n = "Ember Rune",         r = "mythic",   slot = "weapon",  tag = "Rune",     q = 1   },
-	{ n = "Glacier Blade",      r = "rare",     slot = "weapon",  tag = "Weapon",   q = 1   },
-	{ n = "Blood Star",         r = "mythic",   slot = "ring",    tag = "Gem",      q = 1   },
-	{ n = "Void Prism",         r = "epic",     slot = "trinket", tag = "Gem",      q = 7   },
-	{ n = "Trolls Pouch",       r = "legend",   slot = "relic",   tag = "Gold",     q = 3   },
-	{ n = "Gilded Nugget",      r = "legend",   slot = "relic",   tag = "Gold",     q = 1   },
-	{ n = "Rune of Warding",    r = "epic",     slot = "weapon",  tag = "Rune",     q = 2   },
-	{ n = "Ember Leaf",         r = "legend",   slot = "trinket", tag = "Material", q = 1   },
-	{ n = "Obsidian Chunk",     r = "common",   slot = "ring",    tag = "Material", q = 4   },
-	{ n = "Sigil of Ruin",      r = "mythic",   slot = "relic",   tag = "Sigil",    q = 4   },
-	{ n = "Verdant Orb",        r = "uncommon", slot = "trinket", tag = "Orb",      q = 13  },
-	{ n = "Tome of Ash",        r = "legend",   slot = "weapon",  tag = "Tome",     q = 12  },
-	{ n = "Amber Splinter",     r = "legend",   slot = "trinket", tag = "Material", q = 13  },
-	{ n = "Pale Rune",          r = "rare",     slot = "weapon",  tag = "Rune",     q = 5   },
-	{ n = "Nebula Prism",       r = "epic",     slot = "ring",    tag = "Gem",      q = 12  },
-	{ n = "Iron Chest",         r = "common",   slot = "relic",   tag = "Container", q = 2  },
-	{ n = "Frost Cluster",      r = "rare",     slot = "weapon",  tag = "Material", q = 1   },
-	{ n = "Shard of Winter",    r = "rare",     slot = "trinket", tag = "Material", q = 24  },
-	{ n = "Umbral Ingot",       r = "common",   slot = "relic",   tag = "Material", q = 104 },
-	{ n = "Ashen Hood",         r = "epic",     slot = "hat",     tag = "Armor",    q = 1   },
-	{ n = "Bone Helm",          r = "rare",     slot = "hat",     tag = "Armor",    q = 1   },
-	{ n = "Iron Plate",         r = "rare",     slot = "chest",   tag = "Armor",    q = 1   },
-	{ n = "Obsidian Cuirass",   r = "legend",   slot = "chest",   tag = "Armor",    q = 1   },
-	{ n = "Ember Cape",         r = "legend",   slot = "wings",   tag = "Armor",    q = 1   },
-	{ n = "Frost Mantle",       r = "rare",     slot = "wings",   tag = "Armor",    q = 1   },
-	{ n = "Sigil Band",         r = "epic",     slot = "ring",    tag = "Ring",     q = 1   },
-	{ n = "Amber Beads",        r = "uncommon", slot = "trinket", tag = "Trinket",  q = 1   },
-}
-
-local RAW_EQUIPPED = {
-	{ slot = "hat",     n = "Worn Fedora",   r = "legend", tag = "Armor",   lvl = 16 },
-	{ slot = "chest",   n = "Violet Robe",   r = "epic",   tag = "Armor",   lvl = 20 },
-	{ slot = "trinket", n = "Thorn Amulet",  r = "epic",   tag = "Trinket", lvl = 32 },
-	{ slot = "weapon",  n = "Void Blade",    r = "mythic", tag = "Weapon",  lvl = 28 },
-	{ slot = "wings",   n = "Rune Wraps",    r = "epic",   tag = "Armor",   lvl = 27 },
-	{ slot = "relic",   n = "Gilded Relic",  r = "legend", tag = "Relic",   lvl = 27 },
-	{ slot = "ring",    n = "Azure Crown",   r = "rare",   tag = "Ring",    lvl = 19 },
-}
-
-local function rollStats(item, seed)
-	local r    = rng(seed + 7)
-	local tier = 1
-	for i, key in ipairs(RARITY_ORDER) do
-		if key == item.r then tier = i end
-	end
-	local atk   = math.floor(16 + tier * 8 + r() * 24 + 0.5)
-	local pct   = math.floor(18 + r() * 63 + 0.5)
-	local spd   = math.floor((0.9 + r() * 0.8) * 10 + 0.5) / 10
-	local score = math.floor(300 + tier * 380 + r() * 1400 + 0.5)
-	local lines = {}
-
-	if r() > 0.40 then table.insert(lines, { k = "blue",  t = string.format("Attack deals an additional %d points of magical damage", math.floor(4 + r() * 16 + 0.5)) }) end
-	if r() > 0.32 then table.insert(lines, { k = "gray",  t = string.format("Physical damage increased by %d%%", math.floor(6 + r() * 24 + 0.5)) }) end
-	if r() > 0.42 then table.insert(lines, { k = "gray",  t = string.format("Magical damage increased by %d%%", math.floor(3 + r() * 9 + 0.5)) }) end
-	if r() > 0.38 then table.insert(lines, { k = "gray",  t = string.format("Strength +%d", math.floor(2 + r() * 9 + 0.5)) }) end
-	if r() > 0.38 then table.insert(lines, { k = "green", t = string.format("Attack speed increased by %d%%", math.floor(2 + r() * 9 + 0.5)) }) end
-	if r() > 0.54 then table.insert(lines, { k = "green", t = string.format("Critical strike chance +%d%%", math.floor(1 + r() * 7 + 0.5)) }) end
-
-	local skills = {}
-	if item.slot == "weapon" then
-		local pool = {}
-		for i, s in ipairs(SKILL_POOL) do pool[i] = s end
-		for _ = 1, 1 + math.floor(r() * 2) do
-			if #pool > 0 then
-				local idx = math.floor(r() * #pool) + 1
-				local sk = table.remove(pool, idx)
-				table.insert(skills, { n = sk.n, d = sk.d, lvl = math.max(1, (item.lvl or 20) + math.floor((r() - 0.5) * 6)) })
-			end
-		end
-	end
-
-	item.stats = {
-		atk = atk, pct = pct, atkSpeed = spd, score = score,
-		lines = lines, skills = skills,
-		flavor = FLAVOR[math.floor(r() * #FLAVOR) + 1],
-		price  = math.floor((60 + tier * 95 + r() * 420) / 5 + 0.5) * 5,
-	}
-	return item
-end
-
+-- IDs and item data are supplied by the server. This UI owns presentation,
+-- selection, and animations only; inventory mutations are always remote actions.
 local ITEMS = {}
-local nextId = 0
-local function addItem(src, loc, seed)
-	nextId = nextId + 1
-	local it = {
-		id = nextId, n = src.n, r = src.r, slot = src.slot, tag = src.tag,
-		qty = src.q or 1, lvl = src.lvl or (14 + (seed * 7) % 19),
-		loc = loc, eqSlot = (loc == "eq") and src.slot or nil, base = src,
-	}
-	rollStats(it, seed)
-	table.insert(ITEMS, it)
-	return it
-end
-for i, src in ipairs(RAW_EQUIPPED) do addItem(src, "eq", i) end
-for i, src in ipairs(RAW_BAG)      do addItem(src, "bag", i + 7) end
+local applySnapshot
+local actionInFlight = false
 
-local MASTER = {}
-for i, it in ipairs(ITEMS) do
-	MASTER[i] = it
-	it.bootLoc = it.loc
-	it.bootEq  = it.eqSlot
-	it.bootQty = it.qty
-end
-
-----------------------------------------------------------------------
--- 4. STATE
-----------------------------------------------------------------------
 local State = {
 	gold = 0, tab = "weapon", sellMode = false, sellSet = {},
 	sorting = false, sortAsc = false, equipped = {}, bag = {},
 }
 
-local STAR_SCORE = 0
-for _, it in ipairs(ITEMS) do
-	if it.loc == "eq" then STAR_SCORE = STAR_SCORE + it.stats.score end
-end
-if STAR_SCORE <= 0 then STAR_SCORE = 1 end
-local W = { damage = 252.3 / STAR_SCORE, speed = 111.9 / STAR_SCORE, crit = 0.00035, phys = 193.2 / STAR_SCORE, magic = 59 / STAR_SCORE }
-for _, it in ipairs(ITEMS) do
-	local s = it.stats.score
-	it.stats.contrib = {
-		damage = s * W.damage, speed = s * W.speed,
-		crit = math.max(0, (s - STAR_SCORE / 7) * W.crit),
-		phys = s * W.phys, magic = s * W.magic,
-	}
-end
-
 local function rebuildState()
 	State.equipped = {}
 	State.bag = {}
-	for _, it in ipairs(ITEMS) do
-		if it.loc == "eq" then
-			State.equipped[it.eqSlot] = it
+	for _, item in ipairs(ITEMS) do
+		if item.loc == "eq" then
+			State.equipped[item.eqSlot] = item
 		else
-			table.insert(State.bag, it)
+			table.insert(State.bag, item)
 		end
 	end
 end
-rebuildState()
 
 local function totals()
-	local t = { damage = 0, speed = 0, crit = 0, phys = 0, magic = 0 }
-	for _, it in ipairs(ITEMS) do
-		if it.loc == "eq" then
-			local c = it.stats.contrib
-			t.damage = t.damage + c.damage
-			t.speed  = t.speed  + c.speed
-			t.crit   = t.crit   + c.crit
-			t.phys   = t.phys   + c.phys
-			t.magic  = t.magic  + c.magic
+	local total = { damage = 0, speed = 0, crit = 0, phys = 0, magic = 0 }
+	for _, item in ipairs(ITEMS) do
+		if item.loc == "eq" and item.stats and item.stats.contrib then
+			for key, value in pairs(item.stats.contrib) do
+				if total[key] ~= nil then total[key] += value end
+			end
 		end
 	end
-	return t
+	return total
+end
+
+local function requestInventoryAction(request)
+	if actionInFlight then return false end
+	actionInFlight = true
+	local success, result = request()
+	actionInFlight = false
+	if success then
+		if applySnapshot then applySnapshot(result) end
+	else
+		warn("Inventory request failed: " .. tostring(result))
+	end
+	return success
 end
 
 ----------------------------------------------------------------------
@@ -903,62 +771,31 @@ end
 ----------------------------------------------------------------------
 -- 10. EQUIP / UNEQUIP / DISCARD / EQUIP BEST / SELL
 ----------------------------------------------------------------------
-function equipItem(it, silent)
-	if it.loc == "eq" then return end
-	local kind = it.slot
-	local prev = State.equipped[kind]
-	if prev then prev.loc = "bag"; prev.eqSlot = nil end
-	it.loc = "eq"; it.eqSlot = kind
-	State.equipped[kind] = it
-	rebuildState()
-	renderSlot(kind)
-	renderGrid()
-	refreshStats()
+function equipItem(item)
+	if item.loc == "eq" then return end
+	requestInventoryAction(function()
+		return InventoryClient.Equip(item.id)
+	end)
 end
 
-function unequipItem(it)
-	if it.loc ~= "eq" then return end
-	local kind = it.eqSlot
-	it.loc = "bag"; it.eqSlot = nil
-	rebuildState()
-	renderSlot(kind)
-	renderGrid()
-	refreshStats()
+function unequipItem(item)
+	if item.loc ~= "eq" then return end
+	requestInventoryAction(function()
+		return InventoryClient.Unequip(item.id)
+	end)
 end
 
-function discardItem(it)
-	if it.loc ~= "bag" then return end
-	if it.qty > 1 then
-		it.qty -= 1
-	else
-		for i = #ITEMS, 1, -1 do
-			if ITEMS[i] == it then table.remove(ITEMS, i) end
-		end
-	end
-	rebuildState()
-	renderGrid()
-end
-
-local function bestFor(kind)
-	local best = State.equipped[kind]
-	for _, it in ipairs(State.bag) do
-		if it.slot == kind and (not best or it.stats.score > best.stats.score) then best = it end
-	end
-	return best
+function discardItem(item)
+	if item.loc ~= "bag" then return end
+	requestInventoryAction(function()
+		return InventoryClient.SellMany({ item.id })
+	end)
 end
 
 footer.EquipBest.MouseButton1Click:Connect(function()
-	local planned = {}
-	for _, kind in ipairs(SLOT_ORDER) do
-		local best = bestFor(kind)
-		local cur = State.equipped[kind]
-		if best and best.loc == "bag" and (not cur or best.stats.score > cur.stats.score) then
-			table.insert(planned, best)
-		end
-	end
-	for _, it in ipairs(planned) do equipItem(it, true) end
-	renderGrid()
-	refreshStats()
+	requestInventoryAction(function()
+		return InventoryClient.EquipBest()
+	end)
 end)
 
 local function setSellMode(on)
@@ -980,23 +817,15 @@ for _, c in ipairs(sellBar:GetChildren()) do
 end
 cancelBtn.MouseButton1Click:Connect(function() setSellMode(false) end)
 confirmBtn.MouseButton1Click:Connect(function()
-	local earned, sold = 0, 0
-	for id in pairs(State.sellSet) do
-		for _, it in ipairs(State.bag) do
-			if it.id == id then
-				earned += sellValue(it)
-				sold += 1
-				for i = #ITEMS, 1, -1 do
-					if ITEMS[i] == it then table.remove(ITEMS, i) end
-				end
-			end
-		end
+	local itemIds = {}
+	for id, selected in pairs(State.sellSet) do
+		if selected then table.insert(itemIds, id) end
 	end
-	if sold == 0 then return end
-	State.gold += earned
-	footer.Coins.Text = commafy(State.gold)
-	rebuildState()
-	setSellMode(false)
+	if #itemIds == 0 then return end
+	local success = requestInventoryAction(function()
+		return InventoryClient.SellMany(itemIds)
+	end)
+	if success then setSellMode(false) end
 end)
 
 ----------------------------------------------------------------------
@@ -1010,13 +839,6 @@ UserInputService.InputBegan:Connect(function(input, processed)
 end)
 
 local function resetAll()
-	ITEMS = {}
-	for _, it in ipairs(MASTER) do
-		it.loc = it.bootLoc
-		it.eqSlot = it.bootEq
-		it.qty = it.bootQty
-		ITEMS[#ITEMS + 1] = it
-	end
 	State.tab = "weapon"
 	State.sorting = false
 	State.sortAsc = false
@@ -1027,15 +849,39 @@ local function resetAll()
 	showPanel(equipPanel)
 	showPanel(packPanel)
 	setActiveTab("weapon")
+	local success, snapshot = InventoryClient.Get()
+	if success then
+		applySnapshot(snapshot)
+	else
+		warn("Inventory refresh failed: " .. tostring(snapshot))
+	end
+end
+
+local function applyInventorySnapshot(snapshot)
+	if type(snapshot) ~= "table" or type(snapshot.items) ~= "table" then
+		warn("Inventory returned an invalid snapshot.")
+		return
+	end
+
+	ITEMS = {}
+	for _, serverItem in ipairs(snapshot.items) do
+		if type(serverItem) == "table" and type(serverItem.id) == "number" and type(serverItem.stats) == "table" then
+			table.insert(ITEMS, table.clone(serverItem))
+		end
+	end
+	State.gold = if type(snapshot.gold) == "number" then snapshot.gold else 0
+	State.sellSet = {}
+	if currentCardItem then closeCard() end
 	rebuildState()
 	for _, kind in ipairs(SLOT_ORDER) do renderSlot(kind) end
 	renderGrid()
 	refreshStats()
 	footer.Coins.Text = commafy(State.gold)
 end
+applySnapshot = applyInventorySnapshot
 
 ----------------------------------------------------------------------
--- 12. BOOT
+-- 12. BOOT FROM SERVER
 ----------------------------------------------------------------------
 for _, kind in ipairs(SLOT_ORDER) do renderSlot(kind) end
 renderGrid()
@@ -1043,3 +889,19 @@ refreshStats()
 footer.Coins.Text = commafy(State.gold)
 showPanel(equipPanel)
 showPanel(packPanel)
+
+local updateRevision = 0
+InventoryClient.OnUpdated(function(snapshot)
+	updateRevision += 1
+	applySnapshot(snapshot)
+end)
+local revisionBeforeFetch = updateRevision
+local loaded, snapshotOrError = InventoryClient.Get()
+if loaded then
+	-- If a push arrived while Get() was yielding, prefer that newer snapshot.
+	if updateRevision == revisionBeforeFetch then
+		applySnapshot(snapshotOrError)
+	end
+else
+	warn("Inventory load failed: " .. tostring(snapshotOrError))
+end

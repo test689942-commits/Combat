@@ -27,7 +27,7 @@ end)
 
 Each request returns `(success, snapshotOrError)`. A snapshot contains `gold` and `items`; each item has `id`, `n`, `r`, `slot`, `tag`, `qty`, `lvl`, `loc`, `eqSlot`, `weaponId` (for weapons), and server-generated `stats`.
 
-UI actions must use server item IDs, then redraw from the returned snapshot (and from `OnUpdated`) rather than mutating a local copy of inventory state. The EquipUI source supplied in chat is not present in this checkout, so its button handlers/rendering code still needs to be added here before the existing GUI can be directly wired and verified.
+`StarterPlayerScripts/EquipUI.local.luau` keeps the existing GUI, rendering, and animations, but loads item state from `Inventory.Client`. Equip, unequip, Equip Best, and sale actions send server item IDs and redraw from the returned snapshot; the UI also refreshes from `OnUpdated`. The client does not locally mutate authoritative inventory.
 
 ## Weapon items and combat equip
 
