@@ -33,7 +33,7 @@ Each request returns `(success, snapshotOrError)`. A snapshot contains `gold` an
 
 Weapon definitions are sourced from `ReplicatedStorage.Modules.Weapons` and use registry keys such as `GreatSword`, `DragonSlayer`, `Staff`, `LongSword`, `Axe`, `Mortal Blade`, `Dual KT`, `Steel Dagger`, `Steel Spear`, and `Steel Scythe`. `Fists` is an unarmed combat style and is not seeded as a physical weapon item.
 
-A weapon item stores the registry key in `weaponId`. When one is equipped, the server creates a non-droppable character `Tool` with its `Weapon` attribute set to that registry key. The combat system recognizes this Tool; the existing weapon model attach script responds to the Tool being added. Unequipping removes the inventory-managed Tool. The server re-applies the selected weapon on character respawn.
+A weapon item stores the registry key in `weaponId`. When one is equipped, the server sets the character's `EquippedWeaponId` attribute; combat reads that registry key directly, so no Roblox `Tool` or hotbar tool is created. The weapon model is still attached visually by `WeaponServer`. Unequipping clears the attribute, and the server reapplies the selected weapon on character respawn.
 
 New profiles contain weapons only: the registry's Great Sword starts equipped and the other physical registry weapons are in the bag. Fists is omitted because it is an unarmed style, not a weapon model. Older saved armor, materials, fictional demo weapons, and non-registry move/stat rolls are filtered during migration. The UI shows only combo damage/cooldown and move names from the combat weapon data. Future weapon drops must reference a registry key:
 

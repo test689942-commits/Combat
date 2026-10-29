@@ -187,10 +187,10 @@ local function attachWeapon(character: Model, weaponName: string)
 end
 
 local function refreshWeapon(character: Model)
-	local tool = Weapons.GetEquippedTool(character)
+	local weaponName = Weapons.GetEquippedWeaponName(character)
 
-	if tool then
-		attachWeapon(character, tool:GetAttribute(Weapons.AttributeName))
+	if weaponName then
+		attachWeapon(character, weaponName)
 	else
 		detachWeapon(character)
 	end
@@ -199,6 +199,10 @@ end
 --// Characters \\--
 
 local function setupCharacter(character: Model)
+	character:GetAttributeChangedSignal(Weapons.EquippedAttributeName):Connect(function()
+		refreshWeapon(character)
+	end)
+
 	character.ChildAdded:Connect(function(child: Instance)
 		if child:IsA("Tool") then
 			refreshWeapon(character)

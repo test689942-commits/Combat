@@ -11,6 +11,7 @@ Weapons.Default = "GreatSword"
 Weapons.FistsName = "Fists"
 Weapons.FistsCategory = "Fists"
 Weapons.AttributeName = "Weapon"
+Weapons.EquippedAttributeName = "EquippedWeaponId"
 Weapons.Categories = {}
 Weapons.Data = {}
 Weapons.Order = {}
@@ -92,14 +93,32 @@ function Weapons.GetEquippedTool(character: Model?): Tool?
 	return nil
 end
 
-function Weapons.GetName(character: Model?): string
-	local tool = Weapons.GetEquippedTool(character)
-
-	if tool then
-		return tool:GetAttribute(Weapons.AttributeName)
+function Weapons.GetEquippedWeaponName(character: Model?): string?
+	if not character then
+		return nil
 	end
 
-	return Weapons.Default
+	local weaponName = character:GetAttribute(Weapons.EquippedAttributeName)
+	if Weapons.Data[weaponName] then
+		return weaponName
+	end
+
+	-- Keep compatibility with legacy tools while inventory equips are attribute-based.
+	local tool = Weapons.GetEquippedTool(character)
+	local toolWeaponName = tool and tool:GetAttribute(Weapons.AttributeName)
+	if Weapons.Data[toolWeaponName] then
+		return toolWeaponName
+	end
+
+	return nil
+end
+
+function Weapons.HasEquippedWeapon(character: Model?): boolean
+	return Weapons.GetEquippedWeaponName(character) ~= nil
+end
+
+function Weapons.GetName(character: Model?): string
+	return Weapons.GetEquippedWeaponName(character) or Weapons.Default
 end
 
 function Weapons.GetForCharacter(character: Model?)
@@ -123,7 +142,7 @@ function Weapons.DataHasMove(weapon, moveName: string): boolean
 end
 
 function Weapons.HasMove(character: Model?, moveName: string): boolean
-	if not Weapons.GetEquippedTool(character) then
+	if not Weapons.HasEquippedWeapon(character) then
 		return false
 	end
 

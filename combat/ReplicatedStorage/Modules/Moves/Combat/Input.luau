@@ -174,7 +174,7 @@ function Handler.UnlockJump()
 end
 
 function Handler.Punch(Character)
-	if Character ~= nil then
+	if Character ~= nil and Weapons.HasEquippedWeapon(Character) then
 		local weapon = Weapons.GetForCharacter(Character)
 		local MaxCount = weapon.MaxCombo
 		local hit = Weapons.GetHit(weapon, Handler.Variables.count, Character)
@@ -202,7 +202,7 @@ function Handler.TryHeavy(Char)
 		or Handler.Variables.debounce == true
 		or Handler.CanDoCombat(Char) == false
 		or Char:FindFirstChild("DoingCombat") ~= nil
-		or Weapons.GetEquippedTool(Char) == nil then
+		or not Weapons.HasEquippedWeapon(Char) then
 		return
 	end
 
@@ -225,7 +225,7 @@ function Handler.TryHeavy(Char)
 	ServerRemote:FireServer("Combat_Server", "Heavy", Char)
 
 	task.delay(CombatInfo.CriticalWindup, function()
-		if Char.Parent ~= nil and Humanoid.Parent == Char and Humanoid.Health > 0 and Weapons.GetEquippedTool(Char) ~= nil then
+		if Char.Parent ~= nil and Humanoid.Parent == Char and Humanoid.Health > 0 and Weapons.HasEquippedWeapon(Char) then
 			WeaponFX.ClientSwing(Char, hit)
 		end
 	end)
@@ -239,7 +239,7 @@ end
 
 --// Run Checks For Comnbat //--
 function Handler.TryCombat(Char)
-	if Char ~= nil and Handler.Variables.debounce == false and Handler.Variables.heavyDebounce == false and Char:FindFirstChild("Stun") == nil then
+	if Char ~= nil and Weapons.HasEquippedWeapon(Char) and Handler.Variables.debounce == false and Handler.Variables.heavyDebounce == false and Char:FindFirstChild("Stun") == nil then
 		local weapon = Weapons.GetForCharacter(Char)
 		local MaxCount = weapon.MaxCombo
 

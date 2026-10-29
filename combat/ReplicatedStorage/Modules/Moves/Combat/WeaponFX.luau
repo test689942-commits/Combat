@@ -602,9 +602,9 @@ function WeaponFX.HeavySwing(character: Model)
 	local category = weapon.Category
 	local hit = Weapons.GetHit(weapon, count, character)
 	local humanoid, root = getCharacterParts(character)
-	local equippedTool = Weapons.GetEquippedTool(character)
+	local equippedWeaponName = Weapons.GetEquippedWeaponName(character)
 
-	if not humanoid or not equippedTool then
+	if not humanoid or not equippedWeaponName then
 		return hit
 	end
 
@@ -615,8 +615,7 @@ function WeaponFX.HeavySwing(character: Model)
 		if character.Parent == nil
 			or humanoid.Parent ~= character
 			or humanoid.Health <= 0
-			or equippedTool.Parent ~= character
-			or Weapons.GetEquippedTool(character) ~= equippedTool then
+			or Weapons.GetEquippedWeaponName(character) ~= equippedWeaponName then
 			return
 		end
 

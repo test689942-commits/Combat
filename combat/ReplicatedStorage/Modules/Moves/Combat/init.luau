@@ -32,7 +32,7 @@ local function getBlockParrySoundCategory(Character)
 		return "CombatSFX.Fist"
 	end
 
-	if Weapons.GetEquippedTool(Character) ~= nil or Character:FindFirstChild("EquippedWeapon") ~= nil then
+	if Weapons.HasEquippedWeapon(Character) or Character:FindFirstChild("EquippedWeapon") ~= nil then
 		return "CombatSFX.Weapons"
 	end
 
@@ -294,7 +294,7 @@ function Main.Swing(Character,Count,Type)
 end
 
 function Main.HeavySwing(Character)
-	if Character ~= nil and Character:FindFirstChild("Humanoid") ~= nil and Character.Humanoid.Health > 0 and Character:FindFirstChild("HumanoidRootPart") ~= nil and Weapons.GetEquippedTool(Character) ~= nil then
+	if Character ~= nil and Character:FindFirstChild("Humanoid") ~= nil and Character.Humanoid.Health > 0 and Character:FindFirstChild("HumanoidRootPart") ~= nil and Weapons.HasEquippedWeapon(Character) then
 		local hit = WeaponFX.HeavySwing(Character)
 		MainHandler.CreateTing("BoolValue", {Parent = Character, Name = "DoingCombat"}, hit.ActionTime + CombatInfo.CriticalWindup)
 	end

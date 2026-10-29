@@ -88,7 +88,7 @@ local function applyHitKnockback(Humrp, EnemyHumrp, knockback)
 end
 
 function Combat.Punch(Character,Count,Type,MaxCount)
-	if Character ~= nil and typeof(Count) == "number" and Character:FindFirstChild("Humanoid") ~= nil and Character.Humanoid.Health > 0 and Character:FindFirstChild("HumanoidRootPart") ~= nil and Type ~= nil then
+	if Character ~= nil and Weapons.HasEquippedWeapon(Character) and typeof(Count) == "number" and Character:FindFirstChild("Humanoid") ~= nil and Character.Humanoid.Health > 0 and Character:FindFirstChild("HumanoidRootPart") ~= nil and Type ~= nil then
 		local Humrp = Character:FindFirstChild("HumanoidRootPart")
 		local weapon = Weapons.GetForCharacter(Character)
 
@@ -167,11 +167,11 @@ function Combat.Heavy(Character)
 		or Character:FindFirstChild("Stun") ~= nil
 		or Character:FindFirstChild("Blocking") ~= nil
 		or Character:FindFirstChild("DoingMove") ~= nil
-		or Weapons.GetEquippedTool(Character) == nil then
+		or not Weapons.HasEquippedWeapon(Character) then
 		return
 	end
 
-	local equippedTool = Weapons.GetEquippedTool(Character)
+	local equippedWeaponName = Weapons.GetEquippedWeaponName(Character)
 	local now = os.clock()
 	if HeavyCooldowns[Character] ~= nil and HeavyCooldowns[Character] > now then
 		return
@@ -190,8 +190,7 @@ function Combat.Heavy(Character)
 	if Character.Parent == nil
 		or Humrp.Parent ~= Character
 		or Character.Humanoid.Health <= 0
-		or equippedTool.Parent ~= Character
-		or Weapons.GetEquippedTool(Character) ~= equippedTool then
+		or Weapons.GetEquippedWeaponName(Character) ~= equippedWeaponName then
 		return
 	end
 
@@ -232,7 +231,7 @@ function Combat.Heavy(Character)
 end
 
 function Combat.Up(Character,Count,MaxCount)
-	if Character == nil or not Weapons.GetForCharacter(Character).AllowUpperCut then
+	if Character == nil or not Weapons.HasEquippedWeapon(Character) or not Weapons.GetForCharacter(Character).AllowUpperCut then
 		return
 	end
 
@@ -391,7 +390,7 @@ function Combat.EndAirCombat(Character)
 end
 
 function Combat.UpDown(Character,Count,MaxCount,SkipSwing,TargetOverride)
-	if Character == nil or not Weapons.GetForCharacter(Character).AllowUpperCut then
+	if Character == nil or not Weapons.HasEquippedWeapon(Character) or not Weapons.GetForCharacter(Character).AllowUpperCut then
 		return
 	end
 

@@ -270,9 +270,8 @@ local function equipBest(profile)
 	end
 end
 
--- The combat system recognizes the equipped weapon by a Tool in the character
--- whose Weapon attribute is a key in Modules.Weapons.Registry. The visual model
--- is attached by WeaponServer when that Tool appears.
+-- The combat system reads the selected registry key from the character attribute.
+-- WeaponServer attaches the visual model separately; no Roblox Tool is created.
 function InventoryService.ApplyEquippedWeapon(player: Player)
 	local character = player.Character
 	if not character then return end
@@ -286,21 +285,14 @@ function InventoryService.ApplyEquippedWeapon(player: Player)
 		end
 	end
 
+	character:SetAttribute(Weapons.EquippedAttributeName, weaponId)
+
+	-- Clean up a managed Tool left by an older inventory version during a live upgrade.
 	for _, child in ipairs(character:GetChildren()) do
 		if child:IsA("Tool") and child:GetAttribute("InventoryManagedWeapon") then
 			child:Destroy()
 		end
 	end
-
-	if not weaponId then return end
-	local tool = Instance.new("Tool")
-	tool.Name = "InventoryWeapon"
-	tool.RequiresHandle = false
-	tool.CanBeDropped = false
-	tool.ToolTip = Weapons.Data[weaponId].DisplayName or weaponId
-	tool:SetAttribute(Weapons.AttributeName, weaponId)
-	tool:SetAttribute("InventoryManagedWeapon", true)
-	tool.Parent = character
 end
 
 function InventoryService.HandleAction(player: Player, action: string, payload)
