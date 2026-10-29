@@ -2,6 +2,8 @@
 -- Add future loot definitions here, then call InventoryService.AddItem from server loot code.
 
 local Catalog = {}
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Weapons = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Weapons"))
 
 Catalog.RarityOrder = {"common", "uncommon", "rare", "epic", "legend", "mythic"}
 Catalog.SlotOrder = {"hat", "chest", "trinket", "wings", "relic", "ring", "weapon"}
@@ -14,7 +16,7 @@ Catalog.StarterEquipped = {
 	{slot = "hat", n = "Worn Fedora", r = "legend", tag = "Armor", lvl = 16},
 	{slot = "chest", n = "Violet Robe", r = "epic", tag = "Armor", lvl = 20},
 	{slot = "trinket", n = "Thorn Amulet", r = "epic", tag = "Trinket", lvl = 32},
-	{slot = "weapon", n = "Void Blade", r = "mythic", tag = "Weapon", lvl = 28},
+	{slot = "weapon", weaponId = "GreatSword", n = Weapons.Data.GreatSword.DisplayName, r = "rare", tag = "Weapon", lvl = 28},
 	{slot = "wings", n = "Rune Wraps", r = "epic", tag = "Armor", lvl = 27},
 	{slot = "relic", n = "Gilded Relic", r = "legend", tag = "Relic", lvl = 27},
 	{slot = "ring", n = "Azure Crown", r = "rare", tag = "Ring", lvl = 19},
@@ -22,23 +24,17 @@ Catalog.StarterEquipped = {
 
 Catalog.StarterBag = {
 	{n = "Crimson Shard", r = "mythic", slot = "trinket", tag = "Crafting", q = 1},
-	{n = "Ember Rune", r = "mythic", slot = "weapon", tag = "Rune", q = 1},
-	{n = "Glacier Blade", r = "rare", slot = "weapon", tag = "Weapon", q = 1},
 	{n = "Blood Star", r = "mythic", slot = "ring", tag = "Gem", q = 1},
 	{n = "Void Prism", r = "epic", slot = "trinket", tag = "Gem", q = 7},
 	{n = "Trolls Pouch", r = "legend", slot = "relic", tag = "Gold", q = 3},
 	{n = "Gilded Nugget", r = "legend", slot = "relic", tag = "Gold", q = 1},
-	{n = "Rune of Warding", r = "epic", slot = "weapon", tag = "Rune", q = 2},
 	{n = "Ember Leaf", r = "legend", slot = "trinket", tag = "Material", q = 1},
 	{n = "Obsidian Chunk", r = "common", slot = "ring", tag = "Material", q = 4},
 	{n = "Sigil of Ruin", r = "mythic", slot = "relic", tag = "Sigil", q = 4},
 	{n = "Verdant Orb", r = "uncommon", slot = "trinket", tag = "Orb", q = 13},
-	{n = "Tome of Ash", r = "legend", slot = "weapon", tag = "Tome", q = 12},
 	{n = "Amber Splinter", r = "legend", slot = "trinket", tag = "Material", q = 13},
-	{n = "Pale Rune", r = "rare", slot = "weapon", tag = "Rune", q = 5},
 	{n = "Nebula Prism", r = "epic", slot = "ring", tag = "Gem", q = 12},
 	{n = "Iron Chest", r = "common", slot = "relic", tag = "Container", q = 2},
-	{n = "Frost Cluster", r = "rare", slot = "weapon", tag = "Material", q = 1},
 	{n = "Shard of Winter", r = "rare", slot = "trinket", tag = "Material", q = 24},
 	{n = "Umbral Ingot", r = "common", slot = "relic", tag = "Material", q = 104},
 	{n = "Ashen Hood", r = "epic", slot = "hat", tag = "Armor", q = 1},
@@ -50,6 +46,35 @@ Catalog.StarterBag = {
 	{n = "Sigil Band", r = "epic", slot = "ring", tag = "Ring", q = 1},
 	{n = "Amber Beads", r = "uncommon", slot = "trinket", tag = "Trinket", q = 1},
 }
+
+
+-- Starter weapons come directly from the combat registry. Fists is an unarmed
+-- combat style rather than a physical weapon item, so it is not seeded here.
+local weaponRarities = {
+	DragonSlayer = "mythic",
+	Staff = "rare",
+	LongSword = "uncommon",
+	Axe = "rare",
+	["Mortal Blade"] = "epic",
+	["Dual KT"] = "epic",
+	["Steel Dagger"] = "common",
+	["Steel Spear"] = "uncommon",
+	["Steel Scythe"] = "rare",
+}
+for _, weaponId in ipairs(Weapons.Order) do
+	if weaponId ~= "Fists" and weaponId ~= "GreatSword" then
+		local weapon = Weapons.Data[weaponId]
+		table.insert(Catalog.StarterBag, {
+			n = weapon.DisplayName or weaponId,
+			weaponId = weaponId,
+			r = weaponRarities[weaponId] or "common",
+			slot = "weapon",
+			tag = "Weapon",
+			q = 1,
+			lvl = 20,
+		})
+	end
+end
 
 local skillPool = {
 	{n = "Lightning Arrows", d = "Attack deals 72% Lightning damage that chains up to 5 targets for the duration."},
@@ -151,6 +176,21 @@ local weights = {
 	magic = 59 / baseScore,
 }
 
+function Catalog.IsValidWeapon(weaponId)
+	return type(weaponId) == "string"
+		and weaponId ~= Weapons.FistsName
+		and Weapons.Data[weaponId] ~= nil
+end
+
+function Catalog.GetWeaponIdByDisplayName(displayName)
+	for weaponId, weapon in pairs(Weapons.Data) do
+		if weaponId ~= Weapons.FistsName and weapon.DisplayName == displayName then
+			return weaponId
+		end
+	end
+	return nil
+end
+
 function Catalog.IsValidSlot(slot)
 	return Catalog.ValidSlots[slot] == true
 end
@@ -169,13 +209,15 @@ function Catalog.GetStats(item)
 end
 
 function Catalog.MakeItemRecord(definition, id, location)
+	local weaponData = if definition.slot == "weapon" and Catalog.IsValidWeapon(definition.weaponId) then Weapons.Data[definition.weaponId] else nil
 	return {
 		id = id,
-		n = definition.n,
+		n = if weaponData then weaponData.DisplayName or definition.weaponId else definition.n,
 		r = definition.r,
 		slot = definition.slot,
 		tag = definition.tag or "Equipment",
-		qty = math.max(1, math.floor(definition.q or 1)),
+		weaponId = if weaponData then definition.weaponId else nil,
+		qty = if weaponData then 1 else math.max(1, math.floor(definition.q or 1)),
 		lvl = math.max(1, math.floor(definition.lvl or (14 + (id * 7) % 19))),
 		loc = location or "bag",
 		eqSlot = location == "eq" and definition.slot or nil,

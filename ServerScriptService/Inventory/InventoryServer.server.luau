@@ -54,6 +54,28 @@ InventoryService.Changed.Event:Connect(function(player: Player, snapshot)
 	end
 end)
 
+local function bindPlayer(player: Player)
+	player.CharacterAdded:Connect(function(character)
+		task.spawn(function()
+			InventoryService.Load(player)
+			if player.Character == character then
+				InventoryService.ApplyEquippedWeapon(player)
+			end
+		end)
+	end)
+	if player.Character then
+		task.spawn(function()
+			InventoryService.Load(player)
+			InventoryService.ApplyEquippedWeapon(player)
+		end)
+	end
+end
+
+Players.PlayerAdded:Connect(bindPlayer)
+for _, player in ipairs(Players:GetPlayers()) do
+	bindPlayer(player)
+end
+
 Players.PlayerRemoving:Connect(function(player)
 	InventoryService.Release(player)
 end)

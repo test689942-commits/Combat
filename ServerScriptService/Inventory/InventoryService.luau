@@ -4,7 +4,9 @@
 local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Catalog = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Inventory"):WaitForChild("Catalog"))
+local Modules = ReplicatedStorage:WaitForChild("Modules")
+local Catalog = require(Modules:WaitForChild("Inventory"):WaitForChild("Catalog"))
+local Weapons = require(Modules:WaitForChild("Weapons"))
 local Store = DataStoreService:GetDataStore("CombatInventory_v1")
 
 local InventoryService = {}
@@ -40,7 +42,7 @@ local function sanitizeProfile(saved)
 	profile.items = {}
 	profile.dirty = false
 
-	if type(saved) ~= "table" or saved.version ~= 1 or type(saved.items) ~= "table" then
+	if type(saved) ~= "table" or (saved.version ~= 1 and saved.version ~= 2) or type(saved.items) ~= "table" then
 		return makeDefaultProfile()
 	end
 
@@ -60,8 +62,14 @@ local function sanitizeProfile(saved)
 			and type(item.slot) == "string" and Catalog.IsValidSlot(item.slot)
 			and (item.loc == "eq" or item.loc == "bag") then
 
+			local weaponId = item.weaponId
+			if item.slot == "weapon" and not Catalog.IsValidWeapon(weaponId) then
+				weaponId = Catalog.GetWeaponIdByDisplayName(item.n)
+				if item.n == "Void Blade" then weaponId = "GreatSword" end
+			end
 			local rarityValid = table.find(Catalog.RarityOrder, item.r) ~= nil
-			if rarityValid then
+			local weaponValid = item.slot ~= "weapon" or Catalog.IsValidWeapon(weaponId)
+			if rarityValid and weaponValid then
 				local location = item.loc
 				local equipSlot = nil
 				if location == "eq" then
@@ -74,13 +82,15 @@ local function sanitizeProfile(saved)
 					end
 				end
 
+				local weaponData = if item.slot == "weapon" then Weapons.Data[weaponId] else nil
 				local safe = {
 					id = item.id,
-					n = item.n,
+					n = if weaponData then weaponData.DisplayName or weaponId else item.n,
 					r = item.r,
 					slot = item.slot,
-					tag = if type(item.tag) == "string" then string.sub(item.tag, 1, 32) else "Equipment",
-					qty = if type(item.qty) == "number" then math.clamp(math.floor(item.qty), 1, MAX_STACK) else 1,
+					tag = if item.slot == "weapon" then "Weapon" elseif type(item.tag) == "string" then string.sub(item.tag, 1, 32) else "Equipment",
+					weaponId = weaponId,
+					qty = if item.slot == "weapon" then 1 elseif type(item.qty) == "number" then math.clamp(math.floor(item.qty), 1, MAX_STACK) else 1,
 					lvl = if type(item.lvl) == "number" then math.clamp(math.floor(item.lvl), 1, 999) else 1,
 					loc = location,
 					eqSlot = equipSlot,
@@ -143,10 +153,10 @@ function InventoryService.Load(player: Player)
 end
 
 local function serialize(profile)
-	local result = {version = 1, gold = profile.gold, nextId = profile.nextId, items = {}}
+	local result = {version = 2, gold = profile.gold, nextId = profile.nextId, items = {}}
 	for _, item in ipairs(profile.items) do
 		table.insert(result.items, {
-			id = item.id, n = item.n, r = item.r, slot = item.slot, tag = item.tag,
+			id = item.id, n = item.n, r = item.r, slot = item.slot, tag = item.tag, weaponId = item.weaponId,
 			qty = item.qty, lvl = item.lvl, loc = item.loc, eqSlot = item.eqSlot,
 		})
 	end
@@ -254,6 +264,39 @@ local function equipBest(profile)
 	end
 end
 
+-- The combat system recognizes the equipped weapon by a Tool in the character
+-- whose Weapon attribute is a key in Modules.Weapons.Registry. The visual model
+-- is attached by WeaponServer when that Tool appears.
+function InventoryService.ApplyEquippedWeapon(player: Player)
+	local character = player.Character
+	if not character then return end
+
+	local weaponId
+	local profile = profiles[player] or InventoryService.Load(player)
+	for _, item in ipairs(profile.items) do
+		if item.loc == "eq" and item.eqSlot == "weapon" and Catalog.IsValidWeapon(item.weaponId) then
+			weaponId = item.weaponId
+			break
+		end
+	end
+
+	for _, child in ipairs(character:GetChildren()) do
+		if child:IsA("Tool") and child:GetAttribute("InventoryManagedWeapon") then
+			child:Destroy()
+		end
+	end
+
+	if not weaponId then return end
+	local tool = Instance.new("Tool")
+	tool.Name = "InventoryWeapon"
+	tool.RequiresHandle = false
+	tool.CanBeDropped = false
+	tool.ToolTip = Weapons.Data[weaponId].DisplayName or weaponId
+	tool:SetAttribute(Weapons.AttributeName, weaponId)
+	tool:SetAttribute("InventoryManagedWeapon", true)
+	tool.Parent = character
+end
+
 function InventoryService.HandleAction(player: Player, action: string, payload)
 	local profile = InventoryService.Load(player)
 	if type(action) ~= "string" then
@@ -261,11 +304,14 @@ function InventoryService.HandleAction(player: Player, action: string, payload)
 	end
 	payload = if type(payload) == "table" then payload else {}
 	local changed = false
+	local weaponChanged = false
 
 	if action == "Equip" then
-		local success, message = equip(profile, findItem(profile, payload.itemId))
+		local item = findItem(profile, payload.itemId)
+		local success, message = equip(profile, item)
 		if not success then return {success = false, message = message} end
 		changed = true
+		weaponChanged = item.slot == "weapon"
 	elseif action == "Unequip" then
 		local item = findItem(profile, payload.itemId)
 		if not item or item.loc ~= "eq" then
@@ -274,9 +320,11 @@ function InventoryService.HandleAction(player: Player, action: string, payload)
 		item.loc = "bag"
 		item.eqSlot = nil
 		changed = true
+		weaponChanged = item.slot == "weapon"
 	elseif action == "EquipBest" then
 		equipBest(profile)
 		changed = true
+		weaponChanged = true
 	elseif action == "SellMany" then
 		if type(payload.itemIds) ~= "table" or #payload.itemIds > MAX_ITEMS then
 			return {success = false, message = "Invalid sale selection."}
@@ -302,6 +350,9 @@ function InventoryService.HandleAction(player: Player, action: string, payload)
 	end
 
 	if changed then
+		if weaponChanged then
+			InventoryService.ApplyEquippedWeapon(player)
+		end
 		profile.dirty = true
 		profile.revision += 1
 		task.spawn(InventoryService.Save, player)
@@ -322,12 +373,13 @@ function InventoryService.AddItem(player: Player, definition, quantity: number?)
 	if type(definition) ~= "table"
 		or type(definition.n) ~= "string" or #definition.n == 0 or #definition.n > 80
 		or type(definition.r) ~= "string" or not table.find(Catalog.RarityOrder, definition.r)
-		or not Catalog.IsValidSlot(definition.slot) then
+		or not Catalog.IsValidSlot(definition.slot)
+		or (definition.slot == "weapon" and not Catalog.IsValidWeapon(definition.weaponId)) then
 		return false, "Invalid item definition."
 	end
 
 	local item = Catalog.MakeItemRecord(definition, profile.nextId, "bag")
-	item.qty = math.clamp(math.floor(tonumber(quantity) or item.qty), 1, MAX_STACK)
+	item.qty = if item.slot == "weapon" then 1 else math.clamp(math.floor(tonumber(quantity) or item.qty), 1, MAX_STACK)
 	profile.nextId += 1
 	table.insert(profile.items, item)
 	profile.dirty = true
