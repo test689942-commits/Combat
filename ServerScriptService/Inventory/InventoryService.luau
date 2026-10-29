@@ -50,6 +50,7 @@ local function sanitizeProfile(saved)
 		profile.gold = math.clamp(math.floor(saved.gold), 0, MAX_GOLD)
 	end
 
+	local needsRewrite = saved.version ~= 2
 	local seenIds = {}
 	local occupiedSlots = {}
 	for _, item in ipairs(saved.items) do
@@ -63,13 +64,12 @@ local function sanitizeProfile(saved)
 			and (item.loc == "eq" or item.loc == "bag") then
 
 			local weaponId = item.weaponId
-			if item.slot == "weapon" and not Catalog.IsValidWeapon(weaponId) then
+			if not Catalog.IsValidWeapon(weaponId) then
 				weaponId = Catalog.GetWeaponIdByDisplayName(item.n)
-				if item.n == "Void Blade" then weaponId = "GreatSword" end
+				if item.n == "Void Blade" then weaponId = Weapons.Default end
 			end
-			local rarityValid = table.find(Catalog.RarityOrder, item.r) ~= nil
-			local weaponValid = item.slot ~= "weapon" or Catalog.IsValidWeapon(weaponId)
-			if rarityValid and weaponValid then
+			local weaponValid = item.slot == "weapon" and Catalog.IsValidWeapon(weaponId)
+			if weaponValid then
 				local location = item.loc
 				local equipSlot = nil
 				if location == "eq" then
@@ -82,19 +82,24 @@ local function sanitizeProfile(saved)
 					end
 				end
 
-				local weaponData = if item.slot == "weapon" then Weapons.Data[weaponId] else nil
+				local weaponData = Weapons.Data[weaponId]
 				local safe = {
 					id = item.id,
-					n = if weaponData then weaponData.DisplayName or weaponId else item.n,
-					r = item.r,
-					slot = item.slot,
-					tag = if item.slot == "weapon" then "Weapon" elseif type(item.tag) == "string" then string.sub(item.tag, 1, 32) else "Equipment",
+					n = weaponData.DisplayName or weaponId,
+					r = "common",
+					slot = "weapon",
+					tag = "Weapon",
 					weaponId = weaponId,
-					qty = if item.slot == "weapon" then 1 elseif type(item.qty) == "number" then math.clamp(math.floor(item.qty), 1, MAX_STACK) else 1,
-					lvl = if type(item.lvl) == "number" then math.clamp(math.floor(item.lvl), 1, 999) else 1,
+					qty = 1,
+					lvl = 1,
 					loc = location,
-					eqSlot = equipSlot,
+					eqSlot = location == "eq" and "weapon" or nil,
 				}
+				if item.weaponId ~= safe.weaponId or item.n ~= safe.n or item.r ~= safe.r
+					or item.slot ~= safe.slot or item.tag ~= safe.tag or item.qty ~= safe.qty or item.lvl ~= safe.lvl
+					or item.loc ~= safe.loc or item.eqSlot ~= safe.eqSlot then
+					needsRewrite = true
+				end
 				table.insert(profile.items, safe)
 				seenIds[safe.id] = true
 				profile.nextId = math.max(profile.nextId, safe.id + 1)
@@ -105,6 +110,7 @@ local function sanitizeProfile(saved)
 	if type(saved.nextId) == "number" then
 		profile.nextId = math.max(profile.nextId, math.floor(saved.nextId))
 	end
+	profile.dirty = needsRewrite or #profile.items ~= #saved.items
 	return profile
 end
 

@@ -1,180 +1,40 @@
--- Shared item data and deterministic display stats for the inventory.
--- Add future loot definitions here, then call InventoryService.AddItem from server loot code.
+-- Weapon inventory catalog backed by the combat weapon registry.
+-- Until nonweapon equipment is implemented, the inventory contains weapons only.
 
 local Catalog = {}
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Weapons = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Weapons"))
 
 Catalog.RarityOrder = {"common", "uncommon", "rare", "epic", "legend", "mythic"}
-Catalog.SlotOrder = {"hat", "chest", "trinket", "wings", "relic", "ring", "weapon"}
-Catalog.ValidSlots = {
-	hat = true, chest = true, trinket = true, wings = true,
-	relic = true, ring = true, weapon = true,
-}
+Catalog.SlotOrder = {"weapon"}
+Catalog.ValidSlots = {weapon = true}
 
 Catalog.StarterEquipped = {
-	{slot = "hat", n = "Worn Fedora", r = "legend", tag = "Armor", lvl = 16},
-	{slot = "chest", n = "Violet Robe", r = "epic", tag = "Armor", lvl = 20},
-	{slot = "trinket", n = "Thorn Amulet", r = "epic", tag = "Trinket", lvl = 32},
-	{slot = "weapon", weaponId = "GreatSword", n = Weapons.Data.GreatSword.DisplayName, r = "rare", tag = "Weapon", lvl = 28},
-	{slot = "wings", n = "Rune Wraps", r = "epic", tag = "Armor", lvl = 27},
-	{slot = "relic", n = "Gilded Relic", r = "legend", tag = "Relic", lvl = 27},
-	{slot = "ring", n = "Azure Crown", r = "rare", tag = "Ring", lvl = 19},
+	{
+		slot = "weapon",
+		weaponId = Weapons.Default,
+		n = Weapons.Data[Weapons.Default].DisplayName or Weapons.Default,
+		r = "common",
+		tag = "Weapon",
+		lvl = 1,
+	},
 }
 
-Catalog.StarterBag = {
-	{n = "Crimson Shard", r = "mythic", slot = "trinket", tag = "Crafting", q = 1},
-	{n = "Blood Star", r = "mythic", slot = "ring", tag = "Gem", q = 1},
-	{n = "Void Prism", r = "epic", slot = "trinket", tag = "Gem", q = 7},
-	{n = "Trolls Pouch", r = "legend", slot = "relic", tag = "Gold", q = 3},
-	{n = "Gilded Nugget", r = "legend", slot = "relic", tag = "Gold", q = 1},
-	{n = "Ember Leaf", r = "legend", slot = "trinket", tag = "Material", q = 1},
-	{n = "Obsidian Chunk", r = "common", slot = "ring", tag = "Material", q = 4},
-	{n = "Sigil of Ruin", r = "mythic", slot = "relic", tag = "Sigil", q = 4},
-	{n = "Verdant Orb", r = "uncommon", slot = "trinket", tag = "Orb", q = 13},
-	{n = "Amber Splinter", r = "legend", slot = "trinket", tag = "Material", q = 13},
-	{n = "Nebula Prism", r = "epic", slot = "ring", tag = "Gem", q = 12},
-	{n = "Iron Chest", r = "common", slot = "relic", tag = "Container", q = 2},
-	{n = "Shard of Winter", r = "rare", slot = "trinket", tag = "Material", q = 24},
-	{n = "Umbral Ingot", r = "common", slot = "relic", tag = "Material", q = 104},
-	{n = "Ashen Hood", r = "epic", slot = "hat", tag = "Armor", q = 1},
-	{n = "Bone Helm", r = "rare", slot = "hat", tag = "Armor", q = 1},
-	{n = "Iron Plate", r = "rare", slot = "chest", tag = "Armor", q = 1},
-	{n = "Obsidian Cuirass", r = "legend", slot = "chest", tag = "Armor", q = 1},
-	{n = "Ember Cape", r = "legend", slot = "wings", tag = "Armor", q = 1},
-	{n = "Frost Mantle", r = "rare", slot = "wings", tag = "Armor", q = 1},
-	{n = "Sigil Band", r = "epic", slot = "ring", tag = "Ring", q = 1},
-	{n = "Amber Beads", r = "uncommon", slot = "trinket", tag = "Trinket", q = 1},
-}
-
-
--- Starter weapons come directly from the combat registry. Fists is an unarmed
--- combat style rather than a physical weapon item, so it is not seeded here.
-local weaponRarities = {
-	DragonSlayer = "mythic",
-	Staff = "rare",
-	LongSword = "uncommon",
-	Axe = "rare",
-	["Mortal Blade"] = "epic",
-	["Dual KT"] = "epic",
-	["Steel Dagger"] = "common",
-	["Steel Spear"] = "uncommon",
-	["Steel Scythe"] = "rare",
-}
+Catalog.StarterBag = {}
 for _, weaponId in ipairs(Weapons.Order) do
-	if weaponId ~= "Fists" and weaponId ~= "GreatSword" then
+	if weaponId ~= Weapons.FistsName and weaponId ~= Weapons.Default then
 		local weapon = Weapons.Data[weaponId]
 		table.insert(Catalog.StarterBag, {
 			n = weapon.DisplayName or weaponId,
 			weaponId = weaponId,
-			r = weaponRarities[weaponId] or "common",
+			r = "common",
 			slot = "weapon",
 			tag = "Weapon",
 			q = 1,
-			lvl = 20,
+			lvl = 1,
 		})
 	end
 end
-
-local skillPool = {
-	{n = "Lightning Arrows", d = "Attack deals 72% Lightning damage that chains up to 5 targets for the duration."},
-	{n = "Piercing Arrows", d = "Fires a piercing arrow forward, dealing 405% Physical damage."},
-	{n = "Arrow Volley", d = "Unleash a volley into the air, dealing 10 hits of 440% Physical damage to the target area."},
-	{n = "Ember Strike", d = "Ignites the target, burning for 88% Fire damage over 6 seconds."},
-	{n = "Frost Bind", d = "Freezes the target in place for 1.4 seconds and slows nearby foes."},
-	{n = "Void Rend", d = "Tears a rift, dealing 260% Magic damage and reducing armor by 12%."},
-	{n = "Blood Pact", d = "Sacrifices 6% health to increase damage by 35% for 8 seconds."},
-}
-
-local flavors = {
-	"Crafted from natural materials.", "Forged in the deep furnace.",
-	"It hums with old magic.", "Pried from the hands of the fallen.",
-	"Cold to the touch, even in fire.", "The runes refuse to fade.",
-	"Older than the dungeon itself.",
-}
-
-local rarityTier = {}
-for index, rarity in ipairs(Catalog.RarityOrder) do
-	rarityTier[rarity] = index
-end
-
-local function makeRng(seed)
-	local state = (seed * 9301 + 49297) % 233280
-	return function()
-		state = (state * 9301 + 49297) % 233280
-		return state / 233280
-	end
-end
-
-local function rollStats(item, seed)
-	local random = makeRng(seed + 7)
-	local tier = rarityTier[item.r] or 1
-	local stats = {
-		atk = math.floor(16 + tier * 8 + random() * 24 + 0.5),
-		pct = math.floor(18 + random() * 63 + 0.5),
-		atkSpeed = math.floor((0.9 + random() * 0.8) * 10 + 0.5) / 10,
-		score = math.floor(300 + tier * 380 + random() * 1400 + 0.5),
-		lines = {},
-		skills = {},
-	}
-
-	local function addLine(chance, color, makeText)
-		if random() > chance then
-			table.insert(stats.lines, {k = color, t = makeText()})
-		end
-	end
-	addLine(0.40, "blue", function()
-		return string.format("Attack deals an additional %d points of magical damage", math.floor(4 + random() * 16 + 0.5))
-	end)
-	addLine(0.32, "gray", function()
-		return string.format("Physical damage increased by %d%%", math.floor(6 + random() * 24 + 0.5))
-	end)
-	addLine(0.42, "gray", function()
-		return string.format("Magical damage increased by %d%%", math.floor(3 + random() * 9 + 0.5))
-	end)
-	addLine(0.38, "gray", function()
-		return string.format("Strength +%d", math.floor(2 + random() * 9 + 0.5))
-	end)
-	addLine(0.38, "green", function()
-		return string.format("Attack speed increased by %d%%", math.floor(2 + random() * 9 + 0.5))
-	end)
-	addLine(0.54, "green", function()
-		return string.format("Critical strike chance +%d%%", math.floor(1 + random() * 7 + 0.5))
-	end)
-
-	if item.slot == "weapon" then
-		local pool = table.clone(skillPool)
-		local skillCount = 1 + math.floor(random() * 2)
-		for _ = 1, skillCount do
-			if #pool == 0 then break end
-			local skill = table.remove(pool, math.floor(random() * #pool) + 1)
-			table.insert(stats.skills, {
-				n = skill.n,
-				d = skill.d,
-				lvl = math.max(1, (item.lvl or 20) + math.floor((random() - 0.5) * 6)),
-			})
-		end
-	end
-
-	stats.flavor = flavors[math.floor(random() * #flavors) + 1]
-	stats.price = math.floor((60 + tier * 95 + random() * 420) / 5 + 0.5) * 5
-	return stats
-end
-
-local baseScore = 0
-for index, item in ipairs(Catalog.StarterEquipped) do
-	local level = item.lvl or (14 + (index * 7) % 19)
-	baseScore += rollStats({slot = item.slot, r = item.r, lvl = level}, index).score
-end
-if baseScore <= 0 then baseScore = 1 end
-
-local weights = {
-	damage = 252.3 / baseScore,
-	speed = 111.9 / baseScore,
-	crit = 0.00035,
-	phys = 193.2 / baseScore,
-	magic = 59 / baseScore,
-}
 
 function Catalog.IsValidWeapon(weaponId)
 	return type(weaponId) == "string"
@@ -195,32 +55,72 @@ function Catalog.IsValidSlot(slot)
 	return Catalog.ValidSlots[slot] == true
 end
 
+-- These facts come from the same combo/move data used by combat. No synthetic
+-- affixes, random skills, rarity rolls, or stat rolls are generated for weapons.
 function Catalog.GetStats(item)
-	local stats = rollStats(item, item.id)
-	local score = stats.score
-	stats.contrib = {
-		damage = score * weights.damage,
-		speed = score * weights.speed,
-		crit = math.max(0, (score - baseScore / 7) * weights.crit),
-		phys = score * weights.phys,
-		magic = score * weights.magic,
+	local weapon = Weapons.Data[item.weaponId]
+	if not weapon then
+		return {
+			score = 0,
+			maxDamage = 0,
+			averageDamage = 0,
+			averageCooldown = 0,
+			comboCount = 0,
+			moves = {},
+			category = "Unknown",
+			price = 0,
+		}
+	end
+
+	local totalDamage = 0
+	local maxDamage = 0
+	local totalCooldown = 0
+	local combo = weapon.Combo or {}
+	for _, hit in ipairs(combo) do
+		local damage = tonumber(hit.Damage) or 0
+		totalDamage += damage
+		maxDamage = math.max(maxDamage, damage)
+		totalCooldown += tonumber(hit.Cooldown) or 0
+	end
+
+	local comboCount = if #combo > 0 then #combo else (weapon.MaxCombo or 0)
+	local averageDamage = if #combo > 0 then totalDamage / #combo else 0
+	local averageCooldown = if #combo > 0 then totalCooldown / #combo else 0
+	local moves = {}
+	for _, moveName in ipairs(weapon.Moves or {}) do
+		table.insert(moves, moveName)
+	end
+
+	return {
+		-- Equip Best compares the average damage defined by this weapon's combo.
+		score = averageDamage,
+		maxDamage = maxDamage,
+		averageDamage = averageDamage,
+		averageCooldown = averageCooldown,
+		comboCount = comboCount,
+		moves = moves,
+		category = weapon.Category or "Weapon",
+		-- Retain the existing sell UI with a stable value derived from actual
+		-- maximum combo damage; this is not a randomized weapon stat.
+		price = math.floor(maxDamage * 10 + 0.5),
+		contrib = {damage = averageDamage},
 	}
-	return stats
 end
 
 function Catalog.MakeItemRecord(definition, id, location)
-	local weaponData = if definition.slot == "weapon" and Catalog.IsValidWeapon(definition.weaponId) then Weapons.Data[definition.weaponId] else nil
+	local weaponId = definition.weaponId
+	local weapon = if Catalog.IsValidWeapon(weaponId) then Weapons.Data[weaponId] else nil
 	return {
 		id = id,
-		n = if weaponData then weaponData.DisplayName or definition.weaponId else definition.n,
-		r = definition.r,
-		slot = definition.slot,
-		tag = definition.tag or "Equipment",
-		weaponId = if weaponData then definition.weaponId else nil,
-		qty = if weaponData then 1 else math.max(1, math.floor(definition.q or 1)),
-		lvl = math.max(1, math.floor(definition.lvl or (14 + (id * 7) % 19))),
+		n = if weapon then weapon.DisplayName or weaponId else definition.n,
+		r = "common",
+		slot = "weapon",
+		tag = "Weapon",
+		weaponId = weaponId,
+		qty = 1,
+		lvl = 1,
 		loc = location or "bag",
-		eqSlot = location == "eq" and definition.slot or nil,
+		eqSlot = location == "eq" and "weapon" or nil,
 	}
 end
 

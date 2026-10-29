@@ -81,10 +81,6 @@ local function tween(inst, info, props)
 	return t
 end
 
-local function fmt(n)
-	if n >= 1000 then return string.format("%.1fK", n / 1000) end
-	return tostring(math.floor(n + 0.5))
-end
 local function commafy(n)
 	local s = tostring(math.floor(n + 0.5))
 	local out = s:reverse():gsub("(%d%d%d)", "%1,"):reverse()
@@ -119,15 +115,15 @@ local function rebuildState()
 end
 
 local function totals()
-	local total = { damage = 0, speed = 0, crit = 0, phys = 0, magic = 0 }
-	for _, item in ipairs(ITEMS) do
-		if item.loc == "eq" and item.stats and item.stats.contrib then
-			for key, value in pairs(item.stats.contrib) do
-				if total[key] ~= nil then total[key] += value end
-			end
-		end
-	end
-	return total
+	local weapon = State.equipped.weapon
+	local stats = weapon and weapon.stats or {}
+	return {
+		damage = stats.averageDamage or 0,
+		speed = stats.averageCooldown or 0,
+		crit = stats.comboCount or 0,
+		phys = stats.maxDamage or 0,
+		magic = stats.moves and #stats.moves or 0,
+	}
 end
 
 local function requestInventoryAction(request)
@@ -329,25 +325,27 @@ local function renderSlot(kind)
 	v.badgeText.TextTransparency = 1
 	v.name.TextColor3 = SLOT_NAME
 	if not it then
+		v.name.Text = SLOT_LABEL[kind] or kind
 		v.stroke.Color = SLOT_LINE_EMPTY
 		v.boreder.ImageColor3 = SLOT_LINE_EMPTY
 		v.count.Text = ""
 		return
 	end
+	v.name.Text = it.n
 	v.stroke.Color = RARITY[it.r].color
 	v.boreder.ImageColor3 = RARITY[it.r].color
-	v.count.Text = "Lv." .. tostring(it.lvl)
+	v.count.Text = ""
 end
 
 ----------------------------------------------------------------------
 -- 7. STATS
 ----------------------------------------------------------------------
 local STAT_DEFS = {
-	{ k = "damage", row = "Damage",          dec = 1, suf = ""  },
-	{ k = "speed",  row = "attack speed",    dec = 1, suf = "%" },
-	{ k = "crit",   row = "Crit",            dec = 0, suf = "%" },
-	{ k = "phys",   row = "Physical Damage", dec = 1, suf = ""  },
-	{ k = "magic",  row = "Magic Damage",    dec = 0, suf = ""  },
+	{ k = "damage", row = "Damage",          label = "Average Hit",  dec = 1, suf = ""  },
+	{ k = "speed",  row = "attack speed",    label = "Avg Cooldown", dec = 2, suf = "s" },
+	{ k = "crit",   row = "Crit",            label = "Combo Hits",   dec = 0, suf = ""  },
+	{ k = "phys",   row = "Physical Damage", label = "Max Hit",      dec = 1, suf = ""  },
+	{ k = "magic",  row = "Magic Damage",    label = "Special Moves",dec = 0, suf = ""  },
 }
 local statsHolder = equipPanel:WaitForChild("Stats")
 local statLabels = {}
@@ -357,7 +355,13 @@ for _, def in ipairs(STAT_DEFS) do
 	for _, c in ipairs(row:GetChildren()) do
 		if c:IsA("TextLabel") then table.insert(labels, c) end
 	end
-	statLabels[def.k] = labels[2] -- [1]=static label, [2]=value
+	table.sort(labels, function(a, b)
+		local aX = a.Position.X.Scale * 100000 + a.Position.X.Offset
+		local bX = b.Position.X.Scale * 100000 + b.Position.X.Offset
+		return aX < bX
+	end)
+	if labels[1] then labels[1].Text = def.label end
+	statLabels[def.k] = labels[2] -- [1]=label, [2]=value
 end
 
 local function fmtStat(v, def)
@@ -413,22 +417,26 @@ function openCard(item, mode)
 		return f
 	end
 
-	row(1, 40, item.n .. "  Lv." .. tostring(item.lvl), 19, Color3.fromRGB(242, 234, 214), Color3.fromRGB(28, 26, 20))
-	row(2, 24, item.tag .. " · " .. (SLOT_LABEL[item.slot] or ""), 15, C.text)
-	row(3, 24, "Score: " .. fmt(item.stats.score), 15, C.textDim)
-	row(4, 24, string.format("%d (+%d%%) Attack", item.stats.atk, item.stats.pct), 15, C.text)
-	row(5, 24, tostring(item.stats.atkSpeed) .. " Attack Speed", 15, C.text)
+	local stats = item.stats
+	row(1, 40, item.n, 19, Color3.fromRGB(242, 234, 214), Color3.fromRGB(28, 26, 20))
+	row(2, 24, tostring(stats.category or "Weapon") .. " · Weapon", 15, C.text)
+	row(3, 24, "Combo hits: " .. tostring(stats.comboCount or 0), 15, C.textDim)
+	row(4, 24, string.format("Average hit damage: %.1f", stats.averageDamage or 0), 15, C.text)
+	row(5, 24, string.format("Max hit damage: %.1f", stats.maxDamage or 0), 15, C.text)
+	row(6, 24, string.format("Average cooldown: %.2f s", stats.averageCooldown or 0), 15, C.text)
 
-	for i, line in ipairs(item.stats.lines) do
-		row(5 + i, 24, "◆ " .. line.t, 13, C.textDim)
+	local order = 7
+	if #stats.moves > 0 then
+		row(order, 24, "Moves in combat registry", 14, Color3.fromRGB(236, 237, 240)); order += 1
+		for _, moveName in ipairs(stats.moves) do
+			row(order, 24, "• " .. moveName, 13, C.textDim)
+			order += 1
+		end
+	else
+		row(order, 24, "No special moves listed in the combat registry", 13, C.textDim)
+		order += 1
 	end
-	local order = 6 + #item.stats.lines
-	for _, sk in ipairs(item.stats.skills) do
-		row(order, 24, sk.n .. "  Lv." .. tostring(sk.lvl), 14, Color3.fromRGB(236, 237, 240)); order += 1
-		row(order, 34, sk.d, 12, C.textDim); order += 1
-	end
-	row(order, 30, '"' .. item.stats.flavor .. '"', 13, C.textDim); order += 1
-	row(order, 30, commafy(item.stats.price * item.qty) .. " gold", 16, Color3.fromRGB(232, 223, 198)); order += 1
+	row(order, 30, "Sell value: " .. commafy(stats.price or 0) .. " gold", 16, Color3.fromRGB(232, 223, 198)); order += 1
 
 	local btnRow = Instance.new("Frame")
 	btnRow.LayoutOrder = order

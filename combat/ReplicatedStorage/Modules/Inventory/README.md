@@ -35,7 +35,7 @@ Weapon definitions are sourced from `ReplicatedStorage.Modules.Weapons` and use 
 
 A weapon item stores the registry key in `weaponId`. When one is equipped, the server creates a non-droppable character `Tool` with its `Weapon` attribute set to that registry key. The combat system recognizes this Tool; the existing weapon model attach script responds to the Tool being added. Unequipping removes the inventory-managed Tool. The server re-applies the selected weapon on character respawn.
 
-New profiles start with the registry's Great Sword equipped and the other physical registry weapons in the bag, alongside the sample nonweapon items/equipment. Future weapon drops must reference a registry key:
+New profiles contain weapons only: the registry's Great Sword starts equipped and the other physical registry weapons are in the bag. Fists is omitted because it is an unarmed style, not a weapon model. Older saved armor, materials, fictional demo weapons, and non-registry move/stat rolls are filtered during migration. The UI shows only combo damage/cooldown and move names from the combat weapon data. Future weapon drops must reference a registry key:
 
 ```lua
 local InventoryService = require(game.ServerScriptService.Inventory.InventoryService)
