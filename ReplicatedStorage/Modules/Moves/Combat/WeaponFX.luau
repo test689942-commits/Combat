@@ -828,21 +828,6 @@ local function spawnShockwave(root: BasePart)
 	TweenService:Create(ring, TweenInfo.new(0.35, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Size = ring.Size * 2, Transparency = 1}):Play()
 end
 
-local function playCritEffect(attacker: Model?, effectName: string)
-	local attackerRoot = attacker and attacker:FindFirstChild("HumanoidRootPart")
-	local critPart = combatEffects:FindFirstChild(effectName)
-
-	if not attackerRoot or not critPart then
-		return
-	end
-
-	for _, attachment in critPart:GetChildren() do
-		if attachment:IsA("Attachment") then
-			_G.EffectEmitter(attachment, {Parent = attackerRoot, Debris = 1.5})
-		end
-	end
-end
-
 function WeaponFX.HitEffects(victim: Model, attacker: Model?, count: number)
 	local weapon = Weapons.GetForCharacter(attacker)
 	local category = weapon.Category
@@ -858,10 +843,6 @@ function WeaponFX.HitEffects(victim: Model, attacker: Model?, count: number)
 
 	if attachment then
 		_G.EffectEmitter(attachment, {Parent = root, Debris = 1.5})
-	end
-
-	if hit.CritEffect and not weapon.NoCritical then
-		playCritEffect(attacker, hit.CritEffect)
 	end
 
 	playSounds(hit.HitSounds, category, root)

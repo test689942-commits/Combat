@@ -34,7 +34,6 @@ function Combo.CreateBuilder(settings)
 			SwingSoundTime = math.max(0, impact - settings.SwingSoundLead);
 			HitSounds = data.HitSounds;
 			HitEffect = data.HitEffect;
-			CritEffect = data.CritEffect;
 			Knockback = data.Knockback;
 			WalkSpeed = settings.WalkSpeed;
 			Shake = data.Shake;

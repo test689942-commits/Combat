@@ -54,7 +54,7 @@ local combo = table.freeze({
 	});
 	buildHit({
 		Impact = 0.45; Length = 0.75; Speed = 1; Damage = 28; Stun = 1.3; Recovery = 0.6;
-		SwingSounds = SWING_SOUNDS; HitSounds = HIT_SOUNDS; HitEffect = "Finisher"; CritEffect = "Crit";
+		SwingSounds = SWING_SOUNDS; HitSounds = HIT_SOUNDS; HitEffect = "Finisher";
 		Knockback = FINISHER_KNOCKBACK;
 		Shake = table.freeze({Attacker = 1; Victim = 1.2; Duration = 0.4});
 		HitStop = 0.14;
