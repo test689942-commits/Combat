@@ -66,6 +66,7 @@ local DRAGON_SLAYER_COMBO = table.freeze({
 
 return table.freeze({
 	GreatSword = table.freeze({
+		HolsterSlot = "Back";
 		Category = "Greatsword";
 		DisplayName = "Great Sword";
 		Order = 1;
@@ -84,6 +85,7 @@ return table.freeze({
 	});
 
 	DragonSlayer = table.freeze({
+		HolsterSlot = "Back";
 		Category = "Greatsword";
 		DisplayName = "Dragon Slayer";
 		Order = 2;
@@ -121,6 +123,7 @@ return table.freeze({
 	});
 
 	Fists = table.freeze({
+		HolsterSlot = "RightLeg";
 		Category = "Fists";
 		DisplayName = "Fists";
 		Order = 3;
@@ -128,6 +131,7 @@ return table.freeze({
 	});
 
 	Staff = table.freeze({
+		HolsterSlot = "Back";
 		Category = "Staff";
 		DisplayName = "Staff";
 		Order = 4;
@@ -140,6 +144,7 @@ return table.freeze({
 	});
 
 	LongSword = table.freeze({
+		HolsterSlot = "Back";
 		Category = "Longsword";
 		DisplayName = "Long Sword";
 		Order = 5;
@@ -153,6 +158,7 @@ return table.freeze({
 	});
 
 	Axe = table.freeze({
+		HolsterSlot = "RightLeg";
 		Category = "Axe";
 		DisplayName = "Axe";
 		Order = 6;
@@ -166,6 +172,7 @@ return table.freeze({
 	});
 
 	["Mortal Blade"] = table.freeze({
+		HolsterSlot = "LeftLeg";
 		Category = "Katana";
 		DisplayName = "Mortal Blade";
 		Order = 7;
@@ -175,6 +182,7 @@ return table.freeze({
 	});
 
 	["Dual KT"] = table.freeze({
+		HolsterSlot = "Back";
 		Category = "DualKatana";
 		DisplayName = "Dual Katana";
 		Order = 8;
@@ -184,6 +192,7 @@ return table.freeze({
 	});
 
 	["Steel Dagger"] = table.freeze({
+		HolsterSlot = "RightLeg";
 		Category = "Dagger";
 		DisplayName = "Steel Dagger";
 		Order = 9;
@@ -196,6 +205,7 @@ return table.freeze({
 	});
 
 	["Steel Spear"] = table.freeze({
+		HolsterSlot = "Back";
 		Category = "Spear";
 		DisplayName = "Steel Spear";
 		Order = 10;
@@ -204,6 +214,7 @@ return table.freeze({
 	});
 
 	["Steel Scythe"] = table.freeze({
+		HolsterSlot = "Back";
 		Category = "Scythe";
 		DisplayName = "Steel Scythe";
 		Order = 11;

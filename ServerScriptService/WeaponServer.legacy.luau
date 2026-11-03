@@ -161,6 +161,73 @@ local function canAttach(character: Model, template: Instance, grips): boolean
 	return true
 end
 
+local HOLSTER_OFFSETS = table.freeze({
+	Back = CFrame.new(0.45, 0.1, 0.55) * CFrame.Angles(math.rad(-90), 0, math.rad(35));
+	LeftLeg = CFrame.new(-0.08, 0.05, 0.03) * CFrame.Angles(0, 0, math.rad(-12));
+	RightLeg = CFrame.new(0.08, 0.05, 0.03) * CFrame.Angles(0, 0, math.rad(12));
+})
+
+local HOLSTER_BODY_PARTS = table.freeze({
+	Back = {"UpperTorso", "Torso"};
+	LeftLeg = {"LeftUpperLeg", "Left Leg", "LeftLowerLeg"};
+	RightLeg = {"RightUpperLeg", "Right Leg", "RightLowerLeg"};
+})
+
+local function findHolsterBodyPart(character: Model, slot: string): BasePart?
+	for _, partName in HOLSTER_BODY_PARTS[slot] or {} do
+		local part = character:FindFirstChild(partName)
+		if part and part:IsA("BasePart") then
+			return part
+		end
+	end
+	return nil
+end
+
+local function attachHolsteredWeapon(character: Model, weaponName: string)
+	detachWeapon(character)
+
+	local info = Weapons.Get(weaponName)
+	if not info.Model then
+		return
+	end
+
+	local slot = info.HolsterSlot
+	local offset = HOLSTER_OFFSETS[slot]
+	local bodyPart = if offset then findHolsterBodyPart(character, slot) else nil
+	if not bodyPart then
+		warn("Weapon has no valid holster placement: " .. weaponName)
+		return
+	end
+
+	local template = findTemplate(info.Model)
+	local grips = getGrips(info)
+	local primaryGrip = grips[1]
+	local handle = template and primaryGrip and getHandle(template, primaryGrip)
+	if not template or not handle then
+		warn("Holstered weapon model or handle could not be found: " .. weaponName)
+		return
+	end
+
+	local weaponModel = buildWeaponModel(template)
+	local modelHandle = getHandle(weaponModel, primaryGrip)
+	if not modelHandle then
+		weaponModel:Destroy()
+		warn("Holstered weapon handle was excluded from model: " .. weaponName)
+		return
+	end
+
+	weaponModel:SetAttribute("HolsterSlot", slot)
+	weaponModel.Parent = character
+
+	local joint = Instance.new("Motor6D")
+	joint.Name = "HolsterWeaponJoint"
+	joint.Part0 = bodyPart
+	joint.Part1 = modelHandle
+	joint.C0 = info.HolsterC0 or offset
+	joint:SetAttribute(JOINT_ATTRIBUTE, true)
+	joint.Parent = bodyPart
+end
+
 local function attachWeapon(character: Model, weaponName: string)
 	detachWeapon(character)
 
@@ -187,10 +254,15 @@ local function attachWeapon(character: Model, weaponName: string)
 end
 
 local function refreshWeapon(character: Model)
-	local weaponName = Weapons.GetEquippedWeaponName(character)
+	local drawnWeaponName = Weapons.GetEquippedWeaponName(character)
+	if drawnWeaponName then
+		attachWeapon(character, drawnWeaponName)
+		return
+	end
 
-	if weaponName then
-		attachWeapon(character, weaponName)
+	local selectedWeaponName = Weapons.GetSelectedWeaponName(character)
+	if selectedWeaponName then
+		attachHolsteredWeapon(character, selectedWeaponName)
 	else
 		detachWeapon(character)
 	end
@@ -200,6 +272,9 @@ end
 
 local function setupCharacter(character: Model)
 	character:GetAttributeChangedSignal(Weapons.EquippedAttributeName):Connect(function()
+		refreshWeapon(character)
+	end)
+	character:GetAttributeChangedSignal(Weapons.SelectedAttributeName):Connect(function()
 		refreshWeapon(character)
 	end)
 

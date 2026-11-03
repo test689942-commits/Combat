@@ -36,11 +36,11 @@ Roblox assets and GUI instances (such as `ReplicatedStorage.Assets` and `PlayerG
 
 ## Combat and weapon flow
 
-- `StarterPlayerScripts/CombatInput.local.luau` binds combat input and skill keys. M1 starts the combo, Mouse 2 starts Heavy, and F blocks. Skill keys and requirements are declared in `ReplicatedStorage/Modules/Moves/init.luau`.
+- `StarterPlayerScripts/CombatInput.local.luau` binds combat input and skill keys. M1 starts the combo, Mouse 2 starts Heavy, F blocks, and E toggles the selected weapon between its holster and the hand (Leap is mapped to Y to avoid a key conflict). Skill keys and requirements are declared in `ReplicatedStorage/Modules/Moves/init.luau`.
 - `ReplicatedStorage/Modules/Moves/Combat/` contains the client input handler, combat server logic, weapon animations/VFX, and shared combat effects.
 - Skill moves are registered in `Moves/init.luau`. Their client modules live in `Moves/` (for example `Rage.luau`, `Leap.luau`, `DaggerDance.luau`, `Thrust.luau`, and `Spin.luau`); `Moves/Server.luau` handles server-side move phases and hit validation, and `Moves/Effects.luau` dispatches move effects.
 - `ReplicatedStorage/Modules/Weapons/Registry.luau` is the source of weapon keys, names, categories, and weapon-specific move configuration. `Weapons/init.luau` combines those entries with the shared `Weapons/Categories/` and `Weapons/Combo.luau` definitions.
-- The server equips a weapon by setting the character's `EquippedWeaponId` attribute. Combat reads that key from the registry; `ServerScriptService/WeaponServer.legacy.luau` attaches the matching visual model. This equip path does not require a Roblox Tool.
+- Inventory selection is stored as `SelectedWeaponId`; the selected model is displayed at its registry-defined `HolsterSlot` (`Back`, `LeftLeg`, or `RightLeg`). Pressing E asks the server to draw or sheath it. Only the server-set `EquippedWeaponId` marks a drawn, combat-ready weapon, so attacks and skills stay disabled while it is holstered. `WeaponServer.legacy.luau` attaches the corresponding visual model without Roblox Tools.
 
 ### Registered weapons
 

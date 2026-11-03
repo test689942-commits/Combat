@@ -102,7 +102,7 @@ return table.freeze({
 		Parryable = true;
 		Order = 4;
 		RequiresFist = false;
-		Key = Enum.KeyCode.E;
+		Key = Enum.KeyCode.Y;
 		Cooldown = 0;
 		Damage = 10;
 		LockDuration = 2.23;

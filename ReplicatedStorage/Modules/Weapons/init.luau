@@ -12,6 +12,7 @@ Weapons.FistsName = "Fists"
 Weapons.FistsCategory = "Fists"
 Weapons.AttributeName = "Weapon"
 Weapons.EquippedAttributeName = "EquippedWeaponId"
+Weapons.SelectedAttributeName = "SelectedWeaponId"
 Weapons.Categories = {}
 Weapons.Data = {}
 Weapons.Order = {}
@@ -21,6 +22,7 @@ local DEFAULT_JOINT_NAME = "Handle"
 local DEFAULT_GRIP_C0 = CFrame.new(-0.230697632, -1.13454056, 0.00231933594)
 local DEFAULT_GRIP_C1 = CFrame.new()
 local HITBOX_HEIGHT = 6
+local VALID_HOLSTER_SLOTS = table.freeze({Back = true; LeftLeg = true; RightLeg = true})
 
 --// Build \\--
 
@@ -33,6 +35,7 @@ end
 local function buildWeapon(name: string, entry)
 	local category = Weapons.Categories[entry.Category]
 
+	assert(VALID_HOLSTER_SLOTS[entry.HolsterSlot], "Weapon '" .. name .. "' must define exactly one valid HolsterSlot")
 	assert(category, "Unknown weapon category '" .. tostring(entry.Category) .. "' for " .. name)
 
 	local data = {}
@@ -91,6 +94,20 @@ function Weapons.GetEquippedTool(character: Model?): Tool?
 	end
 
 	return nil
+end
+
+function Weapons.GetSelectedWeaponName(character: Model?): string?
+	if not character then
+		return nil
+	end
+
+	local weaponName = character:GetAttribute(Weapons.SelectedAttributeName)
+	if Weapons.Data[weaponName] then
+		return weaponName
+	end
+
+	-- Compatibility for characters from a pre-holster inventory version.
+	return Weapons.GetEquippedWeaponName(character)
 end
 
 function Weapons.GetEquippedWeaponName(character: Model?): string?

@@ -293,8 +293,9 @@ local function equipBest(profile)
 	end
 end
 
--- The combat system reads the selected registry key from the character attribute.
--- WeaponServer attaches the visual model separately; no Roblox Tool is created.
+-- Inventory selection and combat-ready/drawn state are deliberately separate.
+-- A selected item is holstered on the character; EquippedWeaponId is only set
+-- while the server has accepted a draw request. No Roblox Tool is created.
 function InventoryService.ApplyEquippedWeapon(player: Player)
 	local character = player.Character
 	if not character then return end
@@ -308,7 +309,8 @@ function InventoryService.ApplyEquippedWeapon(player: Player)
 		end
 	end
 
-	character:SetAttribute(Weapons.EquippedAttributeName, weaponId)
+	character:SetAttribute(Weapons.EquippedAttributeName, nil)
+	character:SetAttribute(Weapons.SelectedAttributeName, weaponId)
 
 	-- Clean up a managed Tool left by an older inventory version during a live upgrade.
 	for _, child in ipairs(character:GetChildren()) do
@@ -316,6 +318,38 @@ function InventoryService.ApplyEquippedWeapon(player: Player)
 			child:Destroy()
 		end
 	end
+end
+
+function InventoryService.ToggleWeapon(player: Player)
+	local character = player.Character
+	if not character then
+		return false, "Your character is not ready."
+	end
+
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid or humanoid.Health <= 0 then
+		return false, "Your character cannot draw a weapon right now."
+	end
+
+	local profile = profiles[player] or InventoryService.Load(player)
+	local weaponId
+	for _, item in ipairs(profile.items) do
+		if item.loc == "eq" and item.eqSlot == "weapon" and Catalog.IsValidWeapon(item.weaponId) then
+			weaponId = item.weaponId
+			break
+		end
+	end
+
+	if not weaponId then
+		character:SetAttribute(Weapons.EquippedAttributeName, nil)
+		character:SetAttribute(Weapons.SelectedAttributeName, nil)
+		return false, "Equip a weapon in your inventory first."
+	end
+
+	character:SetAttribute(Weapons.SelectedAttributeName, weaponId)
+	local drawnWeaponId = character:GetAttribute(Weapons.EquippedAttributeName)
+	character:SetAttribute(Weapons.EquippedAttributeName, if drawnWeaponId == weaponId then nil else weaponId)
+	return true
 end
 
 function InventoryService.HandleAction(player: Player, action: string, payload)

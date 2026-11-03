@@ -29,6 +29,21 @@ end
 local getInventory = getRemote("RemoteFunction", "GetInventory") :: RemoteFunction
 local action = getRemote("RemoteFunction", "Action") :: RemoteFunction
 local updated = getRemote("RemoteEvent", "InventoryUpdated") :: RemoteEvent
+local toggleWeapon = getRemote("RemoteEvent", "ToggleWeapon") :: RemoteEvent
+
+local lastToggleAt = setmetatable({}, {__mode = "k"})
+toggleWeapon.OnServerEvent:Connect(function(player: Player)
+	local now = os.clock()
+	if now - (lastToggleAt[player] or 0) < 0.3 then
+		return
+	end
+	lastToggleAt[player] = now
+
+	local success, message = pcall(InventoryService.ToggleWeapon, player)
+	if not success then
+		warn("Weapon draw/sheath failed for " .. player.Name .. ": " .. tostring(message))
+	end
+end)
 
 getInventory.OnServerInvoke = function(player: Player)
 	local success, result = pcall(InventoryService.GetSnapshot, player)

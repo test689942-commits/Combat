@@ -12,10 +12,19 @@ local CombatInfo = MovesInfo.Combat
 local Weapons = require(ReplicatedStorage.Modules:WaitForChild("Weapons"))
 
 local player = Players.LocalPlayer
+local toggleWeaponRemote = ReplicatedStorage:WaitForChild("InventoryRemotes"):WaitForChild("ToggleWeapon")
 
 local function getCharacter()
 	return player.Character
 end
+
+-- Draw or sheath the server-selected inventory weapon.
+UserInputService.InputBegan:Connect(function(input, processed)
+	if processed or input.UserInputType ~= Enum.UserInputType.Keyboard then return end
+	if input.KeyCode == Enum.KeyCode.E then
+		toggleWeaponRemote:FireServer()
+	end
+end)
 
 -- Attack (M1)
 UserInputService.InputBegan:Connect(function(input, processed)
