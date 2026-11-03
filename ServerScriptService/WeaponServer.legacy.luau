@@ -161,10 +161,11 @@ local function canAttach(character: Model, template: Instance, grips): boolean
 	return true
 end
 
+-- CFrame.Angles are XYZ Euler rotations in radians, converted from the requested degree orientations.
 local HOLSTER_OFFSETS = table.freeze({
-	Back = CFrame.new(0.45, 0.1, 0.55) * CFrame.Angles(math.rad(-90), 0, math.rad(35));
-	LeftLeg = CFrame.new(-0.08, 0.05, 0.03) * CFrame.Angles(0, 0, math.rad(-12));
-	RightLeg = CFrame.new(0.08, 0.05, 0.03) * CFrame.Angles(0, 0, math.rad(12));
+	Back = CFrame.new(0.45, 0.1, 0.55) * CFrame.Angles(math.rad(55), math.rad(90), math.rad(180));
+	LeftLeg = CFrame.new(-0.08, 0.05, 0.03) * CFrame.Angles(0, math.rad(-90), math.rad(-105));
+	RightLeg = CFrame.new(0.08, 0.05, 0.03) * CFrame.Angles(0, math.rad(-90), math.rad(-105));
 })
 
 local HOLSTER_BODY_PARTS = table.freeze({
@@ -191,41 +192,49 @@ local function attachHolsteredWeapon(character: Model, weaponName: string)
 		return
 	end
 
-	local slot = info.HolsterSlot
-	local offset = HOLSTER_OFFSETS[slot]
-	local bodyPart = if offset then findHolsterBodyPart(character, slot) else nil
-	if not bodyPart then
-		warn("Weapon has no valid holster placement: " .. weaponName)
+	local template = findTemplate(info.Model)
+	local grips = getGrips(info)
+	if not template then
+		warn("Holstered weapon model could not be found: " .. weaponName)
 		return
 	end
 
-	local template = findTemplate(info.Model)
-	local grips = getGrips(info)
-	local primaryGrip = grips[1]
-	local handle = template and primaryGrip and getHandle(template, primaryGrip)
-	if not template or not handle then
-		warn("Holstered weapon model or handle could not be found: " .. weaponName)
-		return
+	local mounts = {}
+	for index, grip in grips do
+		local slot = if info.HolsterSlots then info.HolsterSlots[index] else info.HolsterSlot
+		local offset = HOLSTER_OFFSETS[slot]
+		local bodyPart = if offset then findHolsterBodyPart(character, slot) else nil
+		local handle = getHandle(template, grip)
+		if not offset or not bodyPart or not handle then
+			warn("Weapon has no valid holster placement or handle: " .. weaponName)
+			return
+		end
+		table.insert(mounts, {Slot = slot; Offset = offset; BodyPart = bodyPart; Grip = grip})
 	end
 
 	local weaponModel = buildWeaponModel(template)
-	local modelHandle = getHandle(weaponModel, primaryGrip)
-	if not modelHandle then
-		weaponModel:Destroy()
-		warn("Holstered weapon handle was excluded from model: " .. weaponName)
-		return
+	local mountedSlots = {}
+	for _, mount in mounts do
+		mount.Handle = getHandle(weaponModel, mount.Grip)
+		if not mount.Handle then
+			weaponModel:Destroy()
+			warn("Holstered weapon handle was excluded from model: " .. weaponName)
+			return
+		end
+		table.insert(mountedSlots, mount.Slot)
 	end
 
-	weaponModel:SetAttribute("HolsterSlot", slot)
+	weaponModel:SetAttribute("HolsterSlot", table.concat(mountedSlots, ","))
 	weaponModel.Parent = character
-
-	local joint = Instance.new("Motor6D")
-	joint.Name = "HolsterWeaponJoint"
-	joint.Part0 = bodyPart
-	joint.Part1 = modelHandle
-	joint.C0 = info.HolsterC0 or offset
-	joint:SetAttribute(JOINT_ATTRIBUTE, true)
-	joint.Parent = bodyPart
+	for index, mount in mounts do
+		local joint = Instance.new("Motor6D")
+		joint.Name = "HolsterWeaponJoint" .. tostring(index)
+		joint.Part0 = mount.BodyPart
+		joint.Part1 = mount.Handle
+		joint.C0 = info.HolsterC0 or mount.Offset
+		joint:SetAttribute(JOINT_ATTRIBUTE, true)
+		joint.Parent = mount.BodyPart
+	end
 end
 
 local function attachWeapon(character: Model, weaponName: string)

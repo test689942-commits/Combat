@@ -35,7 +35,16 @@ end
 local function buildWeapon(name: string, entry)
 	local category = Weapons.Categories[entry.Category]
 
-	assert(VALID_HOLSTER_SLOTS[entry.HolsterSlot], "Weapon '" .. name .. "' must define exactly one valid HolsterSlot")
+	if entry.HolsterSlots ~= nil then
+		assert(entry.HolsterSlot == nil and type(entry.HolsterSlots) == "table" and entry.Grips ~= nil and #entry.HolsterSlots == #entry.Grips, "Weapon '" .. name .. "' must map each holstered grip to one slot")
+		local assignedSlots = {}
+		for _, slot in entry.HolsterSlots do
+			assert(VALID_HOLSTER_SLOTS[slot] and not assignedSlots[slot], "Weapon '" .. name .. "' has an invalid or duplicate HolsterSlots entry")
+			assignedSlots[slot] = true
+		end
+	else
+		assert(VALID_HOLSTER_SLOTS[entry.HolsterSlot], "Weapon '" .. name .. "' must define exactly one valid HolsterSlot")
+	end
 	assert(category, "Unknown weapon category '" .. tostring(entry.Category) .. "' for " .. name)
 
 	local data = {}

@@ -144,7 +144,7 @@ return table.freeze({
 	});
 
 	LongSword = table.freeze({
-		HolsterSlot = "Back";
+		HolsterSlot = "RightLeg";
 		Category = "Longsword";
 		DisplayName = "Long Sword";
 		Order = 5;
@@ -158,7 +158,7 @@ return table.freeze({
 	});
 
 	Axe = table.freeze({
-		HolsterSlot = "RightLeg";
+		HolsterSlot = "Back";
 		Category = "Axe";
 		DisplayName = "Axe";
 		Order = 6;
@@ -172,7 +172,7 @@ return table.freeze({
 	});
 
 	["Mortal Blade"] = table.freeze({
-		HolsterSlot = "LeftLeg";
+		HolsterSlot = "RightLeg";
 		Category = "Katana";
 		DisplayName = "Mortal Blade";
 		Order = 7;
@@ -182,7 +182,8 @@ return table.freeze({
 	});
 
 	["Dual KT"] = table.freeze({
-		HolsterSlot = "Back";
+		-- HolsterSlots follow DUAL_BLADE_GRIPS order: right-hand blade, then left-hand blade.
+		HolsterSlots = table.freeze({"RightLeg", "LeftLeg"});
 		Category = "DualKatana";
 		DisplayName = "Dual Katana";
 		Order = 8;
